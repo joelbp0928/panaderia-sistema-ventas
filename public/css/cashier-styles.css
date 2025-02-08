@@ -1,0 +1,309 @@
+/* Estilo general */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4; /* Fondo claro */
+    color: #2c2c2c; /* Texto gris oscuro */
+}
+
+h1, h2, h3 {
+    margin: 0;
+    padding: 0.5rem;
+    text-align: center;
+}
+
+/* Estilo para el contenedor del encabezado */
+#header {
+    display: flex;
+    justify-content: space-between; /* Espacio entre el ticket y el logo */
+    align-items: center; /* Centra verticalmente los elementos */
+    padding: 10px;
+    border-bottom: 2px solid #8B0000; /* Línea separadora (opcional) */
+  }
+
+/* Logo de la Empresa */
+#logo-header {
+    background-color: #ffffff; /* Fondo blanco para el logo */
+    padding: 1rem;
+    text-align: center;
+}
+
+#company-logo {
+    max-width: 150px;
+    max-height: 100px;
+    object-fit: contain; /* Asegura que el logo se ajuste sin distorsionarse */
+}
+
+/* Número de ticket */
+#ticket-header {
+    background-color: #6c1b2d; /* Fondo vino */
+    color: #ffffff; /* Texto blanco */
+    padding: 1rem;
+    text-align: center;
+    flex: 1; /* Toma el espacio restante si es necesario */
+}
+
+/* Estilo para el logo */
+#logo-header {
+    flex-shrink: 0; /* Evita que el logo se reduzca demasiado */
+  }
+
+  #company-logo {
+    height: 60px; /* Ajusta el tamaño del logo */
+    width: auto; /* Mantén las proporciones */
+  }
+
+/* Contenedor principal */
+#cashier-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+/* Contenido principal */
+#main-content {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+/* Sección de productos */
+#products-section {
+    flex: 2;
+    border: 2px solid #6c1b2d; /* Bordes vino */
+    border-radius: 8px;
+    background-color: #ffffff; /* Fondo blanco */
+    padding: 1rem;
+}
+
+#ticket-details {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+#ticket-details th {
+    background-color: #6c1b2d; /* Fondo vino para encabezados */
+    color: #ffffff; /* Texto blanco */
+    padding: 0.8rem;
+}
+
+#ticket-details td {
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    text-align: center;
+    color: #2c2c2c; /* Texto gris oscuro */
+}
+
+#total {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    color: #6c1b2d; /* Texto vino */
+}
+
+/* Sección de pago */
+#payment-section {
+    flex: 1;
+    border: 2px solid #6c1b2d; /* Bordes vino */
+    border-radius: 8px;
+    background-color: #ffffff; /* Fondo blanco */
+    padding: 1rem;
+}
+
+#payment-input {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+#amount-input {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#submit-payment {
+    background-color: #6c1b2d; /* Fondo vino */
+    color: #ffffff; /* Texto blanco */
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+/* Botones de pago */
+.payment-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.payment-btn {
+    padding: 1rem;
+    background-color: #e6e6e6; /* Fondo gris claro */
+    border: 1px solid #6c1b2d; /* Bordes vino */
+    cursor: pointer;
+    font-size: 1rem;
+    border-radius: 4px;
+    color: #2c2c2c; /* Texto gris oscuro */
+}
+
+.payment-btn:hover {
+    background-color: #6c1b2d; /* Fondo vino al pasar el cursor */
+    color: #ffffff; /* Texto blanco */
+}
+
+
+/* Sección de Pago del Cliente */
+#payment-section {
+    flex: 2;
+    border: 2px solid #6c1b2d;
+    border-radius: 8px;
+    background-color: #ffffff;
+    padding: 1rem;
+}
+
+#payment-input {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+#amount-input {
+    flex: 1;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1.2rem;
+}
+
+#submit-payment {
+    background-color: #6c1b2d;
+    color: #ffffff;
+    border: none;
+    padding: 0.8rem 1.2rem;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* Teclado Numérico */
+#numeric-keypad {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.keypad-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.keypad-btn {
+    flex: 1;
+    padding: 1rem;
+    background-color: #e6e6e6;
+    border: 1px solid #6c1b2d;
+    border-radius: 4px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    text-align: center;
+}
+
+.keypad-btn:hover {
+    background-color: #6c1b2d;
+    color: #ffffff;
+}
+
+/* Nominaciones de Billetes o Monedas */
+.payment-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.payment-btn {
+    padding: 1rem;
+    background-color: #e6e6e6;
+    border: 1px solid #6c1b2d;
+    border-radius: 4px;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.payment-btn:hover {
+    background-color: #6c1b2d;
+    color: #ffffff;
+}
+
+/* Cambio a Entregar */
+#change-section {
+    flex: 1;
+    border: 2px solid #6c1b2d;
+    border-radius: 8px;
+    padding: 1rem;
+    background-color: #ffffff;
+    text-align: center;
+    margin-top: 0rem;
+}
+
+#change {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-top: 0.5rem;
+    color: #6c1b2d;
+}
+
+.payment-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Tres columnas */
+    gap: 10px; /* Menor espacio entre botones */
+    justify-items: center;
+    padding: 5px; /* Reducir el padding global */
+  }
+  
+  .payment-btn {
+    background-color: transparent; /* Sin fondo */
+    border: none; /* Quitar contornos */
+    padding: 0; /* Sin espacio interno */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px; /* Reducir tamaño del botón */
+    height: 80px; /* Reducir tamaño del botón */
+    cursor: pointer;
+  }
+  
+  .payment-btn img {
+    width: 100%; /* Imagen ocupa todo el espacio del botón */
+    height: auto; /* Proporciones automáticas */
+  }
+  
+  .payment-btn:hover img {
+    transform: scale(1.1); /* Efecto de agrandar al pasar el cursor */
+    transition: transform 0.2s ease;
+  }
+  
+  /* Ajustes responsivos para pantallas pequeñas */
+  @media (max-width: 768px) {
+    .payment-grid {
+      grid-template-columns: repeat(2, 1fr); /* Dos columnas en pantallas pequeñas */
+      gap: 8px; /* Espacio más pequeño entre botones */
+    }
+  
+    .payment-btn {
+      width: 70px; /* Botones más pequeños en pantallas pequeñas */
+      height: 70px;
+    }
+  }
+
+  

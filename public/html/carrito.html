@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carrito de Compras</title>
+    <link rel="stylesheet" href="/css/styles-usuario.css" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Encabezado -->
+    <header>
+      <div class="logo">
+        <img src="/img/lona logo mr donut.jpg" alt="Logo Empresa" />
+      </div>
+      <div class="header-buttons">
+        <button id="back-btn" onclick="window.history.back()">Volver</button>
+    <!--    <button id="checkout-btn">Proceder al Pago</button>-->
+      </div>
+    </header>
+
+    <!-- Carrito de Compras -->
+    <main>
+      <section id="shopping-cart">
+        <h2>Carrito de Compras</h2>
+        <div class="cart-items">
+          <!-- Ejemplo de Producto -->
+          <div class="cart-item d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+              <img
+                src="/img/dona_chocolate.jpg"
+                alt="Dona de Chocolate"
+                class="cart-item-img"
+              />
+              <div class="cart-item-details">
+                <h5>Dona de Chocolate</h5>
+                <p>$10.00</p>
+              </div>
+            </div>
+            <div class="cart-item-actions">
+              <input
+                type="number"
+                class="form-control quantity-input"
+                value="1"
+                min="1"
+              />
+              <button class="btn btn-danger btn-sm remove-btn">Eliminar</button>
+            </div>
+          </div>
+          <hr />
+          <!-- Fin del Producto -->
+        </div>
+
+        <!-- Resumen del Carrito -->
+        <div id="cart-summary" class="mt-4">
+          <h4>Resumen</h4>
+          <p>Total de productos: <span id="total-items">1</span></p>
+          <p>Total a pagar: <span id="total-price">$10.00</span></p>
+        </div>
+
+        <!-- Botón para Vaciar Carrito -->
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-danger" id="clear-cart-btn">Vaciar Carrito</button>
+          <button class="btn btn-success" id="proceed-payment-btn">Realizar pedido</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <p>&copy; 2024 Mr. Donut. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="/script/carrito.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

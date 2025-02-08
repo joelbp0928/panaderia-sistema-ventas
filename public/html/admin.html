@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel de Administración</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      /* Estilo base */
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+      }
+
+      header {
+        background-color: #6c1b2d; /* Color principal */
+        color: white;
+        padding: 20px;
+        text-align: center;
+      }
+
+      header img {
+        width: 150px;
+        margin-bottom: 10px;
+      }
+
+      .nav-tabs .nav-link {
+        color: #6c1b2d;
+        font-weight: bold;
+      }
+
+      .nav-tabs .nav-link.active {
+        background-color: #6c1b2d;
+        color: white;
+      }
+
+      .tab-content {
+        padding: 20px;
+        background-color: #ffffff;
+        border: 1px solid #ddd;
+        border-top: none;
+      }
+
+      .form-section {
+        margin-bottom: 20px;
+      }
+
+      .btn-primary,
+      .btn-warning,
+      .btn-info,
+      .btn-success,
+      .btn-danger {
+        background-color: #6c1b2d;
+        border-color: #6c1b2d;
+        color: white;
+      }
+
+      .btn-primary:hover,
+      .btn-warning:hover,
+      .btn-info:hover,
+      .btn-success:hover,
+      .btn-danger:hover {
+        background-color: #5a1725;
+        border-color: #5a1725;
+      }
+
+      footer {
+        margin-top: 30px;
+        text-align: center;
+        padding: 10px;
+        background-color: #6c1b2d;
+        color: white;
+      }
+
+      input[type="color"] {
+        border: 2px solid #6c1b2d;
+        border-radius: 5px;
+        width: 100%;
+        padding: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="/img/lona logo mr donut.jpg" alt="Logo Empresa" />
+      <h1>Panel de Administración</h1>
+    </header>
+
+    <!-- Navegación de pestañas -->
+    <div class="container mt-4">
+      <ul class="nav nav-tabs" id="admin-tabs" role="tablist">
+        <li class="nav-item">
+          <button
+            class="nav-link active"
+            id="clients-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#clients"
+            type="button"
+            role="tab"
+            aria-controls="clients"
+            aria-selected="true"
+          >
+            Clientes
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            id="employees-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#employees"
+            type="button"
+            role="tab"
+            aria-controls="employees"
+            aria-selected="false"
+          >
+            Empleados
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            id="ingredients-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#ingredients"
+            type="button"
+            role="tab"
+            aria-controls="ingredients"
+            aria-selected="false"
+          >
+            Ingrediente
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            id="products-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#products"
+            type="button"
+            role="tab"
+            aria-controls="products"
+            aria-selected="false"
+          >
+            Productos
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            id="promotion-recommendations"
+            data-bs-toggle="tab"
+            data-bs-target="#promo-recommendations"
+            type="button"
+            role="tab"
+            aria-controls="promo-recommendations"
+            aria-selected="false"
+          >
+            Promociones
+          </button>
+        </li>
+        <!-- Botón para estadísticas -->
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            id="sales-stats"
+            data-bs-toggle="tab"
+            data-bs-target="#sales-stats-content"
+            type="button"
+            role="tab"
+            aria-controls="sales-stats-content"
+            aria-selected="false"
+          >
+            Estadísticas
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            id="settings-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#settings"
+            type="button"
+            role="tab"
+            aria-controls="settings"
+            aria-selected="false"
+          >
+            Configuraciones
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content" id="admin-tabs-content">
+        <!-- Clientes -->
+        <div
+          class="tab-pane fade show active"
+          id="clients"
+          role="tabpanel"
+          aria-labelledby="clients-tab"
+        >
+          <h2>Gestión de Clientes</h2>
+          <button class="btn btn-primary mb-3">Agregar Cliente</button>
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Juan Pérez</td>
+                <td>juan@example.com</td>
+                <td>555-1234</td>
+                <td>
+                  <button class="btn btn-sm btn-warning">Editar</button>
+                  <button class="btn btn-sm btn-danger">Eliminar</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empleados -->
+        <div
+          class="tab-pane fade"
+          id="employees"
+          role="tabpanel"
+          aria-labelledby="employees-tab"
+        >
+          <h2>Gestión de Empleados</h2>
+          <button class="btn btn-primary mb-3">Agregar Empleado</button>
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Puesto</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Pedro Sánchez</td>
+                <td>Cajero</td>
+                <td>pedro@example.com</td>
+                <td>555-9876</td>
+                <td>
+                  <button class="btn btn-sm btn-warning">Editar</button>
+                  <button class="btn btn-sm btn-danger">Eliminar</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Gestión de Ingredientes -->
+        <div
+          class="tab-pane fade"
+          id="ingredients"
+          role="tabpanel"
+          aria-labelledby="ingredients-tab"
+        >
+          <h2>Gestión de Ingredientes</h2>
+          <button class="btn btn-primary mb-3" onclick="showIngredientForm()">
+            Agregar Ingrediente
+          </button>
+          <form id="ingredient-form" style="display: none">
+            <div class="form-section">
+              <label for="ingredient-name">Nombre del Ingrediente:</label>
+              <input
+                type="text"
+                id="ingredient-name"
+                class="form-control"
+                placeholder="Nombre del Ingrediente"
+                required
+              />
+            </div>
+            <div class="form-section">
+              <label for="ingredient-measure">Tipo de Medida:</label>
+              <select id="ingredient-measure" class="form-control" required>
+                <option value="pz">Piezas</option>
+                <option value="kg">Kilogramos</option>
+                <option value="gr">Gramos</option>
+                <option value="cj">Cajas</option>
+                <option value="otra">Otra</option>
+              </select>
+            </div>
+            <div class="form-section">
+              <label for="ingredient-stock">Cantidad en Stock:</label>
+              <input
+                type="number"
+                id="ingredient-stock"
+                class="form-control"
+                placeholder="Cantidad disponible"
+                min="0"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              class="btn btn-success"
+              id="save-ingredient-btn"
+            >
+              Guardar Ingrediente
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="cancelIngredientEdit()"
+            >
+              Cancelar
+            </button>
+          </form>
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Tipo de Medida</th>
+                <th>Cantidad en Stock</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="ingredients-list">
+              <!-- Lista dinámica de ingredientes -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Gestión de Productos -->
+        <div
+          class="tab-pane fade"
+          id="products"
+          role="tabpanel"
+          aria-labelledby="products-tab"
+        >
+          <h2>Gestión de Productos</h2>
+          <button class="btn btn-primary mb-3" onclick="addProduct()">
+            Agregar Producto
+          </button>
+          <form id="product-form">
+            <div class="form-section">
+              <label for="product-name">Nombre del Producto:</label>
+              <input
+                type="text"
+                id="product-name"
+                class="form-control"
+                placeholder="Nombre del Producto"
+              />
+            </div>
+            <div class="form-section">
+              <label for="product-image">Imagen del Producto:</label>
+              <input type="file" id="product-image" class="form-control" />
+            </div>
+            <div class="form-section">
+              <label for="product-category">Categoría:</label>
+              <select id="product-category" class="form-control">
+                <option>Donas</option>
+                <option>Repostería</option>
+                <option>Promociones</option>
+                <option>Pan de Temporada</option>
+              </select>
+            </div>
+            <div class="form-section">
+              <label for="product-price">Precio:</label>
+              <input
+                type="number"
+                id="product-price"
+                class="form-control"
+                placeholder="Precio del Producto"
+              />
+            </div>
+            <div class="form-section">
+              <label for="product-stock">Stock:</label>
+              <input
+                type="number"
+                id="product-stock"
+                class="form-control"
+                placeholder="Cantidad en Inventario"
+              />
+            </div>
+            <div class="form-section">
+              <label for="product-ingredients">Seleccionar Ingredientes:</label>
+              <select id="product-ingredients" class="form-control" multiple>
+                <!-- Los ingredientes serán generados dinámicamente -->
+              </select>
+            </div>
+            <button type="submit" class="btn btn-success">
+              Guardar Producto
+            </button>
+          </form>
+        </div>
+
+        <!-- Promociones Tab -->
+        <div
+          class="tab-pane fade"
+          id="promo-recommendations"
+          role="tabpanel"
+          aria-labelledby="promotion-recommendations"
+        >
+          <div class="container mt-4">
+            <!-- Sección de sugerencias -->
+            <h3>Sugerencias de Promociones</h3>
+            <div class="suggestions">
+              <!-- Botón para crear sugerencia -->
+              <button class="btn btn-primary mb-3" id="create-suggestion-btn">
+                Crear Sugerencia
+              </button>
+              <ul class="list-group">
+                <li class="list-group-item">
+                  🛒 Promoción sugerida: 2x1 en Donas de Chocolate
+                  <button class="btn btn-success btn-sm float-end">
+                    Aceptar
+                  </button>
+                </li>
+                <li class="list-group-item">
+                  📊 Descuento del 15% en pedidos mayores a $100
+                  <button class="btn btn-success btn-sm float-end">
+                    Aceptar
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Separador -->
+            <hr class="my-4" />
+
+            <!-- Sección de creación de promociones -->
+            <h3>Crear Promociones</h3>
+            <form id="create-promotion-form">
+              <div class="mb-3">
+                <label for="promotion-name" class="form-label"
+                  >Nombre de la Promoción</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="promotion-name"
+                  placeholder="Ejemplo: Descuento de Verano"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="promotion-products" class="form-label"
+                  >Productos</label
+                >
+                <select
+                  multiple
+                  class="form-select"
+                  id="promotion-products"
+                  required
+                >
+                  <option value="1">Dona de Chocolate</option>
+                  <option value="2">Concha de Vainilla</option>
+                  <option value="3">Bolillo</option>
+                  <option value="4">Pastel de Tres Leches</option>
+                </select>
+                <!-- <small class="text-muted">
+                  Mantén presionado <kbd>Ctrl</kbd> (o <kbd>Cmd</kbd> en Mac)
+                  para seleccionar múltiples productos.
+                </small>-->
+              </div>
+
+              <div class="mb-3">
+                <label for="promotion-discount-type" class="form-label"
+                  >Tipo de Descuento</label
+                >
+                <select
+                  class="form-select"
+                  id="promotion-discount-type"
+                  onchange="updateDiscountOptions()"
+                  required
+                >
+                  <option value="" disabled selected>
+                    Selecciona el tipo de descuento
+                  </option>
+                  <option value="percentage">Porcentaje de descuento</option>
+                  <option value="buy-get">Compra tal y llévate tal</option>
+                  <option value="bogo">2x1</option>
+                  <option value="threshold">
+                    Porcentaje de descuento en compras mayores
+                  </option>
+                </select>
+              </div>
+
+              <!-- Configuración específica para cada tipo de descuento -->
+              <div id="discount-configurations">
+                <!-- Configuración para porcentaje -->
+                <div id="percentage-config" class="discount-option d-none">
+                  <label for="percentage-value" class="form-label"
+                    >Porcentaje de Descuento (%)</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="percentage-value"
+                    placeholder="Ejemplo: 20"
+                  />
+                </div>
+
+                <!-- Configuración para compra tal y llévate tal -->
+                <div id="buy-get-config" class="discount-option d-none">
+                  <label for="buy-quantity" class="form-label"
+                    >Cantidad a Comprar</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="buy-quantity"
+                    placeholder="Ejemplo: 3"
+                  />
+                  <label for="get-quantity" class="form-label mt-2"
+                    >Cantidad a Llevar Gratis</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="get-quantity"
+                    placeholder="Ejemplo: 1"
+                  />
+                </div>
+
+                <!-- Configuración para 2x1 -->
+                <div id="bogo-config" class="discount-option d-none">
+                  <p class="form-text">
+                    La promoción se aplicará automáticamente al añadir productos
+                    idénticos al carrito.
+                  </p>
+                </div>
+
+                <!-- Configuración para porcentaje de descuento en compras mayores -->
+                <div id="threshold-config" class="discount-option d-none">
+                  <label for="threshold-value" class="form-label"
+                    >Monto Mínimo de Compra</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="threshold-value"
+                    placeholder="Ejemplo: 100"
+                  />
+                  <label for="threshold-percentage" class="form-label mt-2"
+                    >Porcentaje de Descuento (%)</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="threshold-percentage"
+                    placeholder="Ejemplo: 15"
+                  />
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="promotion-expiry" class="form-label"
+                  >Fecha de Vigencia</label
+                >
+                <input type="date" class="form-control" id="promotion-expiry" />
+              </div>
+
+              <button type="submit" class="btn btn-success">
+                Crear Promoción
+              </button>
+            </form>
+
+            <!-- Listado de promociones existentes -->
+            <h3 class="mt-4">Promociones Activas</h3>
+            <ul class="list-group">
+              <li class="list-group-item">
+                🎉 2x1 en Donas de Chocolate
+                <span class="badge bg-secondary float-end"
+                  >Vence: 2024-12-15</span
+                >
+              </li>
+              <li class="list-group-item">
+                📢 Descuento del 20% en Pasteles
+                <span class="badge bg-secondary float-end"
+                  >Vence: 2024-12-20</span
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Estadísticas de Ventas -->
+        <div
+          class="tab-pane fade"
+          id="sales-stats-content"
+          role="tabpanel"
+          aria-labelledby="sales-stats"
+        >
+          <h2>Estadísticas de Ventas</h2>
+          <canvas id="sales-chart" width="400" height="200"></canvas>
+          <div class="filters">
+            <label for="stats-period">Periodo:</label>
+            <select
+              id="stats-period"
+              class="form-control"
+              onchange="updateSalesChart()"
+            >
+              <option value="daily">Diario</option>
+              <option value="weekly">Semanal</option>
+              <option value="monthly">Mensual</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Configuraciones -->
+        <div
+          class="tab-pane fade"
+          id="settings"
+          role="tabpanel"
+          aria-labelledby="settings-tab"
+        >
+          <h2>Personalización del Sitio</h2>
+          <form>
+            <div class="form-section">
+              <label for="site-name">Nombre del Sitio:</label>
+              <input
+                type="text"
+                id="site-name"
+                class="form-control"
+                placeholder="Nombre de la página"
+              />
+            </div>
+            <div class="form-section">
+              <label for="site-logo">Logo del Sitio:</label>
+              <input type="file" id="site-logo" class="form-control" />
+            </div>
+            <div class="form-section">
+              <label for="primary-color">Color Primario:</label>
+              <input type="color" id="primary-color" value="#6c1b2d" />
+            </div>
+            <button type="submit" class="btn btn-primary">
+              Guardar Configuración
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>&copy; 2024 MR. Donut</p>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      function updateDiscountOptions() {
+        // Ocultar todas las configuraciones
+        document.querySelectorAll(".discount-option").forEach((option) => {
+          option.classList.add("d-none");
+        });
+
+        // Mostrar la configuración correspondiente
+        const selectedType = document.getElementById(
+          "promotion-discount-type"
+        ).value;
+        const configId = {
+          percentage: "percentage-config",
+          "buy-get": "buy-get-config",
+          bogo: "bogo-config",
+          threshold: "threshold-config",
+        }[selectedType];
+
+        if (configId) {
+          document.getElementById(configId).classList.remove("d-none");
+        }
+      }
+
+      const promoRecommendations = [];
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const promoList = document.getElementById("promo-recommendations");
+        promoRecommendations.forEach((promo) => {
+          const listItem = document.createElement("li");
+          listItem.className = "list-group-item";
+          listItem.innerHTML = `
+              <strong>${promo.name}</strong><br />
+              <small>${promo.reason}</small>
+            `;
+          promoList.appendChild(listItem);
+        });
+      });
+    </script>
+    <script>
+      const promotions = [];
+      const products = ["Dona Chocolate", "Concha", "Bolillo"]; // Ejemplo de productos
+
+      function showPromotionForm() {
+        document.getElementById("promotion-form").style.display = "block";
+        const promoProducts = document.getElementById("promo-products");
+        promoProducts.innerHTML = "";
+        products.forEach((product) => {
+          const option = document.createElement("option");
+          option.value = product;
+          option.textContent = product;
+          promoProducts.appendChild(option);
+        });
+      }
+
+      function cancelPromotion() {
+        document.getElementById("promotion-form").style.display = "none";
+      }
+
+      // Función para crear o editar una promoción
+      document
+        .getElementById("create-promo-btn")
+        .addEventListener("click", function (event) {
+          event.preventDefault(); // Evita que se recargue la página
+
+          const promoName = document.getElementById("promo-name").value; // Nombre de la promoción
+          const promoDiscount = document.getElementById("promo-discount").value; // Descuento de la promoción
+          const promoProducts = Array.from(
+            document.getElementById("promo-products").selectedOptions
+          ).map((option) => option.value); // Productos seleccionados
+
+          // Verificación de que los campos no estén vacíos o incorrectos
+          if (promoName && promoDiscount && promoProducts.length > 0) {
+            const newPromo = {
+              name: promoName,
+              discount: promoDiscount,
+              products: promoProducts,
+            };
+
+            // Si se está editando una promoción existente, actualiza el elemento en el arreglo
+            if (editingPromoIndex !== null) {
+              promotions[editingPromoIndex] = newPromo;
+            } else {
+              // Si no, agrega una nueva promoción al arreglo
+              promotions.push(newPromo);
+            }
+
+            // Actualiza la lista de promociones y cierra el modal
+            updatePromotionList();
+            cancelPromotion(); // Cancela la creación o edición de la promoción
+          } else {
+            // Si los campos están vacíos o incorrectos, muestra un mensaje de error
+            alert("Por favor, llena todos los campos correctamente.");
+          }
+        });
+
+      function updatePromotionList() {
+        const promoList = document.getElementById("promotion-list");
+        promoList.innerHTML = "";
+        promotions.forEach((promo, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${promo.name}</td>
+                    <td>${promo.discount}%</td>
+                    <td>${promo.products.join(", ")}</td>
+                    <td>
+                      <button class="btn btn-warning btn-sm" onclick="editPromotion(${index})">Editar</button>
+                      <button class="btn btn-danger btn-sm" onclick="deletePromotion(${index})">Eliminar</button>
+                    </td>
+                  `;
+          promoList.appendChild(row);
+        });
+      }
+
+      function editPromotion(index) {
+        const promo = promotions[index];
+        document.getElementById("promo-name").value = promo.name;
+        document.getElementById("promo-discount").value = promo.discount;
+        const promoProducts = document.getElementById("promo-products");
+        Array.from(promoProducts.options).forEach((option) => {
+          option.selected = promo.products.includes(option.value);
+        });
+        promotions.splice(index, 1); // Elimina temporalmente para actualizar
+        showPromotionForm();
+      }
+
+      function deletePromotion(index) {
+        promotions.splice(index, 1);
+        updatePromotionList();
+      }
+    </script>
+    <script>
+      let salesChart;
+      const salesData = {
+        daily: [120, 150, 90, 180, 200],
+        weekly: [500, 700, 800, 600, 900],
+        monthly: [3000, 4000, 3200, 5000, 4800],
+      };
+
+      function initializeSalesChart() {
+        const ctx = document.getElementById("sales-chart").getContext("2d");
+        salesChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"],
+            datasets: [
+              {
+                label: "Ventas",
+                data: salesData.daily,
+                borderColor: "#6c1b2d",
+                backgroundColor: "rgba(108, 27, 45, 0.3)",
+                borderWidth: 2,
+              },
+            ],
+          },
+        });
+      }
+
+      function updateSalesChart() {
+        const period = document.getElementById("stats-period").value;
+        salesChart.data.datasets[0].data = salesData[period];
+        salesChart.update();
+      }
+
+      document.addEventListener("DOMContentLoaded", initializeSalesChart);
+
+      // Lista para almacenar los ingredientes disponibles
+      const ingredients = [];
+      let editIndex = null; // Índice del ingrediente a editar
+
+      // Mostrar el formulario para agregar o editar ingrediente
+      function showIngredientForm(index = null) {
+        document.getElementById("ingredient-form").style.display = "block";
+        if (index !== null) {
+          const ingredient = ingredients[index];
+          document.getElementById("ingredient-name").value = ingredient.name;
+          document.getElementById("ingredient-measure").value =
+            ingredient.measure;
+          document.getElementById("ingredient-stock").value = ingredient.stock;
+          editIndex = index; // Guardar el índice del ingrediente a editar
+        } else {
+          clearIngredientForm();
+        }
+      }
+
+      // Cancelar edición y ocultar el formulario
+      function cancelIngredientEdit() {
+        clearIngredientForm();
+        document.getElementById("ingredient-form").style.display = "none";
+        editIndex = null;
+      }
+
+      // Función para guardar un ingrediente
+      document
+        .getElementById("ingredient-form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          const name = document.getElementById("ingredient-name").value.trim();
+          const measure = document.getElementById("ingredient-measure").value;
+          const stock = parseFloat(
+            document.getElementById("ingredient-stock").value
+          );
+
+          if (name !== "" && measure !== "" && !isNaN(stock) && stock >= 0) {
+            if (editIndex !== null) {
+              // Editar ingrediente existente
+              ingredients[editIndex] = { name, measure, stock };
+              alert("Ingrediente editado con éxito.");
+            } else {
+              // Agregar nuevo ingrediente
+              ingredients.push({ name, measure, stock });
+              alert("Ingrediente agregado con éxito.");
+            }
+            updateIngredientList();
+            updateProductIngredients();
+            cancelIngredientEdit();
+          } else {
+            alert("Por favor, completa todos los campos correctamente.");
+          }
+        });
+
+      // Función para limpiar el formulario de ingredientes
+      function clearIngredientForm() {
+        document.getElementById("ingredient-name").value = "";
+        document.getElementById("ingredient-measure").value = "pz";
+        document.getElementById("ingredient-stock").value = "";
+      }
+
+      // Actualizar lista de ingredientes en la tabla
+      function updateIngredientList() {
+        const ingredientList = document.getElementById("ingredients-list");
+        ingredientList.innerHTML = "";
+        ingredients.forEach((ingredient, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+              <td>${ingredient.name}</td>
+              <td>${ingredient.measure}</td>
+              <td>${ingredient.stock}</td>
+              <td>
+                <button class="btn btn-primary btn-sm" onclick="showIngredientForm(${index})">Editar</button>
+                <button class="btn btn-danger btn-sm" onclick="removeIngredient(${index})">Eliminar</button>
+              </td>
+            `;
+          ingredientList.appendChild(row);
+        });
+      }
+
+      // Actualizar lista de ingredientes en el selector de productos
+      function updateProductIngredients() {
+        const ingredientSelect = document.getElementById("product-ingredients");
+        ingredientSelect.innerHTML = "";
+        ingredients.forEach((ingredient) => {
+          const option = document.createElement("option");
+          option.value = ingredient.name;
+          option.textContent = `${ingredient.name} (${ingredient.measure})`;
+          ingredientSelect.appendChild(option);
+        });
+      }
+
+      // Función para eliminar un ingrediente
+      function removeIngredient(index) {
+        ingredients.splice(index, 1);
+        updateIngredientList();
+        updateProductIngredients();
+      }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

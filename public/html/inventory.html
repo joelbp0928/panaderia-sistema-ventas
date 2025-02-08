@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Inventario - Punto de Venta</title>
+    <link rel="stylesheet" href="/css/inventory-styles.css">
+</head>
+<body>
+    <!-- Pantalla de Gestión de Inventario -->
+    <div id="inventory-screen">
+        <header>
+            <h2>Gestión de Inventario</h2>
+            <button onclick="logout()">Cerrar Sesión</button>
+        </header>
+
+        <main>
+            <!-- Sección para agregar un nuevo producto -->
+            <section id="add-product">
+                <h3>Agregar Nuevo Producto</h3>
+                <form id="add-product-form">
+                    <label for="product-name">Nombre del Producto:</label>
+                    <input type="text" id="product-name" required>
+                    <label for="product-price">Precio:</label>
+                    <input type="number" id="product-price" required>
+                    <label for="product-stock">Stock:</label>
+                    <input type="number" id="product-stock" required>
+                    <button type="button" onclick="addProduct()">Agregar Producto</button>
+                </form>
+            </section>
+
+            <!-- Lista de productos en inventario -->
+            <section id="product-list">
+                <h3>Inventario Actual</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-items">
+                        <!-- Aquí se cargarán los productos -->
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <script src="inventory-scripts.js"></script>
+</body>
+</html>

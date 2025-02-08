@@ -1,0 +1,282 @@
+/* General */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #fdf8f9;
+    color: #6c1b2d;
+}
+
+/* Encabezado */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #6c1b2d;
+    padding: 1rem 2rem;
+    color: #ffffff;
+}
+
+.logo img {
+    max-height: 50px;
+}
+
+.search-bar input {
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.search-bar button {
+    padding: 0.5rem 1rem;
+    margin-left: 0.5rem;
+    background-color: #ffffff;
+    color: #6c1b2d;
+    border: none;
+    cursor: pointer;
+}
+
+.header-buttons button {
+    background-color: #ffffff;
+    color: #6c1b2d;
+    border: none;
+    margin-left: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#promotions {
+    width: 100%; /* O ajusta a un porcentaje más pequeño si es necesario */
+    height: 150px; /* Define una altura más pequeña */
+    overflow: hidden; /* Oculta cualquier contenido que exceda la altura */
+    margin: 10px 0; /* Ajusta el margen para dar espacio */
+  }
+  
+  .promo-slider {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; /* Asegura que la imagen se ajuste dentro de la sección */
+  }
+  
+  .promo-slider img {
+    max-height: 100%; /* La imagen no excederá la altura de la sección */
+    max-width: 100%; /* Evita que la imagen se desborde horizontalmente */
+    object-fit: contain; /* Ajusta la imagen dentro del contenedor */
+  }
+  
+/* Categorías */
+#categories {
+    padding: 2rem;
+    text-align: center;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.category-btn {
+    padding: 1rem;
+    background-color: #6c1b2d;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.category-btn:hover {
+    background-color: #9a223d;
+}
+
+/* Productos */
+#products {
+    padding: 2rem;
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
+.product-card {
+    text-align: center;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.product-card img {
+    max-width: 100%;
+    border-radius: 8px;
+}
+
+.add-to-cart-btn {
+    margin-top: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: #6c1b2d;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.add-to-cart-btn:hover {
+    background-color: #9a223d;
+}
+
+/* Footer */
+footer {
+    background-color: #6c1b2d;
+    color: #ffffff;
+    text-align: center;
+    padding: 1rem 0;
+}
+
+
+/* Estilo general del modal */
+.modal {
+    display: none; /* Oculta el modal por defecto */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+    z-index: 1000;
+    overflow-y: auto; /* Permite desplazamiento si el contenido es extenso */
+  }
+  
+  /* Contenedor del contenido del modal */
+  .modal-content {
+    background-color: #fff;
+    margin: 0 auto; /* Centra horizontalmente */
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%; /* Ocupa el 90% del ancho de la pantalla */
+    max-width: 600px; /* Ancho máximo */
+    height: 100%; /* Ocupa todo el alto del modal */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Centra verticalmente el contenido */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+
+.modal-content h2 {
+    color: #6c1b2d;
+    margin-bottom: 1.5rem;
+}
+
+.modal-content label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: #6c1b2d;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.modal-content .submit-btn {
+    background-color: #6c1b2d;
+    color: #ffffff;
+    padding: 0.7rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.modal-content .submit-btn:hover {
+    background-color: #9a223d;
+}
+
+
+.close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 1.5rem;
+    color: #6c1b2d;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #9a223d;
+}
+
+
+/* Pie del Modal */
+.modal-footer {
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: #6c1b2d;
+}
+
+.modal-footer a {
+    color: #6c1b2d;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.modal-footer a:hover {
+    color: #9a223d;
+}
+
+.modal-footer span {
+    color: #6c1b2d;
+}
+
+#signup-gender {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+  }
+  
+
+  /* Estilo de la página del carrito */
+#shopping-cart {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .cart-item {
+    margin-bottom: 15px;
+  }
+  
+  .cart-item-img {
+    width: 70px;
+    height: 70px;
+    border-radius: 5px;
+    margin-right: 15px;
+  }
+  
+  .cart-item-details {
+    margin-right: auto;
+  }
+  
+  .quantity-input {
+    width: 60px;
+  }
+  
+  #cart-summary {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+  }
+  

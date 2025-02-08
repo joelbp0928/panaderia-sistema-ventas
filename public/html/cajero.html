@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interfaz del Cajero</title>
+    <link rel="stylesheet" href="/css/cashier-styles.css" />
+  </head>
+  <body>
+    <!-- Contenedor principal -->
+    <div id="cashier-container">
+      <!-- Encabezado con Número de Ticket y Logo -->
+      <div id="header">
+        <div id="ticket-header">
+          <h1>Número de Ticket: <span id="ticket-number">#12345</span></h1>
+        </div>
+        <div id="logo-header">
+          <img
+            src="/img/lona logo mr donut.jpg"
+            alt="Logo de la Empresa"
+            id="company-logo"
+          />
+        </div>
+      </div>
+
+      <!-- Contenido Principal -->
+      <div id="main-content">
+        <!-- Tabla de Productos -->
+        <div id="products-section">
+          <h2>Productos</h2>
+          <table id="ticket-details">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Dona Chocolate</td>
+                <td>2</td>
+                <td>$10.00</td>
+                <td>$20.00</td>
+              </tr>
+              <tr>
+                <td>Concha</td>
+                <td>3</td>
+                <td>$8.00</td>
+                <td>$24.00</td>
+              </tr>
+            </tbody>
+          </table>
+          <div id="total">
+            <span>Total a Pagar:</span>
+            <span id="total-amount">$44.00</span>
+          </div>
+        </div>
+        <div id="payment-section">
+          <h2>Pago del Cliente</h2>
+          <div id="payment-input">
+            <input
+              id="amount-input"
+              type="text"
+              placeholder="Cantidad entregada"
+              readonly
+            />
+            <button id="submit-payment">Confirmar Pago</button>
+          </div>
+
+          <!-- Teclado Numérico -->
+          <div id="numeric-keypad">
+            <div class="keypad-row">
+              <button class="keypad-btn">7</button>
+              <button class="keypad-btn">8</button>
+              <button class="keypad-btn">9</button>
+            </div>
+            <div class="keypad-row">
+              <button class="keypad-btn">4</button>
+              <button class="keypad-btn">5</button>
+              <button class="keypad-btn">6</button>
+            </div>
+            <div class="keypad-row">
+              <button class="keypad-btn">1</button>
+              <button class="keypad-btn">2</button>
+              <button class="keypad-btn">3</button>
+            </div>
+            <div class="keypad-row">
+              <button class="keypad-btn">0</button>
+              <button class="keypad-btn" id="clear-key">Borrar</button>
+            </div>
+          </div>
+          <div class="payment-grid">
+            <button class="payment-btn">
+              <img src="/img/billete-20.jpg" alt="$20" />
+            </button>
+            <button class="payment-btn">
+              <img src="/img/billete-50.png" alt="$50" />
+            </button>
+            <button class="payment-btn">
+              <img src="/img/billete-100.webp" alt="$100" />
+            </button>
+            <button class="payment-btn">
+              <img src="/img/billete-200.jpg" alt="$200" />
+            </button>
+            <button class="payment-btn">
+              <img src="/img/billete-500.webp" alt="$500" />
+            </button>
+          </div>
+        </div>
+        <!-- Cambio a Entregar -->
+        <div id="change-section">
+          <h2>Cambio a Entregar</h2>
+          <div id="change">$0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/cashier-scripts.js"></script>
+  </body>
+</html>
