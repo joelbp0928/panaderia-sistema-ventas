@@ -148,3 +148,26 @@ function removeIngredient(index) { ingredients.splice(index, 1); updateIngredien
 
 // Función para agregar un producto (solo muestra mensaje por ahora) 
 function addProduct() { alert("Aquí puedes agregar un nuevo producto completando el formulario."); }
+
+
+const { createClient } = require("@supabase/supabase-js");
+
+
+// Conectar con Supabase
+const supabase = createClient(
+  'https://kicwgxkkayxneguidsxe.supabase.co', 
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpY3dneGtrYXl4bmVndWlkc3hlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwNjc2NDgsImV4cCI6MjA1NjY0MzY0OH0.0d-ON6kBYU3Wx3L7-jP-n0wcLYD9Uj0GcxAYULqsDRg'
+);
+
+// Obtener productos de la panadería
+async function obtenerProductos() {
+  const { data, error } = await supabase
+    .from('productos')
+    .select('*');
+
+  if (error) console.error(error);
+  return data;
+}
+
+// Prueba la conexión
+obtenerProductos().then(productos => console.log(productos));
