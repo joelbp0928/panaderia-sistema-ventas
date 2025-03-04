@@ -82,8 +82,23 @@ function addIngredient() {
     } else { alert("Por favor, ingresa un nombre para el ingrediente."); }
 }
 
-// Actualizar lista de ingredientes en la tabla function 
-updateIngredientList() { const ingredientList = document.getElementById("ingredients-list"); ingredientList.innerHTML = ""; ingredients.forEach((ingredient, index) => { const row = document.createElement("tr"); row.innerHTML = <td>${ingredient}</td> <td> <button class="btn btn-danger btn-sm" onclick="removeIngredient(${index})">Eliminar</button> </td>; ingredientList.appendChild(row); }); }
+document.addEventListener("DOMContentLoaded", function () {
+    fetch("/api/products/promotions") // Llamada a la API
+        .then(response => response.json())
+        .then(data => {
+            const promoContainer = document.getElementById("promotions");
+            promoContainer.innerHTML = ""; // Limpia cualquier contenido previo
+
+            data.forEach(promo => {
+                const promoElement = document.createElement("div");
+                promoElement.classList.add("promo-slider");
+                promoElement.innerHTML = `<img src="${promo.imagen_url}" alt="${promo.nombre}" />`;
+                promoContainer.appendChild(promoElement);
+            });
+        })
+        .catch(error => console.error("Error cargando promociones:", error));
+});
+
 
 // Actualizar lista de ingredientes en el selector de productos 
 function updateProductIngredients() { const ingredientSelect = document.getElementById("product-ingredients"); ingredientSelect.innerHTML = ""; ingredients.forEach((ingredient) => { const option = document.createElement("option"); option.value = ingredient; option.textContent = ingredient; ingredientSelect.appendChild(option); }); }
