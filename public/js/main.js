@@ -99,6 +99,46 @@ document.addEventListener("DOMContentLoaded", function () {
         .catch(error => console.error("Error cargando promociones:", error));
 });
 
+document.addEventListener("DOMContentLoaded", function () {
+    actualizarContadorCarrito();
+
+    // Escuchar eventos en todos los botones "Agregar al carrito"
+    document.querySelectorAll(".add-to-cart-btn").forEach(button => {
+        button.addEventListener("click", function (event) {
+            const productCard = event.target.closest(".product-card");
+            const productName = productCard.querySelector("h3").textContent;
+            const productPrice = parseFloat(productCard.querySelector("p").textContent.replace("$", ""));
+            const productImg = productCard.querySelector("img").src;
+
+            agregarAlCarrito(productName, productPrice, productImg);
+        });
+    });
+});
+
+function agregarAlCarrito(nombre, precio, imagen) {
+    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+
+    // Buscar si el producto ya está en el carrito
+    let productoExistente = carrito.find(producto => producto.nombre === nombre);
+
+    if (productoExistente) {
+        productoExistente.cantidad += 1;  // Si ya existe, aumenta la cantidad
+    } else {
+        carrito.push({ nombre, precio, imagen, cantidad: 1 }); // Si no existe, agrégalo
+    }
+
+    localStorage.setItem("carrito", JSON.stringify(carrito)); // Guardar en `localStorage`
+    actualizarContadorCarrito();
+}
+
+function actualizarContadorCarrito() {
+    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+    let totalProductos = carrito.reduce((acc, producto) => acc + producto.cantidad, 0);
+
+    document.getElementById("cart-btn").textContent = `Carrito (${totalProductos})`;
+}
+
+
 
 // Actualizar lista de ingredientes en el selector de productos 
 function updateProductIngredients() { const ingredientSelect = document.getElementById("product-ingredients"); ingredientSelect.innerHTML = ""; ingredients.forEach((ingredient) => { const option = document.createElement("option"); option.value = ingredient; option.textContent = ingredient; ingredientSelect.appendChild(option); }); }
