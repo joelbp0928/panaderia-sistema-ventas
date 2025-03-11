@@ -1,36 +1,57 @@
 const functions = require("firebase-functions");
 const express = require("express");
 const cors = require("cors");
-const { createClient } = require("@supabase/supabase-js");
-
-const app = express();
-app.use(cors());
-app.use(express.json());
+const { Pool } = require("pg");
 
 
-
-// Ruta de prueba
-app.get("/api/hello", (req, res) => {
-    res.json({ message: "Hola desde Node.js y Express en Firebase!" });
+// Configurar conexión con Supabase (PostgreSQL)
+const pool = new Pool({
+  user: "postgres.kicwgxkkayxneguidsxe",
+  host: "aws-0-us-west-1.pooler.supabase.com",
+  database: "postgres",
+ // postgresql://postgres.kicwgxkkayxneguidsxe:[YOUR-PASSWORD]@aws-0-us-west-1.pooler.supabase.com:6543/postgres
+  password: "Lallamaperez55!",
+  port: 6543,
+  ssl: { rejectUnauthorized: false }
 });
 
 
-// Conectar con Supabase
-const supabase = createClient(
-  "https://kicwgxkkayxneguidsxe.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpY3dneGtrYXl4bmVndWlkc3hlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwNjc2NDgsImV4cCI6MjA1NjY0MzY0OH0.0d-ON6kBYU3Wx3L7-jP-n0wcLYD9Uj0GcxAYULqsDRg" // Usa la clave secreta en lugar de la pública
-);
+// Inicializar Express
+const app = express();
+app.use(cors({
+  origin: ["https://gestor-panaderia.web.app", "http://127.0.0.1:5500"], // Agrega todos los orígenes permitidos
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
-// Ruta para obtener productos desde Supabase
-app.get("/api/productos", async (req, res) => {
-    const { data, error } = await supabase.from("productos").select("*");
-  
-    if (error) {
-      res.status(500).json({ error: error.message });
-    } else {
-      res.json(data);
-    }
-  });
+app.use(express.json()); // Permite manejar JSON en las solicitudes
 
-// Exportar la API como función de Firebase
+// Obtener promociones activas desde la base de datos
+app.get("/config/promociones", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM promociones WHERE activa = TRUE");
+    console.log("se obtuvieron promociones:");
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error obteniendo promociones:", error);
+    res.status(500).json({ error: "Error obteniendo promociones" });
+  }
+});
+
+// Exportar la API de Firebase Functions
 exports.api = functions.https.onRequest(app);
+
+const { createClient } = require("@supabase/supabase-js");
+
+// Probar conexión obteniendo datos de una tabla de prueba
+async function probarConexion() {
+  try {
+    const result = await pool.query("SELECT * FROM promociones WHERE activa = TRUE");
+  //  console.log("✅ Conexión a Supabase exitosa. Datos obtenidos:", result.rows);
+  } catch (error) {
+    console.error("❌ Error conectando a Supabase:", error);
+  }
+}
+
+// Ejecutar la prueba al iniciar el servidor
+probarConexion();

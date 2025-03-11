@@ -1,55 +1,84 @@
-// Elementos del Modal
-const loginModal = document.getElementById("login-modal");
-const loginBtn = document.getElementById("login-btn");
-const closeBtn = document.querySelector(".close");
+// Importar otros módulos
+import { cargarPromociones, cargarProductos } from "./config.js";
+import { inicializarCarrito } from "./cart.js";
+import { inicializarAutenticacion } from "./auth.js";
 
-// Mostrar el Modal al hacer clic en el botón de Iniciar Sesión
-loginBtn.addEventListener("click", () => {
-    loginModal.style.display = "block";
-});
+window.onload = function () {
+    // Cargar elementos principales de la página
+    cargarPromociones();
+    cargarProductos();
 
-// Ocultar el Modal al hacer clic en el botón de cerrar
-closeBtn.addEventListener("click", () => {
-    loginModal.style.display = "none";
-});
+    // Inicializar otros módulos
+    inicializarCarrito();
+    inicializarAutenticacion();
+}
 
-// Ocultar el Modal al hacer clic fuera del contenido
-window.addEventListener("click", (event) => {
-    if (event.target === loginModal) {
-        loginModal.style.display = "none";
-    }
-});
+/*
+function cargarConfiguracion() {
+    fetch('/api/config/empresa')
+        .then(response => response.json())
+        .then(data => {
+            document.title = data.nombre_empresa; // Cambia el título de la página
+            document.querySelector(".logo img").src = data.logo_url; // Cambia el logo dinámicamente
+        })
+        .catch(error => console.error("Error cargando la configuración:", error));
+}
+*/
 
+/*document.addEventListener("DOMContentLoaded", function () {
+    cargarPromociones();
+   // cargarProductos();
+});*/
 
-// Referencias a los modales
-const signupModal = document.getElementById('signup-modal');
-const createAccountLink = document.getElementById('create-account');
+// 🔹 Cargar promociones desde Firebase
+/*function cargarPromociones() {
+    fetch("https://us-central1-gestor-panaderia.cloudfunctions.net/api/config/promociones")
+        .then(response => response.json())
+        .then(data => {
+            const promoContainer = document.getElementById("promotions");
+            promoContainer.innerHTML = "";
 
-// Cerrar modales
-const closeButtons = document.querySelectorAll('.close');
+            data.forEach(promo => {
+                const promoElement = document.createElement("div");
+                promoElement.classList.add("promo-slider");
+                promoElement.innerHTML = `<img src="${promo.imagen_url}" alt="${promo.nombre}" class="promo-img"/>`;
+                promoContainer.appendChild(promoElement);
+            });
+        })
+        .catch(error => console.error("❌ Error cargando promociones:", error));
+}*/
 
-closeButtons.forEach(button => {
-    button.onclick = () => {
-        signupModal.style.display = 'none';
-        loginModal.style.display = 'none';
-    };
-});
+// 🔹 Cargar productos dinámicamente
+/*function cargarProductos() {
+    fetch("https://us-central1-gestor-panaderia.cloudfunctions.net/api/config/productos")
+        .then(response => response.json())
+        .then(data => {
+            const productContainer = document.querySelector(".product-grid");
+            productContainer.innerHTML = "";
 
-// Abrir el modal de Crear Cuenta desde el enlace
-createAccountLink.onclick = (e) => {
-    e.preventDefault();
-    loginModal.style.display = 'none'; // Cerrar el modal de inicio de sesión
-    signupModal.style.display = 'flex'; // Mostrar el modal de crear cuenta
-};
+            data.forEach(producto => {
+                const productElement = document.createElement("div");
+                productElement.classList.add("product-card");
+                productElement.innerHTML = `
+                    <img src="${producto.imagen_url}" alt="${producto.nombre}" />
+                    <h3>${producto.nombre}</h3>
+                    <p>$${producto.precio.toFixed(2)}</p>
+                    <button class="add-to-cart-btn" onclick="agregarAlCarrito('${producto.nombre}', ${producto.precio}, '${producto.imagen_url}')">Agregar</button>
+                `;
+                productContainer.appendChild(productElement);
+            });
+        })
+        .catch(error => console.error("❌ Error cargando productos:", error));
+}
+*/
+// 🔹 Carrito de compras dinámico
+/*const cart = document.getElementById("cart");
+document.getElementById("cart-btn").addEventListener("click", () => {
+    cart.classList.toggle("open");
+});*/
 
-// Cerrar modales al hacer clic fuera de ellos
-window.onclick = (event) => {
-    if (event.target === signupModal) {
-        signupModal.style.display = 'none';
-    }
-};
-
-document.getElementById("forgot-password-form").addEventListener("submit", function (e) {
+//Recuperacion Contraseña
+/*document.getElementById("forgot-password-form").addEventListener("submit", function (e) {
     e.preventDefault(); // Evita el envío tradicional del formulario
 
     const emailInput = document.getElementById("recovery-email").value;
@@ -65,109 +94,11 @@ document.getElementById("forgot-password-form").addEventListener("submit", funct
         alertBox.classList.add("alert-success");
         alertBox.textContent = "Se ha enviado un enlace de recuperación a tu correo.";
     }
+});*/
+
+
+// Evento que mueve el foco fuera del modal cuando se cierra
+document.addEventListener("hidden.bs.modal", function (event) {
+    // Mueve el foco a otro elemento fuera del modal (ejemplo: el botón de inicio de sesión)
+    document.getElementById("login-btn")?.focus();
 });
-
-// Lista para almacenar los ingredientes disponibles
-const ingredients = [];
-
-// Función para agregar un ingrediente
-function addIngredient() {
-    const ingredientName = document.getElementById("ingredient-name").value;
-    if (ingredientName.trim() !== "") {
-        ingredients.push(ingredientName);
-        updateIngredientList();
-        updateProductIngredients();
-        document.getElementById("ingredient-name").value = "";
-        alert("Ingrediente agregado con éxito.");
-    } else { alert("Por favor, ingresa un nombre para el ingrediente."); }
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-    fetch("/api/products/promotions") // Llamada a la API
-        .then(response => response.json())
-        .then(data => {
-            const promoContainer = document.getElementById("promotions");
-            promoContainer.innerHTML = ""; // Limpia cualquier contenido previo
-
-            data.forEach(promo => {
-                const promoElement = document.createElement("div");
-                promoElement.classList.add("promo-slider");
-                promoElement.innerHTML = `<img src="${promo.imagen_url}" alt="${promo.nombre}" />`;
-                promoContainer.appendChild(promoElement);
-            });
-        })
-        .catch(error => console.error("Error cargando promociones:", error));
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-    actualizarContadorCarrito();
-
-    // Escuchar eventos en todos los botones "Agregar al carrito"
-    document.querySelectorAll(".add-to-cart-btn").forEach(button => {
-        button.addEventListener("click", function (event) {
-            const productCard = event.target.closest(".product-card");
-            const productName = productCard.querySelector("h3").textContent;
-            const productPrice = parseFloat(productCard.querySelector("p").textContent.replace("$", ""));
-            const productImg = productCard.querySelector("img").src;
-
-            agregarAlCarrito(productName, productPrice, productImg);
-        });
-    });
-});
-
-function agregarAlCarrito(nombre, precio, imagen) {
-    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-
-    // Buscar si el producto ya está en el carrito
-    let productoExistente = carrito.find(producto => producto.nombre === nombre);
-
-    if (productoExistente) {
-        productoExistente.cantidad += 1;  // Si ya existe, aumenta la cantidad
-    } else {
-        carrito.push({ nombre, precio, imagen, cantidad: 1 }); // Si no existe, agrégalo
-    }
-
-    localStorage.setItem("carrito", JSON.stringify(carrito)); // Guardar en `localStorage`
-    actualizarContadorCarrito();
-}
-
-function actualizarContadorCarrito() {
-    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-    let totalProductos = carrito.reduce((acc, producto) => acc + producto.cantidad, 0);
-
-    document.getElementById("cart-btn").textContent = `Carrito (${totalProductos})`;
-}
-
-
-
-// Actualizar lista de ingredientes en el selector de productos 
-function updateProductIngredients() { const ingredientSelect = document.getElementById("product-ingredients"); ingredientSelect.innerHTML = ""; ingredients.forEach((ingredient) => { const option = document.createElement("option"); option.value = ingredient; option.textContent = ingredient; ingredientSelect.appendChild(option); }); }
-
-// Función para eliminar un ingrediente 
-function removeIngredient(index) { ingredients.splice(index, 1); updateIngredientList(); updateProductIngredients(); }
-
-// Función para agregar un producto (solo muestra mensaje por ahora) 
-function addProduct() { alert("Aquí puedes agregar un nuevo producto completando el formulario."); }
-
-
-const { createClient } = require("@supabase/supabase-js");
-
-
-// Conectar con Supabase
-const supabase = createClient(
-  'https://kicwgxkkayxneguidsxe.supabase.co', 
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpY3dneGtrYXl4bmVndWlkc3hlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwNjc2NDgsImV4cCI6MjA1NjY0MzY0OH0.0d-ON6kBYU3Wx3L7-jP-n0wcLYD9Uj0GcxAYULqsDRg'
-);
-
-// Obtener productos de la panadería
-async function obtenerProductos() {
-  const { data, error } = await supabase
-    .from('productos')
-    .select('*');
-
-  if (error) console.error(error);
-  return data;
-}
-
-// Prueba la conexión
-obtenerProductos().then(productos => console.log(productos));
