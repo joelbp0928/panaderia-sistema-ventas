@@ -25,6 +25,68 @@ function cerrarSesion() {
     alert("Sesión cerrada");
     location.reload();
 }
+// 📌 Función para iniciar sesión y redirigir según el rol
+async function iniciarSesion(event) {
+    event.preventDefault();
+
+    // Obtener datos del formulario
+    const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value.trim();
+
+    if (!email || !password) {
+        alert("⚠️ Debes ingresar correo y contraseña.");
+        return;
+    }
+
+    try {
+        // 🔹 Autenticar usuario en Supabase
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
+
+        if (error) throw new Error("Correo o contraseña incorrectos. Intenta nuevamente.");
+
+        const user = data.user;
+        if (!user) {
+            throw new Error("No se pudo obtener la información del usuario.");
+        }
+
+        // 🔹 Consultar los datos del usuario en la base de datos
+        const { data: userData, error: userError } = await supabase
+            .from("usuarios")
+            .select("nombre, rol")
+            .eq("id", user.id)
+            .single();
+
+        if (userError) throw new Error("No se encontró el usuario en la base de datos.");
+
+        // Extraer datos del usuario
+        const { nombre, rol } = userData;
+
+        // Guardar los datos en localStorage
+        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("rol", rol);
+        localStorage.setItem("nombre", nombre);
+
+        // 🔹 Mensaje personalizado según el rol
+        if (rol === "admin") {
+            alert(`✅ Bienvenido, ${nombre}. Accediendo al panel de administración.`);
+            window.location.href = './html/admin.html'; // 🔥 Redirige a la página de admin
+        } else {
+            alert(`✅ Bienvenido, ${nombre}. Disfruta de tu experiencia en nuestra tienda.`);
+            window.location.href = "index.html"; // O página de usuario normal
+        }
+
+    } catch (error) {
+        console.error("❌ Error en el inicio de sesión:", error);
+        alert(`⚠️ ${error.message}`);
+    }
+}
+
+
+// 📌 Asociar la función al formulario de inicio de sesión
+document.getElementById("login-form").addEventListener("submit", iniciarSesion);
 
 
 // 📌 Función para registrar un usuario nuevo en Supabase

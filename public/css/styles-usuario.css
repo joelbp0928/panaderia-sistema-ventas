@@ -7,6 +7,7 @@
   --gris-oscuro: #cccccc;
   --fondo-modal: #f9f9f9;
 }
+
 /* 🌍 Estilos generales */
 body {
   font-family: 'Arial', sans-serif;
@@ -171,29 +172,45 @@ footer {
   padding: 1rem;
   font-size: 0.9rem;
 }
-/* 📌 MODAL MEJORADO */
+
+/* 📌 Modales */
 .modal-content {
-  background-color: var(--fondo-modal);
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--gris-oscuro);
-}
-
-.modal-header {
-  border-bottom: 1px solid var(--gris-oscuro);
-}
-
-.modal-header h2 {
+  background-color: var(--gris-claro);
   color: var(--vino);
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* 🔹 Ajuste del encabezado del modal */
+.modal-header {
+  background-color: var(--vino);
+  color: var(--blanco);
+  border-bottom: none;
+  padding: 15px;
+  border-radius: 10px 10px 0 0;
+}
+
+.modal-header h3 {
+  margin: 0;
   font-size: 1.5rem;
 }
 
+.modal-content a {
+color: var(--vino-claro)
+}
+.modal-content a:hover {
+  color: var(--vino)
+  }
+
+/* 🔹 Cuerpo del modal */
 .modal-body {
   padding: 15px;
+  background-color: var(--gris-claro);
+  border-radius: 0 0 10px 10px;
 }
 
-/* Estiliza los inputs dentro del modal */
+/* 🔹 Estiliza los inputs dentro del modal */
 .modal-content input {
   width: 100%;
   padding: 10px;
@@ -208,7 +225,7 @@ footer {
   outline: none;
 }
 
-/* Botón del modal */
+/* 🔹 Botón del modal */
 .modal-content .submit-btn {
   background-color: var(--vino);
   color: var(--blanco);
@@ -226,68 +243,45 @@ footer {
   background-color: var(--vino-claro);
 }
 
-/* Cerrar el modal */
-.close {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 1.5rem;
-  color: var(--vino);
-  cursor: pointer;
-}
-
-.close:hover {
-  color: var(--vino-claro);
-}
-
-/* Pie del Modal */
-.modal-footer {
-  margin-top: 1.5rem;
-  font-size: 0.9rem;
-  color: var(--vino);
-  text-align: center;
-}
-
-.modal-footer a {
-  color: var(--vino);
-  text-decoration: none;
-  font-weight: bold;
-}
-
-.modal-footer a:hover {
-  color: var(--vino-claro);
-}
-
 /* 📱 RESPONSIVE */
 @media (max-width: 768px) {
-  .logo{
+  .logo {
     width: 50%;
   }
+
   header {
-      flex-direction: column;
-      text-align: center;
+    flex-direction: column;
+    text-align: center;
   }
 
   .search-bar {
-      width: 100%;
+    width: 100%;
   }
 
   .header-buttons {
-      flex-direction: column;
-      width: 100%;
+    flex-direction: column;
+    width: 100%;
   }
 
   .header-buttons button {
-      margin: 5px 0;
+    margin: 5px 0;
   }
 
-  .modal-content {
-    width: 95%;
-    max-width: 350px;
-    padding: 15px;
-}
-  footer {
-      padding: 0.5rem;
-      font-size: 0.8rem;
+  .modal-dialog {
+    max-width: 95%;
   }
+
+  footer {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* 📌 Estilos del footer del modal */
+.modal-footer {
+  background-color: var(--vino);
+  color: var(--blanco);
+  padding: 15px;
+  text-align: center;
+  border-radius: 0 0 10px 10px;
 }

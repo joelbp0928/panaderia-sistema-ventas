@@ -81,6 +81,9 @@
         width: 100%;
         padding: 5px;
       }
+      .d-block {
+        display: block !important;
+      }
     </style>
   </head>
   <body>
@@ -234,7 +237,67 @@
           aria-labelledby="employees-tab"
         >
           <h2>Gestión de Empleados</h2>
-          <button class="btn btn-primary mb-3">Agregar Empleado</button>
+          <button class="btn btn-primary mb-3" id="btn-agregar-empleado">
+            Agregar Empleado
+          </button>
+
+          <form id="form-empleado" class="d-none">
+            <div class="mb-3">
+              <label for="empleado-nombre">Nombre</label>
+              <input
+                type="text"
+                class="form-control"
+                id="empleado-nombre"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="empleado-email">Email</label>
+              <input
+                type="email"
+                class="form-control"
+                id="empleado-email"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="empleado-telefono">Teléfono</label>
+              <input
+                type="text"
+                class="form-control"
+                id="empleado-telefono"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="empleado-genero">Género</label>
+              <select class="form-control" id="empleado-genero">
+                <option value="Masculino">Masculino</option>
+                <option value="Femenino">Femenino</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="empleado-fecha">Fecha de Nacimiento</label>
+              <input
+                type="date"
+                class="form-control"
+                id="empleado-fecha"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="empleado-puesto">Puesto</label>
+              <select class="form-control" id="empleado-puesto">
+                <option value="cajero">Cajero</option>
+                <option value="empacador">Empacador</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-success">
+              Guardar Empleado
+            </button>
+          </form>
           <table class="table table-striped">
             <thead>
               <tr>
@@ -915,5 +978,8 @@
       }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../js/auth-check.js"></script>
+    <script type="module" src="../js/admin.js"></script>
   </body>
 </html>
