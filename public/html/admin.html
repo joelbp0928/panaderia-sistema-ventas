@@ -88,10 +88,9 @@
   </head>
   <body>
     <header>
-      <img src="/img/lona logo mr donut.jpg" alt="Logo Empresa" />
+      <img src="../img/lona logo mr donut.jpg" alt="Logo Empresa" />
       <h1>Panel de Administración</h1>
     </header>
-
     <!-- Navegación de pestañas -->
     <div class="container mt-4">
       <ul class="nav nav-tabs" id="admin-tabs" role="tablist">
@@ -771,7 +770,7 @@
       }
 
       // Función para crear o editar una promoción
-      document
+    /*  document
         .getElementById("create-promo-btn")
         .addEventListener("click", function (event) {
           event.preventDefault(); // Evita que se recargue la página
@@ -806,7 +805,7 @@
             alert("Por favor, llena todos los campos correctamente.");
           }
         });
-
+*/
       function updatePromotionList() {
         const promoList = document.getElementById("promotion-list");
         promoList.innerHTML = "";

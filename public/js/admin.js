@@ -1,5 +1,5 @@
 import { verificarAccesoAdmin, verificarSesion } from "./auth-check.js";
-import { mostrarFormularioEmpleado } from "./empleados.js";
+import { mostrarFormularioEmpleado, registrarEmpleado } from "./empleados.js";
 
 window.onload = function () {   
     // Cargar elementos principales de la página
