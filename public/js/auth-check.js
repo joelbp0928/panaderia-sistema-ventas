@@ -8,9 +8,7 @@ export async function verificarAccesoAdmin() {
         // 🔹 Obtener sesión activa y usuario autenticado
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
-        if (sessionError || !sessionData.session) {
-            throw new Error("No hay sesión activa.");
-        }
+        if (sessionError || !sessionData.session) throw new Error("No hay sesión activa.");
 
         const userId = sessionData.session.user.id;
        // console.log("🟢 Usuario autenticado con ID:", userId);

@@ -297,27 +297,21 @@
               Guardar Empleado
             </button>
           </form>
-          <table class="table table-striped">
+          <table class="table table-striped" id="tabla-empleados">
             <thead>
               <tr>
                 <th>Nombre</th>
+                <th>Fecha Nacimiento</th>
                 <th>Puesto</th>
                 <th>Email</th>
                 <th>Teléfono</th>
+                <th>Registrado por</th>
+                <th>Fecha Registro</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Pedro Sánchez</td>
-                <td>Cajero</td>
-                <td>pedro@example.com</td>
-                <td>555-9876</td>
-                <td>
-                  <button class="btn btn-sm btn-warning">Editar</button>
-                  <button class="btn btn-sm btn-danger">Eliminar</button>
-                </td>
-              </tr>
+              <!-- 📌 Aquí se insertarán dinámicamente los empleados -->
             </tbody>
           </table>
         </div>
@@ -770,7 +764,7 @@
       }
 
       // Función para crear o editar una promoción
-    /*  document
+      /*  document
         .getElementById("create-promo-btn")
         .addEventListener("click", function (event) {
           event.preventDefault(); // Evita que se recargue la página

@@ -1,10 +1,11 @@
 import { verificarAccesoAdmin, verificarSesion } from "./auth-check.js";
-import { mostrarFormularioEmpleado, registrarEmpleado } from "./empleados.js";
+import { mostrarFormularioEmpleado, registrarEmpleado, cargarEmpleados } from "./empleados.js";
 
 window.onload = function () {   
     // Cargar elementos principales de la página
     verificarAccesoAdmin();
     verificarSesion();
+    cargarEmpleados();
 }
 
 // 🔹 Event listeners después de cargar el DOM
