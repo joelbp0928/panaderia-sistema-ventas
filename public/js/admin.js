@@ -1,11 +1,13 @@
 import { verificarAccesoAdmin, verificarSesion } from "./auth-check.js";
 import { mostrarFormularioEmpleado, registrarEmpleado, cargarEmpleados } from "./empleados.js";
+import { cargarConfiguracion } from "./admin/configAdmin.js";
 
 window.onload = function () {   
     // Cargar elementos principales de la página
     verificarAccesoAdmin();
     verificarSesion();
     cargarEmpleados();
+    cargarConfiguracion(); // ✅ Cargar la configuración de la tienda
 }
 
 // 🔹 Event listeners después de cargar el DOM
