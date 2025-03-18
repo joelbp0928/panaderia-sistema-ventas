@@ -39,12 +39,12 @@ export async function registrarEmpleado(event) {
     }
 
     try {
-        // 🔹 Verificar si el usuario ya existe en la tabla `usuarios`
+        // 🔹 Verificar si el usuario ya existe en `usuarios`
         const { data: usuarioExistente, error: errorExistente } = await supabase
             .from("usuarios")
             .select("id")
             .eq("email", email)
-            .maybeSingle(); // 📌 Evita el error si no hay coincidencias
+            .maybeSingle(); // 📌 Evita error si no hay coincidencias
 
         if (usuarioExistente) {
             alert("⚠️ El email ya está registrado. Usa otro correo.");
@@ -65,29 +65,39 @@ export async function registrarEmpleado(event) {
 
         if (authError) throw authError;
 
-        const empleadoId = authUser.user.id; // 📌 Obtener el UID generado en autenticación
+        const usuarioId = authUser.user.id; // 📌 Obtener el UID generado en autenticación
 
         // 🔹 Insertar el nuevo usuario en `usuarios`
-        const { error: usuarioError } = await supabase.from("usuarios").insert([
-            {
-                id: empleadoId, // 📌 UID obtenido de la autenticación
-                email,
-                nombre,
-                telefono,
-                fechaNacimiento,
-                rol: "empleado",  // Se define explícitamente el rol
-                fechaRegistro: new Date().toISOString()
-            }
-        ]);
+        const { data: usuarioInsertado, error: usuarioError } = await supabase
+            .from("usuarios")
+            .insert([
+                {
+                    id: usuarioId, // 📌 UID obtenido de la autenticación
+                    email,
+                    nombre,
+                    telefono,
+                    fechaNacimiento,
+                    rol: "empleado", // Se define explícitamente el rol
+                    fechaRegistro: new Date().toISOString()
+                }
+            ])
+            .select("id") // 📌 Recuperamos el ID insertado
+            .single();
 
         if (usuarioError) throw usuarioError;
+
+        // 🔹 Validamos que el usuario se haya insertado correctamente
+        if (!usuarioInsertado || !usuarioInsertado.id) {
+            throw new Error("No se pudo obtener el ID del usuario registrado.");
+        }
 
         // 🔹 Insertar los datos adicionales en la tabla `empleados`
         const { error: empleadoError } = await supabase
             .from("empleados")
             .insert([
                 {
-                    id: empleadoId, // 📌 Usamos el mismo UID obtenido antes
+                    id: usuarioInsertado.id, // ✅ Usamos el mismo ID del usuario
+                    usuario_id: usuarioInsertado.id, // ✅ Se enlaza correctamente con `usuarios.id`
                     genero,
                     puesto,
                     creado_por: adminId // 📌 Quién lo registró
@@ -99,7 +109,7 @@ export async function registrarEmpleado(event) {
         alert("✅ Empleado registrado correctamente.");
         document.getElementById("form-empleado").reset(); // Limpiar formulario
         mostrarFormularioEmpleado(); // Ocultar formulario
-
+        cargarEmpleados(); // 🔄 Recargar la lista de empleados después de agregar
     } catch (error) {
         console.error("❌ Error al registrar empleado:", error);
         alert(`Error: ${error.message}`);
@@ -162,33 +172,25 @@ export async function cargarEmpleados() {
     }
 }
 
-
-
-
+// Hacer la función accesible globalmente
+window.eliminarEmpleado = eliminarEmpleado;
 // 📌 Función para eliminar empleados
 export async function eliminarEmpleado(idEmpleado) {
     try {
-        if (!confirm("¿Estás seguro de que deseas eliminar este empleado?")) {
+        if (!confirm("⚠️ ¿Estás seguro de que deseas eliminar este empleado? Esta acción es irreversible.")) {
             return;
         }
 
         console.log(`🗑 Eliminando empleado con ID: ${idEmpleado}`);
 
-        // 🔹 Eliminar primero de `empleados`
-        let { error: errorEmpleado } = await supabase
-            .from("empleados")
-            .delete()
-            .eq("id", idEmpleado);
+        // 🔹 Llamar al backend de Firebase Functions para eliminar el empleado
+        const response = await fetch(`https://us-central1-gestor-panaderia.cloudfunctions.net/api/eliminar-empleado/${idEmpleado}`, {
+            method: "DELETE",
+        });
 
-        if (errorEmpleado) throw errorEmpleado;
-
-        // 🔹 Luego eliminarlo de `usuarios` (solo si no hay referencias en otras tablas)
-        let { error: errorUsuario } = await supabase
-            .from("usuarios")
-            .delete()
-            .eq("id", idEmpleado);
-
-        if (errorUsuario) throw errorUsuario;
+        if (!response.ok) {
+            throw new Error("No se pudo eliminar el empleado.");
+        }
 
         alert("✅ Empleado eliminado correctamente.");
         cargarEmpleados(); // 🔄 Recargar la lista de empleados después de eliminar
