@@ -79,12 +79,12 @@ export async function cargarConfiguracion() {
         const logoElement = document.getElementById("site-logo-preview");
         if (logoElement && configuracion.logo_url) {
             logoElement.src = configuracion.logo_url;
-            console.log("✅ Logo cargado correctamente:", configuracion.logo_url);
+          //  console.log("✅ Logo cargado correctamente:", configuracion.logo_url);
         } else {
             console.warn("⚠️ No se pudo cargar el logo porque el elemento no existe.");
         }
 
-        console.log("✅ Configuración cargada correctamente:", configuracion);
+      //  console.log("✅ Configuración cargada correctamente:", configuracion);
     } catch (error) {
         console.error("❌ Error al cargar la configuración:", error);
     }

@@ -1,4 +1,5 @@
 import { marcarErrorCampo, limpiarErrorCampo, mostrarToast } from "./manageError.js"; // Importar manejo de errores
+import { validarTelefono, validarEdad } from "./validaciones.js"; // 🔹 Importamos la validación del teléfono
 import { supabase } from "./supabase-config.js"; // Importamos la configuración
 
 // Hacer accesibles globalmente las funciones necesarias
@@ -71,7 +72,17 @@ export async function gestionarEmpleado(event) {
 
     try {
         let mensajeError = "";
-         // 🔹 Verificar si el email ya existe en otro usuario
+
+        // **🔎 Validar número de teléfono**
+        if (!validarTelefono(telefono)) {
+            marcarErrorCampo("empleado-telefono", "⚠️ El número debe contener 10 dígitos.");
+            mostrarToast("El teléfono debe contener 10 dígitos numéricos.", "error");
+            return;
+        }
+
+
+
+        // 🔹 Verificar si el email ya existe en otro usuario
         const { data: usuarioConEmail } = await supabase
             .from("usuarios")
             .select("id")
@@ -81,6 +92,8 @@ export async function gestionarEmpleado(event) {
         if (usuarioConEmail && (!idEmpleado || usuarioConEmail.id !== idEmpleado)) {
             mensajeError += "⚠️ El email ya está registrado. ";
             marcarErrorCampo("empleado-email", "⚠️ Este email ya está en uso.");
+            mostrarToast(mensajeError, "error");
+            return;
         }
 
         // 🔹 Verificar si el teléfono ya existe en otro usuario
@@ -93,19 +106,22 @@ export async function gestionarEmpleado(event) {
         if (usuarioConTelefono && (!idEmpleado || usuarioConTelefono.id !== idEmpleado)) {
             mensajeError += "⚠️ El teléfono ya está registrado. ";
             marcarErrorCampo("empleado-telefono", "⚠️ Este teléfono ya está en uso.");
+            mostrarToast(mensajeError, "error");
+            return;
         }
 
-        if (mensajeError) {
-            mostrarToast(mensajeError);
+        // 📌 **Validar edad mínima de 16 años**
+        if (!validarEdad(fechaNacimiento)) {
+            marcarErrorCampo("empleado-fecha", "⚠️ Debes tener al menos 16 años.");
+            mostrarToast("Debes ser mayor de 16 años para registrarte.", "error");
             return;
         }
 
         if (idEmpleado) {
             // ✏️ **Editar empleado existente**
-            console.log(`✏️ Editando empleado con ID: ${idEmpleado}`);
+            // console.log(`✏️ Editando empleado con ID: ${idEmpleado}`);
 
             await actualizarEmpleado(idEmpleado, { nombre, email, telefono, fechaNacimiento, puesto, genero });
-            console.log("mostrarToast(✅ Empleado actualizado correctamente.", "success);")
             mostrarToast("✅ Empleado actualizado correctamente.", "success");
 
         } else {
@@ -113,7 +129,6 @@ export async function gestionarEmpleado(event) {
             console.log("➕ Registrando nuevo empleado...");
             await registrarNuevoEmpleado({ nombre, email, telefono, fechaNacimiento, puesto, genero });
             mostrarToast("✅ Empleado registrado correctamente.", "success");
-
         }
 
         // 🔄 Refrescar la lista y ocultar el formulario
@@ -185,46 +200,56 @@ async function actualizarEmpleado(idEmpleado, datos) {
 }
 
 // 📌 **Función para registrar un nuevo empleado**
-async function registrarNuevoEmpleado(datos) {
-    // 🔹 Obtener el admin que está registrando al empleado
-    const { data: session, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session.session) throw new Error("No hay sesión activa.");
-    const adminId = session.session.user.id;
+export async function registrarNuevoEmpleado(datos) {
+    try {
 
-    // 🔹 Crear usuario en la autenticación de Supabase
-    const { data: authUser, error: authError } = await supabase.auth.signUp({
-        email: datos.email,
-        password: "Empleado" + Math.floor(Math.random() * 10000)
-    });
+        // 🔹 **Obtener el admin que está registrando al empleado**
+        const { data: session, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session.session) throw new Error("No hay sesión activa.");
+        const adminId = session.session.user.id;
 
-    if (authError) throw authError;
-    const usuarioId = authUser.user.id;
-
-    // 🔹 Insertar en `usuarios`
-    await supabase.from("usuarios").insert([
-        {
-            id: usuarioId,
+        // 🔹 **Crear usuario en la autenticación de Supabase**
+        const { data: authUser, error: authError } = await supabase.auth.signUp({
             email: datos.email,
-            nombre: datos.nombre,
-            telefono: datos.telefono,
-            fechaNacimiento: datos.fechaNacimiento,
-            rol: "empleado",
-            fechaRegistro: new Date().toISOString()
-        }
-    ]);
+            password: "Empleado" + Math.floor(Math.random() * 10000) // 🔐 Contraseña temporal
+        });
 
-    // 🔹 Insertar en `empleados`
-    await supabase.from("empleados").insert([
-        {
-            id: usuarioId,
-            usuario_id: usuarioId,
-            genero: datos.genero,
-            puesto: datos.puesto,
-            creado_por: adminId
-        }
-    ]);
+        if (authError) throw authError;
+        const usuarioId = authUser.user.id;
+
+        // 🔹 **Insertar en `usuarios`**
+        const { error: usuarioError } = await supabase.from("usuarios").insert([
+            {
+                id: usuarioId,
+                email: datos.email,
+                nombre: datos.nombre,
+                telefono: datos.telefono,
+                fechaNacimiento: datos.fechaNacimiento,
+                rol: "empleado",
+                fechaRegistro: new Date().toISOString()
+            }
+        ]);
+        if (usuarioError) throw usuarioError;
+
+        // 🔹 **Insertar en `empleados`**
+        const { error: empleadoError } = await supabase.from("empleados").insert([
+            {
+                id: usuarioId,
+                usuario_id: usuarioId,
+                genero: datos.genero,
+                puesto: datos.puesto,
+                creado_por: adminId
+            }
+        ]);
+        if (empleadoError) throw empleadoError;
+
+        mostrarToast("✅ Empleado registrado correctamente.", "success");
+
+    } catch (error) {
+        console.error("❌ Error al registrar empleado:", error);
+        mostrarToast(`Error: ${error.message}`, "error");
+    }
 }
-
 // 📌 **Función para cargar empleados**
 export async function cargarEmpleados() {
     try {

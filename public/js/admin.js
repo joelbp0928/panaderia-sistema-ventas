@@ -14,7 +14,7 @@ window.onload = async function () {
         document.getElementById("btn-agregar-empleado").addEventListener("click", mostrarFormularioEmpleado);
         document.getElementById("form-empleado").addEventListener("submit", gestionarEmpleado);
 
-        console.log("✅ Eventos y configuraciones cargados correctamente.");
+        //console.log("✅ Eventos y configuraciones cargados correctamente.");
     } catch (error) {
         console.error("❌ Error en la inicialización de admin.js:", error);
     }
