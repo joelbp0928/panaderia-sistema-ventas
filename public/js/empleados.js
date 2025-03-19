@@ -1,152 +1,232 @@
 import { supabase } from "./supabase-config.js"; // Importamos la configuración
 
-// 📌 Escuchar el evento de envío del formulario
-document.getElementById("form-empleado").addEventListener("submit", registrarEmpleado);
+// Hacer accesibles globalmente las funciones necesarias
+window.editarEmpleado = editarEmpleado;
+window.eliminarEmpleado = eliminarEmpleado;
 
-// 📌 Escuchar el evento de formulario
-document.getElementById("btn-agregar-empleado").addEventListener("click", mostrarFormularioEmpleado);
+// 📌 Asignar eventos al cargar la página
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("btn-agregar-empleado").addEventListener("click", mostrarFormularioEmpleado);
+    document.getElementById("form-empleado").addEventListener("submit", gestionarEmpleado);
+});
 
-// 📌 Muestra u oculta el formulario cuando se hace clic en "Agregar Empleado"
+
 export function mostrarFormularioEmpleado() {
     const formulario = document.getElementById("form-empleado");
 
+    // 🔹 Si el formulario está oculto, se muestra; si está visible, se oculta
     if (formulario.classList.contains("d-none")) {
-        formulario.classList.remove("d-none");
-        formulario.classList.add("d-block");
+        formulario.classList.remove("d-none"); // Mostrar formulario
     } else {
-        formulario.classList.toggle("d-none");
-        formulario.classList.toggle("d-block");
+        formulario.classList.add("d-none"); // Ocultar formulario
+        return; // 🔹 Si se oculta, terminamos aquí para evitar reset innecesario
     }
+
+    // 🔹 Restablecer valores y ocultar ID de edición solo si se está mostrando
+    formulario.reset();
+    formulario.dataset.empleadoId = "";
+    document.querySelector("#form-empleado button[type='submit']").innerText = "Guardar Empleado";
 }
 
-// 📌 Función para registrar un nuevo empleado
-export async function registrarEmpleado(event) {
+
+// 📌 Función para Registrar o Editar empleados
+export async function gestionarEmpleado(event) {
     event.preventDefault(); // Evita la recarga de la página
 
     // Obtener datos del formulario
+    const idEmpleado = document.getElementById("form-empleado").dataset.empleadoId || null;
     const nombre = document.getElementById("empleado-nombre").value.trim();
     const email = document.getElementById("empleado-email").value.trim();
     const telefono = document.getElementById("empleado-telefono").value.trim();
     const genero = document.getElementById("empleado-genero").value;
     const fechaNacimiento = document.getElementById("empleado-fecha").value;
     const puesto = document.getElementById("empleado-puesto").value;
-    const password = "Empleado" + Math.floor(Math.random() * 10000); // 🔹 Contraseña temporal
 
-    // Validaciones básicas
     if (!nombre || !email || !telefono || !fechaNacimiento || !puesto) {
         alert("⚠️ Todos los campos son obligatorios.");
         return;
     }
 
     try {
-        // 🔹 Verificar si el usuario ya existe en `usuarios`
-        const { data: usuarioExistente, error: errorExistente } = await supabase
+        let mensajeError = "";
+
+        // 🔹 Verificar si el email ya existe en otro usuario
+        const { data: usuarioConEmail, error: errorEmail } = await supabase
             .from("usuarios")
             .select("id")
             .eq("email", email)
-            .maybeSingle(); // 📌 Evita error si no hay coincidencias
+            .maybeSingle();
 
-        if (usuarioExistente) {
-            alert("⚠️ El email ya está registrado. Usa otro correo.");
+        if (errorEmail) throw errorEmail;
+
+        if (usuarioConEmail && (!idEmpleado || usuarioConEmail.id !== idEmpleado)) {
+            mensajeError += "⚠️ El email ya está registrado. ";
+        }
+
+        // 🔹 Verificar si el teléfono ya existe en otro usuario
+        const { data: usuarioConTelefono, error: errorTelefono } = await supabase
+            .from("usuarios")
+            .select("id")
+            .eq("telefono", telefono)
+            .maybeSingle();
+
+        if (errorTelefono) throw errorTelefono;
+
+        if (usuarioConTelefono && (!idEmpleado || usuarioConTelefono.id !== idEmpleado)) {
+            mensajeError += "⚠️ El teléfono ya está registrado. ";
+        }
+
+        // Si hay errores, mostrar mensaje y detener el proceso
+        if (mensajeError) {
+            alert(mensajeError);
             return;
         }
 
-        // 🔹 Obtener el admin que está registrando al empleado
-        const { data: session, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError || !session.session) throw new Error("No hay sesión activa.");
+        if (idEmpleado) {
+            // ✏️ **Editar empleado existente**
+            console.log(`✏️ Editando empleado con ID: ${idEmpleado}`);
 
-        const adminId = session.session.user.id; // 📌 ID del admin que registra al empleado
+            await actualizarEmpleado(idEmpleado, { nombre, email, telefono, fechaNacimiento, puesto, genero });
+            alert("✅ Empleado actualizado correctamente.");
 
-        // 🔹 Crear el usuario en la autenticación de Supabase
-        const { data: authUser, error: authError } = await supabase.auth.signUp({
-            email,
-            password
-        });
-
-        if (authError) throw authError;
-
-        const usuarioId = authUser.user.id; // 📌 Obtener el UID generado en autenticación
-
-        // 🔹 Insertar el nuevo usuario en `usuarios`
-        const { data: usuarioInsertado, error: usuarioError } = await supabase
-            .from("usuarios")
-            .insert([
-                {
-                    id: usuarioId, // 📌 UID obtenido de la autenticación
-                    email,
-                    nombre,
-                    telefono,
-                    fechaNacimiento,
-                    rol: "empleado", // Se define explícitamente el rol
-                    fechaRegistro: new Date().toISOString()
-                }
-            ])
-            .select("id") // 📌 Recuperamos el ID insertado
-            .single();
-
-        if (usuarioError) throw usuarioError;
-
-        // 🔹 Validamos que el usuario se haya insertado correctamente
-        if (!usuarioInsertado || !usuarioInsertado.id) {
-            throw new Error("No se pudo obtener el ID del usuario registrado.");
+        } else {
+            // ➕ **Registrar nuevo empleado**
+            console.log("➕ Registrando nuevo empleado...");
+            await registrarNuevoEmpleado({ nombre, email, telefono, fechaNacimiento, puesto, genero });
+            alert("✅ Empleado registrado correctamente.");
         }
 
-        // 🔹 Insertar los datos adicionales en la tabla `empleados`
-        const { error: empleadoError } = await supabase
-            .from("empleados")
-            .insert([
-                {
-                    id: usuarioInsertado.id, // ✅ Usamos el mismo ID del usuario
-                    usuario_id: usuarioInsertado.id, // ✅ Se enlaza correctamente con `usuarios.id`
-                    genero,
-                    puesto,
-                    creado_por: adminId // 📌 Quién lo registró
-                }
-            ]);
+        // 🔄 Refrescar la lista y ocultar el formulario
+        mostrarFormularioEmpleado();
+        cargarEmpleados();
 
-        if (empleadoError) throw empleadoError;
-
-        alert("✅ Empleado registrado correctamente.");
-        document.getElementById("form-empleado").reset(); // Limpiar formulario
-        mostrarFormularioEmpleado(); // Ocultar formulario
-        cargarEmpleados(); // 🔄 Recargar la lista de empleados después de agregar
     } catch (error) {
-        console.error("❌ Error al registrar empleado:", error);
+        console.error("❌ Error al registrar o actualizar empleado:", error);
         alert(`Error: ${error.message}`);
     }
 }
 
-// 📌 Función para cargar empleados en la tabla
+// 📌 Función para editar un empleado
+export async function editarEmpleado(idEmpleado) {
+    try {
+        // 🔹 Obtener los datos del empleado desde Supabase
+        const { data: empleadoData, error: empleadoError } = await supabase
+            .from("empleados")
+            .select(`
+                id, puesto, genero, usuario_id,
+                usuario:usuario_id (nombre, email, telefono, fechaNacimiento)
+            `)
+            .eq("id", idEmpleado)
+            .single();  // Obtener solo un registro
+
+        if (empleadoError || !empleadoData) {
+            throw new Error("No se pudo cargar los datos del empleado.");
+        }
+
+        // 🔹 Llenar el formulario con los datos del empleado
+        document.getElementById("empleado-nombre").value = empleadoData.usuario.nombre;
+        document.getElementById("empleado-email").value = empleadoData.usuario.email;
+        document.getElementById("empleado-telefono").value = empleadoData.usuario.telefono;
+        document.getElementById("empleado-genero").value = empleadoData.genero;
+        document.getElementById("empleado-fecha").value = empleadoData.usuario.fechaNacimiento;
+        document.getElementById("empleado-puesto").value = empleadoData.puesto;
+
+        // 🔹 Guardar el ID del empleado en un atributo del formulario para saber qué usuario se edita
+        const formulario = document.getElementById("form-empleado");
+        formulario.dataset.empleadoId = idEmpleado;
+
+        // 🔹 Cambiar el botón para indicar que se actualizará un empleado
+        document.querySelector("#form-empleado button[type='submit']").innerText = "Actualizar Empleado";
+
+        // 📌 Mostrar el formulario si estaba oculto
+        formulario.classList.remove("d-none");
+
+    } catch (error) {
+        console.error("❌ Error al cargar los datos del empleado:", error);
+    }
+}
+
+// 📌 **Función para actualizar un empleado**
+async function actualizarEmpleado(idEmpleado, datos) {
+    // 🔹 Actualizar en la tabla `usuarios`
+    await supabase.from("usuarios").update({
+        nombre: datos.nombre,
+        email: datos.email,
+        telefono: datos.telefono,
+        fechaNacimiento: datos.fechaNacimiento
+    }).eq("id", idEmpleado);
+
+    // 🔹 Actualizar en la tabla `empleados`
+    await supabase.from("empleados").update({
+        puesto: datos.puesto,
+        genero: datos.genero
+    }).eq("id", idEmpleado);
+}
+
+// 📌 **Función para registrar un nuevo empleado**
+async function registrarNuevoEmpleado(datos) {
+    // 🔹 Obtener el admin que está registrando al empleado
+    const { data: session, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session.session) throw new Error("No hay sesión activa.");
+    const adminId = session.session.user.id;
+
+    // 🔹 Crear usuario en la autenticación de Supabase
+    const { data: authUser, error: authError } = await supabase.auth.signUp({
+        email: datos.email,
+        password: "Empleado" + Math.floor(Math.random() * 10000)
+    });
+
+    if (authError) throw authError;
+    const usuarioId = authUser.user.id;
+
+    // 🔹 Insertar en `usuarios`
+    await supabase.from("usuarios").insert([
+        {
+            id: usuarioId,
+            email: datos.email,
+            nombre: datos.nombre,
+            telefono: datos.telefono,
+            fechaNacimiento: datos.fechaNacimiento,
+            rol: "empleado",
+            fechaRegistro: new Date().toISOString()
+        }
+    ]);
+
+    // 🔹 Insertar en `empleados`
+    await supabase.from("empleados").insert([
+        {
+            id: usuarioId,
+            usuario_id: usuarioId,
+            genero: datos.genero,
+            puesto: datos.puesto,
+            creado_por: adminId
+        }
+    ]);
+}
+
+// 📌 **Función para cargar empleados**
 export async function cargarEmpleados() {
     try {
-        // 🔹 Consulta incluyendo fechaNacimiento y fechaRegistro
         const { data, error } = await supabase
             .from("empleados")
             .select(`
-                id, 
-                puesto, 
-                genero, 
-                creado_por,
+                id, puesto, genero, creado_por,
                 usuario:usuario_id (nombre, email, telefono, fechaNacimiento, fechaRegistro),
                 admin:creado_por (nombre)
             `);
 
         if (error) throw error;
-
         console.log("✅ Empleados cargados:", data);
 
-        // Limpiar la tabla antes de actualizarla
         const tablaEmpleados = document.querySelector("#employees tbody");
         tablaEmpleados.innerHTML = "";
 
-        // Insertar cada empleado en la tabla
         data.forEach((empleado) => {
             if (!empleado.usuario) {
                 console.warn(`⚠️ El empleado con ID ${empleado.id} no tiene usuario asociado.`);
                 return;
             }
 
-            // 🔹 Convertir fechas al formato dd/mm/aaaa
             const fechaNacimiento = formatearFecha(empleado.usuario.fechaNacimiento);
             const fechaRegistro = formatearFecha(empleado.usuario.fechaRegistro);
 
@@ -172,8 +252,6 @@ export async function cargarEmpleados() {
     }
 }
 
-// Hacer la función accesible globalmente
-window.eliminarEmpleado = eliminarEmpleado;
 // 📌 Función para eliminar empleados
 export async function eliminarEmpleado(idEmpleado) {
     try {
@@ -201,12 +279,9 @@ export async function eliminarEmpleado(idEmpleado) {
     }
 }
 
-
+// 📌 **Función auxiliar para formatear fechas**
 function formatearFecha(fechaISO) {
-    if (!fechaISO) return "N/A"; // Maneja valores nulos o indefinidos
+    if (!fechaISO) return "N/A";
     const fecha = new Date(fechaISO);
-    const dia = fecha.getDate().toString().padStart(2, "0");
-    const mes = (fecha.getMonth() + 1).toString().padStart(2, "0");
-    const anio = fecha.getFullYear();
-    return `${dia}/${mes}/${anio}`;
+    return `${fecha.getDate().toString().padStart(2, "0")}/${(fecha.getMonth() + 1).toString().padStart(2, "0")}/${fecha.getFullYear()}`;
 }
