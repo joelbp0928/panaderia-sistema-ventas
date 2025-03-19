@@ -1,3 +1,4 @@
+import { marcarErrorCampo, limpiarErrorCampo, mostrarToast } from "./manageError.js"; // Importar manejo de errores
 import { supabase } from "./supabase-config.js"; // Importamos la configuración
 
 // Hacer accesibles globalmente las funciones necesarias
@@ -42,43 +43,60 @@ export async function gestionarEmpleado(event) {
     const fechaNacimiento = document.getElementById("empleado-fecha").value;
     const puesto = document.getElementById("empleado-puesto").value;
 
-    if (!nombre || !email || !telefono || !fechaNacimiento || !puesto) {
-        alert("⚠️ Todos los campos son obligatorios.");
+    // Limpiar errores previos
+    limpiarErrorCampo("empleado-nombre");
+    limpiarErrorCampo("empleado-email");
+    limpiarErrorCampo("empleado-telefono");
+
+    let hayErrores = false;
+    // Validaciones básicas
+    if (!nombre) {
+        marcarErrorCampo("empleado-nombre", "⚠️ El nombre es obligatorio.");
+        hayErrores = true;
+    }
+    if (!email) {
+        marcarErrorCampo("empleado-email", "⚠️ El email es obligatorio.");
+        hayErrores = true;
+    }
+    if (!telefono) {
+        marcarErrorCampo("empleado-telefono", "⚠️ El teléfono es obligatorio.");
+        hayErrores = true;
+    }
+    if (!fechaNacimiento || !puesto) {
+        mostrarToast("⚠️ Todos los campos son obligatorios.");
         return;
     }
 
+    if (hayErrores) return; // ❌ Detener el proceso si hay errores
+
     try {
         let mensajeError = "";
-
-        // 🔹 Verificar si el email ya existe en otro usuario
-        const { data: usuarioConEmail, error: errorEmail } = await supabase
+         // 🔹 Verificar si el email ya existe en otro usuario
+        const { data: usuarioConEmail } = await supabase
             .from("usuarios")
             .select("id")
             .eq("email", email)
             .maybeSingle();
 
-        if (errorEmail) throw errorEmail;
-
         if (usuarioConEmail && (!idEmpleado || usuarioConEmail.id !== idEmpleado)) {
             mensajeError += "⚠️ El email ya está registrado. ";
+            marcarErrorCampo("empleado-email", "⚠️ Este email ya está en uso.");
         }
 
         // 🔹 Verificar si el teléfono ya existe en otro usuario
-        const { data: usuarioConTelefono, error: errorTelefono } = await supabase
+        const { data: usuarioConTelefono } = await supabase
             .from("usuarios")
             .select("id")
             .eq("telefono", telefono)
             .maybeSingle();
 
-        if (errorTelefono) throw errorTelefono;
-
         if (usuarioConTelefono && (!idEmpleado || usuarioConTelefono.id !== idEmpleado)) {
             mensajeError += "⚠️ El teléfono ya está registrado. ";
+            marcarErrorCampo("empleado-telefono", "⚠️ Este teléfono ya está en uso.");
         }
 
-        // Si hay errores, mostrar mensaje y detener el proceso
         if (mensajeError) {
-            alert(mensajeError);
+            mostrarToast(mensajeError);
             return;
         }
 
@@ -87,13 +105,15 @@ export async function gestionarEmpleado(event) {
             console.log(`✏️ Editando empleado con ID: ${idEmpleado}`);
 
             await actualizarEmpleado(idEmpleado, { nombre, email, telefono, fechaNacimiento, puesto, genero });
-            alert("✅ Empleado actualizado correctamente.");
+            console.log("mostrarToast(✅ Empleado actualizado correctamente.", "success);")
+            mostrarToast("✅ Empleado actualizado correctamente.", "success");
 
         } else {
             // ➕ **Registrar nuevo empleado**
             console.log("➕ Registrando nuevo empleado...");
             await registrarNuevoEmpleado({ nombre, email, telefono, fechaNacimiento, puesto, genero });
-            alert("✅ Empleado registrado correctamente.");
+            mostrarToast("✅ Empleado registrado correctamente.", "success");
+
         }
 
         // 🔄 Refrescar la lista y ocultar el formulario
@@ -103,6 +123,7 @@ export async function gestionarEmpleado(event) {
     } catch (error) {
         console.error("❌ Error al registrar o actualizar empleado:", error);
         alert(`Error: ${error.message}`);
+        mostrarToast("❌ Error al registrar o actualizar empleado.", "error");
     }
 }
 
