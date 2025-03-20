@@ -395,10 +395,11 @@
           aria-labelledby="products-tab"
         >
           <h2>Gestión de Productos</h2>
-          <button class="btn btn-primary mb-3" onclick="addProduct()">
+          <button class="btn btn-primary mb-3" id="btn-agregar-producto">
             Agregar Producto
           </button>
-          <form id="product-form">
+
+          <form id="product-form" style="display: none">
             <div class="form-section">
               <label for="product-name">Nombre del Producto:</label>
               <input
@@ -406,19 +407,24 @@
                 id="product-name"
                 class="form-control"
                 placeholder="Nombre del Producto"
+                required
               />
             </div>
             <div class="form-section">
               <label for="product-image">Imagen del Producto:</label>
-              <input type="file" id="product-image" class="form-control" />
+              <input
+                type="file"
+                id="product-image"
+                class="form-control"
+              />
             </div>
             <div class="form-section">
               <label for="product-category">Categoría:</label>
-              <select id="product-category" class="form-control">
-                <option>Donas</option>
-                <option>Repostería</option>
-                <option>Promociones</option>
-                <option>Pan de Temporada</option>
+              <select id="product-category" class="form-control" required>
+                <option value="Donas">Donas</option>
+                <option value="Repostería">Repostería</option>
+                <option value="Promociones">Promociones</option>
+                <option value="Pan de Temporada">Pan de Temporada</option>
               </select>
             </div>
             <div class="form-section">
@@ -428,6 +434,7 @@
                 id="product-price"
                 class="form-control"
                 placeholder="Precio del Producto"
+                required
               />
             </div>
             <div class="form-section">
@@ -437,14 +444,15 @@
                 id="product-stock"
                 class="form-control"
                 placeholder="Cantidad en Inventario"
+                required
               />
             </div>
             <div class="form-section">
               <label for="product-ingredients">Seleccionar Ingredientes:</label>
-              <select id="product-ingredients" class="form-control" multiple>
-                <!-- Los ingredientes serán generados dinámicamente -->
+              <select id="product-ingredients" class="form-control" multiple required>
+                  <!-- Los ingredientes se generarán dinámicamente -->
               </select>
-            </div>
+          </div>          
             <button type="submit" class="btn btn-success">
               Guardar Producto
             </button>
@@ -868,8 +876,6 @@
       }
 
       document.addEventListener("DOMContentLoaded", initializeSalesChart);
-
-    
     </script>
     <!-- Toastify CSS -->
     <link

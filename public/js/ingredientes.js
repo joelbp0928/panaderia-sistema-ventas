@@ -8,7 +8,6 @@ window.eliminarIngrediente = eliminarIngrediente;
 
 // Mostrar el formulario para agregar o editar ingrediente
 export function showIngredientForm() {
-    console.log("aquitoy")
     const formulario = document.getElementById("ingredient-form");
 
     // 🔹 Si el formulario está oculto, se muestra; si está visible, se oculta
