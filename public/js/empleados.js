@@ -1,6 +1,7 @@
 import { marcarErrorCampo, limpiarErrorCampo, mostrarToast } from "./manageError.js"; // Importar manejo de errores
 import { validarTelefono, validarEdad } from "./validaciones.js"; // 🔹 Importamos la validación del teléfono
 import { supabase } from "./supabase-config.js"; // Importamos la configuración
+import { formatearFecha } from "./formatearFecha.js";
 
 // Hacer accesibles globalmente las funciones necesarias
 window.editarEmpleado = editarEmpleado;
@@ -11,7 +12,6 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("btn-agregar-empleado").addEventListener("click", mostrarFormularioEmpleado);
     document.getElementById("form-empleado").addEventListener("submit", gestionarEmpleado);
 });
-
 
 export function mostrarFormularioEmpleado() {
     const formulario = document.getElementById("form-empleado");
@@ -29,7 +29,6 @@ export function mostrarFormularioEmpleado() {
     formulario.dataset.empleadoId = "";
     document.querySelector("#form-empleado button[type='submit']").innerText = "Guardar Empleado";
 }
-
 
 // 📌 Función para Registrar o Editar empleados
 export async function gestionarEmpleado(event) {
@@ -71,16 +70,12 @@ export async function gestionarEmpleado(event) {
     if (hayErrores) return; // ❌ Detener el proceso si hay errores
 
     try {
-        let mensajeError = "";
-
         // **🔎 Validar número de teléfono**
         if (!validarTelefono(telefono)) {
             marcarErrorCampo("empleado-telefono", "⚠️ El número debe contener 10 dígitos.");
-            mostrarToast("El teléfono debe contener 10 dígitos numéricos.", "error");
+            mostrarToast("❌ El teléfono debe contener 10 dígitos numéricos.", "error");
             return;
         }
-
-
 
         // 🔹 Verificar si el email ya existe en otro usuario
         const { data: usuarioConEmail } = await supabase
@@ -90,9 +85,8 @@ export async function gestionarEmpleado(event) {
             .maybeSingle();
 
         if (usuarioConEmail && (!idEmpleado || usuarioConEmail.id !== idEmpleado)) {
-            mensajeError += "⚠️ El email ya está registrado. ";
             marcarErrorCampo("empleado-email", "⚠️ Este email ya está en uso.");
-            mostrarToast(mensajeError, "error");
+            mostrarToast("⚠️ El email ya está registrado.", "error");
             return;
         }
 
@@ -104,9 +98,8 @@ export async function gestionarEmpleado(event) {
             .maybeSingle();
 
         if (usuarioConTelefono && (!idEmpleado || usuarioConTelefono.id !== idEmpleado)) {
-            mensajeError += "⚠️ El teléfono ya está registrado. ";
             marcarErrorCampo("empleado-telefono", "⚠️ Este teléfono ya está en uso.");
-            mostrarToast(mensajeError, "error");
+            mostrarToast("⚠️ El teléfono ya está registrado. ", "error");
             return;
         }
 
@@ -137,7 +130,6 @@ export async function gestionarEmpleado(event) {
 
     } catch (error) {
         console.error("❌ Error al registrar o actualizar empleado:", error);
-        alert(`Error: ${error.message}`);
         mostrarToast("❌ Error al registrar o actualizar empleado.", "error");
     }
 }
@@ -178,6 +170,7 @@ export async function editarEmpleado(idEmpleado) {
         formulario.classList.remove("d-none");
 
     } catch (error) {
+        mostrarToast("❌ Error al cargar los datos del empleado.", "error")
         console.error("❌ Error al cargar los datos del empleado:", error);
     }
 }
@@ -247,7 +240,7 @@ export async function registrarNuevoEmpleado(datos) {
 
     } catch (error) {
         console.error("❌ Error al registrar empleado:", error);
-        mostrarToast(`Error: ${error.message}`, "error");
+        mostrarToast("❌ Error al registrar empleado", "error");
     }
 }
 // 📌 **Función para cargar empleados**
@@ -262,7 +255,7 @@ export async function cargarEmpleados() {
             `);
 
         if (error) throw error;
-        console.log("✅ Empleados cargados:", data);
+    //    console.log("✅ Empleados cargados:", data);
 
         const tablaEmpleados = document.querySelector("#employees tbody");
         tablaEmpleados.innerHTML = "";
@@ -294,6 +287,7 @@ export async function cargarEmpleados() {
         });
 
     } catch (error) {
+        mostrarToast("❌ Error al cargar empleados.", "error")
         console.error("❌ Error al cargar empleados:", error);
     }
 }
@@ -313,21 +307,13 @@ export async function eliminarEmpleado(idEmpleado) {
         });
 
         if (!response.ok) {
-            throw new Error("No se pudo eliminar el empleado.");
+            mostrarToast("❌ No se pudo eliminar el empleado.", "error")
         }
-
-        alert("✅ Empleado eliminado correctamente.");
+        mostrarToast("✅ Empleado eliminado correctamente.", "success")
         cargarEmpleados(); // 🔄 Recargar la lista de empleados después de eliminar
 
     } catch (error) {
         console.error("❌ Error al eliminar empleado:", error);
-        alert(`Error: ${error.message}`);
+        mostrarToast("❌ Error al eliminar empleado.", "error")
     }
-}
-
-// 📌 **Función auxiliar para formatear fechas**
-function formatearFecha(fechaISO) {
-    if (!fechaISO) return "N/A";
-    const fecha = new Date(fechaISO);
-    return `${fecha.getDate().toString().padStart(2, "0")}/${(fecha.getMonth() + 1).toString().padStart(2, "0")}/${fecha.getFullYear()}`;
 }

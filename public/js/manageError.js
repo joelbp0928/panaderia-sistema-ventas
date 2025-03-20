@@ -54,7 +54,7 @@ export function mostrarToast(mensaje, tipo) {
         newWindow: true,       // Abre en nueva ventana
         close: true,           // Permite cerrar el mensaje
         gravity: "top",     // Posición del mensaje, en la parte inferior
-        position: "right",     // Alineación del mensaje, al centro
+        position: "center",     // Alineación del mensaje, al centro
         stopOnFocus: true,     // Evita que el mensaje se cierre al poner el cursor encima
         style: {
             background: color, // Utilizamos el color obtenido del objeto "colors" para establecer el fondo del mensaje

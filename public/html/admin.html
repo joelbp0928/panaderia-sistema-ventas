@@ -328,10 +328,10 @@
           aria-labelledby="ingredients-tab"
         >
           <h2>Gestión de Ingredientes</h2>
-          <button class="btn btn-primary mb-3" onclick="showIngredientForm()">
+          <button class="btn btn-primary mb-3" id="btn-agregar-ingrediente">
             Agregar Ingrediente
           </button>
-          <form id="ingredient-form" style="display: none">
+          <form id="ingredient-form" class="d-none">
             <div class="form-section">
               <label for="ingredient-name">Nombre del Ingrediente:</label>
               <input
@@ -370,13 +370,6 @@
             >
               Guardar Ingrediente
             </button>
-            <button
-              type="button"
-              class="btn btn-secondary"
-              onclick="cancelIngredientEdit()"
-            >
-              Cancelar
-            </button>
           </form>
           <table class="table table-striped">
             <thead>
@@ -384,6 +377,7 @@
                 <th>Nombre</th>
                 <th>Tipo de Medida</th>
                 <th>Cantidad en Stock</th>
+                <th>Fecha Registro</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -875,105 +869,7 @@
 
       document.addEventListener("DOMContentLoaded", initializeSalesChart);
 
-      // Lista para almacenar los ingredientes disponibles
-      const ingredients = [];
-      let editIndex = null; // Índice del ingrediente a editar
-
-      // Mostrar el formulario para agregar o editar ingrediente
-      function showIngredientForm(index = null) {
-        document.getElementById("ingredient-form").style.display = "block";
-        if (index !== null) {
-          const ingredient = ingredients[index];
-          document.getElementById("ingredient-name").value = ingredient.name;
-          document.getElementById("ingredient-measure").value =
-            ingredient.measure;
-          document.getElementById("ingredient-stock").value = ingredient.stock;
-          editIndex = index; // Guardar el índice del ingrediente a editar
-        } else {
-          clearIngredientForm();
-        }
-      }
-
-      // Cancelar edición y ocultar el formulario
-      function cancelIngredientEdit() {
-        clearIngredientForm();
-        document.getElementById("ingredient-form").style.display = "none";
-        editIndex = null;
-      }
-
-      // Función para guardar un ingrediente
-      document
-        .getElementById("ingredient-form")
-        .addEventListener("submit", function (event) {
-          event.preventDefault();
-          const name = document.getElementById("ingredient-name").value.trim();
-          const measure = document.getElementById("ingredient-measure").value;
-          const stock = parseFloat(
-            document.getElementById("ingredient-stock").value
-          );
-
-          if (name !== "" && measure !== "" && !isNaN(stock) && stock >= 0) {
-            if (editIndex !== null) {
-              // Editar ingrediente existente
-              ingredients[editIndex] = { name, measure, stock };
-              alert("Ingrediente editado con éxito.");
-            } else {
-              // Agregar nuevo ingrediente
-              ingredients.push({ name, measure, stock });
-              alert("Ingrediente agregado con éxito.");
-            }
-            updateIngredientList();
-            updateProductIngredients();
-            cancelIngredientEdit();
-          } else {
-            alert("Por favor, completa todos los campos correctamente.");
-          }
-        });
-
-      // Función para limpiar el formulario de ingredientes
-      function clearIngredientForm() {
-        document.getElementById("ingredient-name").value = "";
-        document.getElementById("ingredient-measure").value = "pz";
-        document.getElementById("ingredient-stock").value = "";
-      }
-
-      // Actualizar lista de ingredientes en la tabla
-      function updateIngredientList() {
-        const ingredientList = document.getElementById("ingredients-list");
-        ingredientList.innerHTML = "";
-        ingredients.forEach((ingredient, index) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-              <td>${ingredient.name}</td>
-              <td>${ingredient.measure}</td>
-              <td>${ingredient.stock}</td>
-              <td>
-                <button class="btn btn-primary btn-sm" onclick="showIngredientForm(${index})">Editar</button>
-                <button class="btn btn-danger btn-sm" onclick="removeIngredient(${index})">Eliminar</button>
-              </td>
-            `;
-          ingredientList.appendChild(row);
-        });
-      }
-
-      // Actualizar lista de ingredientes en el selector de productos
-      function updateProductIngredients() {
-        const ingredientSelect = document.getElementById("product-ingredients");
-        ingredientSelect.innerHTML = "";
-        ingredients.forEach((ingredient) => {
-          const option = document.createElement("option");
-          option.value = ingredient.name;
-          option.textContent = `${ingredient.name} (${ingredient.measure})`;
-          ingredientSelect.appendChild(option);
-        });
-      }
-
-      // Función para eliminar un ingrediente
-      function removeIngredient(index) {
-        ingredients.splice(index, 1);
-        updateIngredientList();
-        updateProductIngredients();
-      }
+    
     </script>
     <!-- Toastify CSS -->
     <link
