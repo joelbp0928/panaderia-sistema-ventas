@@ -1,0 +1,84 @@
+/* Definir una variable para el color primario */
+:root {
+  --primary-color: #6c1b2d; /* Valor por defecto */
+  --light-color: #f5f5f5;
+}
+
+/* Usar la variable en el fondo y botones */
+body {
+  background-color: var(--light-color);
+  font-family: Arial, sans-serif;
+}
+
+header {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+header img {
+  width: 150px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.nav-tabs .nav-link {
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.nav-tabs .nav-link.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary,
+.btn-warning,
+.btn-info,
+.btn-success,
+.btn-danger {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover,
+.btn-warning:hover,
+.btn-info:hover,
+.btn-success:hover,
+.btn-danger:hover {
+  background-color: #5a1725;
+  border-color: #5a1725;
+}
+
+/*------------------------------------------------------------------------------------------       */
+
+.tab-content {
+  padding: 20px;
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-top: none;
+}
+
+.form-section {
+  margin-bottom: 20px;
+}
+
+footer {
+  margin-top: 30px;
+  text-align: center;
+  padding: 10px;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+input[type="color"] {
+  border: 2px solid --primary-color;
+  border-radius: 5px;
+  width: 100%;
+  padding: 5px;
+}
+.d-block {
+  display: block !important;
+}

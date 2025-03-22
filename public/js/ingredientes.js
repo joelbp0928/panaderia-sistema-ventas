@@ -8,25 +8,62 @@ window.eliminarIngrediente = eliminarIngrediente;
 
 // Mostrar el formulario para agregar o editar ingrediente
 export function showIngredientForm() {
+    const modal = new bootstrap.Modal(document.getElementById("ingredientModal"));
+    modal.show(); // Mostrar el modal
+
+    // 🔹 No resetear el formulario si es edición
     const formulario = document.getElementById("ingredient-form");
 
-    // 🔹 Si el formulario está oculto, se muestra; si está visible, se oculta
-    if (formulario.classList.contains("d-none")) {
-        formulario.classList.remove("d-none"); // Mostrar formulario
-    } else {
-        formulario.classList.add("d-none"); // Ocultar formulario
-        return; // 🔹 Si se oculta, terminamos aquí para evitar reset innecesario
+    // Limpiar el ID solo si se está agregando un ingrediente
+    if (!formulario.dataset.ingredienteId) {
+        formulario.reset(); // Limpiar formulario solo cuando no es edición
+        document.querySelector("#ingredient-form button[type='submit']").innerText = "Guardar Ingrediente";
+    }
+}
+
+
+// 📌 Función para agregar o actualizar un ingrediente
+export async function gestionarIngrediente(event) {
+    event.preventDefault(); // Evita la recarga de la página
+
+    // 🔹 Obtener datos del formulario
+    const idIngrediente = document.getElementById("ingredient-form").dataset.ingredienteId;
+    const nombre = document.getElementById("ingredient-name").value.trim();
+    const medida = document.getElementById("ingredient-measure").value;
+    const cantidad = document.getElementById("ingredient-stock").value;
+
+    // Validaciones
+    if (!nombre || !medida || !cantidad) {
+        alert("⚠️ Todos los campos son obligatorios.");
+        return;
     }
 
-    // 🔹 Restablecer valores y ocultar ID de edición solo si se está mostrando
-    formulario.reset();
-    formulario.dataset.ingredienteId = "";
-    document.querySelector("#ingredient-form button[type='submit']").innerText = "Guardar Ingrediente";
+    try {
+        // 🔹 Si idIngrediente existe, actualizamos, si no, agregamos un nuevo ingrediente
+        if (idIngrediente) {
+            console.log("aqui")
+            await actualizarIngrediente(idIngrediente, { nombre, medida, cantidad });
+        } else {
+            await agregarIngrediente({ nombre, medida, cantidad });
+        }
+
+        // 🔄 Recargar la lista de ingredientes después de agregar o actualizar
+        cargarIngredientes();
+
+        // Limpiar el formulario y ocultar el modal
+        document.getElementById("ingredient-form").reset();
+        const modal = bootstrap.Modal.getInstance(document.getElementById("ingredientModal"));
+        modal.hide(); // Ocultar el modal después de guardar o actualizar
+
+
+    } catch (error) {
+        console.error("❌ Error al guardar el ingrediente:", error);
+        mostrarToast(`❌ Error al guardar el ingrediente.`, "error");
+    }
 }
 
 // 📌 Agregar un nuevo ingrediente
-export async function agregarIngrediente(event) {
-    event.preventDefault(); // 📌 Evita recargar la página
+export async function agregarIngrediente(datos) {
 
     // 🔹 Obtener datos del formulario
     const nombre = document.getElementById("ingredient-name").value.trim();
@@ -38,12 +75,7 @@ export async function agregarIngrediente(event) {
         alert("⚠️ Todos los campos son obligatorios.");
         return;
     }
-
-    if (cantidad <= 0) {
-        alert("⚠️ La cantidad debe ser mayor a 0.");
-        return;
-    }
-
+    console.log("datos", datos)
     try {
         // 🔹 Insertar el ingrediente en la base de datos de Supabase
         const { error } = await supabase.from("ingredientes").insert([
@@ -63,13 +95,9 @@ export async function agregarIngrediente(event) {
         // 🔄 Recargar la lista de ingredientes después de agregar
         cargarIngredientes();
 
-        // 📌 Limpiar el formulario
-        document.getElementById("ingredient-form").reset();
-        document.getElementById("ingredient-form").style.display = "none";
-
     } catch (error) {
         console.error("❌ Error al agregar ingrediente:", error);
-        mostrarToast(`❌ Error: ${error.message}`, "error");
+        mostrarToast(`❌ Error al agregar ingrediente`, "error");
     }
 }
 
@@ -108,32 +136,43 @@ export async function cargarIngredientes() {
 
 // 📌 Función para eliminar un ingrediente
 export async function eliminarIngrediente(idIngrediente) {
-    try {
-        if (!confirm("⚠️ ¿Estás seguro de que deseas eliminar este ingrediente? Esta acción es irreversible.")) {
-            return;
+    // Mostrar el modal de confirmación de eliminación
+    const modal = new bootstrap.Modal(document.getElementById('deleteIngredientModal'));
+    modal.show();
+    // Manejar el evento de confirmación del modal
+    document.getElementById("confirm-delete-btn").addEventListener("click", async () => {
+
+        try {
+            const { error } = await supabase
+                .from("ingredientes")
+                .delete()
+                .eq("id", idIngrediente);
+
+            if (error) throw error;
+
+            // 🔄 Recargar la lista de ingredientes después de eliminar
+            cargarIngredientes();
+
+            // Cerrar el modal
+            modal.hide();
+
+            mostrarToast("✅ Ingrediente eliminado correctamente.", "success");
+
+        } catch (error) {
+            console.error("❌ Error al eliminar ingrediente:", error);
+            mostrarToast(`❌ Error al eliminar ingrediente`, "error");
         }
+    });
 
-        const { error } = await supabase
-            .from("ingredientes")
-            .delete()
-            .eq("id", idIngrediente);
-
-        if (error) throw error;
-
-        // 🔄 Recargar la lista de ingredientes después de eliminar
-        cargarIngredientes();
-
-        mostrarToast("✅ Ingrediente eliminado correctamente.", "success");
-
-    } catch (error) {
-        console.error("❌ Error al eliminar ingrediente:", error);
-        mostrarToast(`❌ Error: ${error.message}`, "error");
-    }
+    // Si el usuario decide cancelar, simplemente cerramos el modal sin hacer nada
+    document.getElementById("deleteIngredientModal").addEventListener('hidden.bs.modal', function () {
+        console.log("Modal cerrado sin eliminar");
+    });
 }
 
 // 📌 Función para editar un ingrediente
 export async function editarIngrediente(idIngrediente) {
-
+    console.log("editarIngrediente", idIngrediente)
     try {
         // 🔹 Obtener el ingrediente desde Supabase
         const { data, error } = await supabase
@@ -145,45 +184,33 @@ export async function editarIngrediente(idIngrediente) {
         if (error || !data) {
             throw new Error("No se pudo cargar el ingrediente.");
         }
-
+        console.log("data", data)
         // 🔹 Llenar el formulario con los datos del ingrediente
         document.getElementById("ingredient-name").value = data.nombre;
         document.getElementById("ingredient-measure").value = data.medida;
         document.getElementById("ingredient-stock").value = data.cantidad;
 
         // 📌 Cambiar el botón a "Actualizar"
-        document.querySelector("#ingredient-form button[type='submit']").innerText = "Actualizar Ingrediente";
+        document.querySelector('#ingredient-form button[type="submit"').innerText = "Actualizar Ingrediente";
 
         // 📌 Establecer el ID en el formulario para actualizar
         const formulario = document.getElementById("ingredient-form");
         formulario.dataset.ingredienteId = idIngrediente;
+        console.log(formulario);
 
-        // 📌 Mostrar el formulario si estaba oculto
-        formulario.classList.remove("d-none");
+        // Mostrar el formulario en un modal
+        showIngredientForm();
+        console.log(formulario);
+
     } catch (error) {
         console.error("❌ Error al cargar el ingrediente para edición:", error);
-        mostrarToast(`❌ Error: ${error.message}`, "error");
+        mostrarToast(`❌ Error al cargar el ingrediente para edición.`, "error");
     }
 }
 
 // 📌 Función para actualizar un ingrediente
-export async function actualizarIngrediente(event) {
-    event.preventDefault();
-
-    const idIngrediente = document.getElementById("ingredient-form").dataset.ingredienteId;
-    const nombre = document.getElementById("ingredient-name").value.trim();
-    const medida = document.getElementById("ingredient-measure").value;
-    const cantidad = document.getElementById("ingredient-stock").value;
-
-    if (!nombre || !medida || !cantidad) {
-        alert("⚠️ Todos los campos son obligatorios.");
-        return;
-    }
-
-    if (cantidad <= 0) {
-        alert("⚠️ La cantidad debe ser mayor a 0.");
-        return;
-    }
+export async function actualizarIngrediente(idIngrediente, datos) {
+    const { nombre, medida, cantidad } = datos;
 
     try {
         // 🔹 Actualizar el ingrediente en la base de datos
@@ -194,15 +221,10 @@ export async function actualizarIngrediente(event) {
 
         if (error) throw error;
 
-        mostrarToast("✅ Ingrediente actualizado correctamente.", "success");
+        mostrarToast("✍ Ingrediente actualizado correctamente.", "success");
 
         // 🔄 Recargar la lista de ingredientes después de actualizar
         cargarIngredientes();
-
-        // Limpiar el formulario
-        document.getElementById("ingredient-form").reset();
-        document.querySelector("#ingredient-form button[type='submit']").innerText = "Guardar Ingrediente";
-        document.getElementById("ingredient-form").dataset.ingredienteId = ""; // Limpiar ID del ingrediente
 
     } catch (error) {
         console.error("❌ Error al actualizar ingrediente:", error);
