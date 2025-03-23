@@ -16,6 +16,7 @@ export function showIngredientForm() {
 
     // Limpiar el ID solo si se está agregando un ingrediente
     if (!formulario.dataset.ingredienteId) {
+        console.log("aquiiiiii reset")
         formulario.reset(); // Limpiar formulario solo cuando no es edición
         document.querySelector("#ingredient-form button[type='submit']").innerText = "Guardar Ingrediente";
     }
@@ -135,7 +136,7 @@ export async function cargarIngredientes() {
 }
 
 // 📌 Función para eliminar un ingrediente
-export async function eliminarIngrediente(idIngrediente) {
+async function eliminarIngrediente(idIngrediente) {
     // Mostrar el modal de confirmación de eliminación
     const modal = new bootstrap.Modal(document.getElementById('deleteIngredientModal'));
     modal.show();
@@ -166,12 +167,12 @@ export async function eliminarIngrediente(idIngrediente) {
 
     // Si el usuario decide cancelar, simplemente cerramos el modal sin hacer nada
     document.getElementById("deleteIngredientModal").addEventListener('hidden.bs.modal', function () {
-        console.log("Modal cerrado sin eliminar");
+        //console.log("Modal cerrado sin eliminar");
     });
 }
 
 // 📌 Función para editar un ingrediente
-export async function editarIngrediente(idIngrediente) {
+async function editarIngrediente(idIngrediente) {
     console.log("editarIngrediente", idIngrediente)
     try {
         // 🔹 Obtener el ingrediente desde Supabase

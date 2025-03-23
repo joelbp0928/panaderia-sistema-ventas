@@ -1,6 +1,6 @@
 import { mostrarFormularioEmpleado, gestionarEmpleado, cargarEmpleados } from "./empleados.js";
 import { gestionarIngrediente, cargarIngredientes, showIngredientForm } from "./ingredientes.js";
-import { addProduct, gestionarProducto, loadIngredients } from "./productos.js";
+import { showProductForm, gestionarProducto, loadIngredients, cargarProductos } from "./productos.js";
 import { verificarAccesoAdmin, verificarSesion } from "./auth-check.js";
 import { cargarConfiguracion } from "./admin/configAdmin.js";
 window.onload = async function () {
@@ -12,6 +12,7 @@ window.onload = async function () {
         await cargarConfiguracion(); // ✅ Cargar la configuración de la tienda
         await cargarIngredientes(); // 🔹 Cargar los ingredientes
         await loadIngredients(); // 🔹 Cargar los ingredientes para el producto
+        await cargarProductos();
 
         // 🔹 Event listeners después de cargar el DOM
         document.getElementById("btn-agregar-empleado").addEventListener("click", mostrarFormularioEmpleado);
@@ -19,7 +20,7 @@ window.onload = async function () {
         document.getElementById("ingredient-form").addEventListener("submit", gestionarIngrediente);
         document.getElementById("btn-agregar-ingrediente").addEventListener("click", showIngredientForm);
         document.getElementById("product-form").addEventListener("submit", gestionarProducto);
-        document.getElementById("btn-agregar-producto").addEventListener("click", addProduct);
+        document.getElementById("btn-agregar-producto").addEventListener("click", showProductForm);
 
         //console.log("✅ Eventos y configuraciones cargados correctamente.");
     } catch (error) {

@@ -77,6 +77,20 @@
         <li class="nav-item">
           <button
             class="nav-link"
+            id="categorias-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#categorias"
+            type="button"
+            role="tab"
+            aria-controls="categorias"
+            aria-selected="false"
+          >
+            Categorias
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link"
             id="promotion-recommendations"
             data-bs-toggle="tab"
             data-bs-target="#promo-recommendations"
@@ -151,7 +165,6 @@
             </tbody>
           </table>
         </div>
-
         <!-- Empleados -->
         <div
           class="tab-pane fade"
@@ -163,7 +176,6 @@
           <button class="btn btn-primary mb-3" id="btn-agregar-empleado">
             Agregar Empleado
           </button>
-
           <form id="form-empleado" class="d-none">
             <div class="mb-3">
               <label for="empleado-nombre">Nombre</label>
@@ -295,6 +307,8 @@
                         <option value="pz">Piezas</option>
                         <option value="kg">Kilogramos</option>
                         <option value="gr">Gramos</option>
+                        <option value="lt">Litros</option>
+                        <option value="ml">Mililitros</option>
                         <option value="otra">Otra</option>
                       </select>
                     </div>
@@ -321,7 +335,6 @@
               </div>
             </div>
           </div>
-
           <table class="table table-striped">
             <thead>
               <tr>
@@ -349,66 +362,127 @@
           <button class="btn btn-primary mb-3" id="btn-agregar-producto">
             Agregar Producto
           </button>
+          <!-- Modal para agregar/editar producto -->
+          <div
+            class="modal fade"
+            id="productModal"
+            tabindex="-1"
+            aria-labelledby="productModalLabel"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="productModalLabel">
+                    Agregar Producto
+                  </h5>
+                  <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div class="modal-body">
+                  <form id="product-form">
+                    <div class="form-section">
+                      <label for="product-name">Nombre del Producto:</label>
+                      <input
+                        type="text"
+                        id="product-name"
+                        class="form-control"
+                        placeholder="Nombre del Producto"
+                        required
+                      />
+                    </div>
+                    <div class="form-section">
+                      <label for="product-image">Imagen del Producto:</label>
+                      <input
+                        type="file"
+                        id="product-image"
+                        class="form-control"
+                      />
+                    </div>
+                    <div class="form-section">
+                      <label for="product-category">Categoría:</label>
+                      <select
+                        id="product-category"
+                        class="form-control"
+                        required
+                      >
+                        <option value="Donas">Donas</option>
+                        <option value="Repostería">Repostería</option>
+                        <option value="Promociones">Promociones</option>
+                        <option value="Pan de Temporada">
+                          Pan de Temporada
+                        </option>
+                      </select>
+                    </div>
+                    <div class="form-section">
+                      <label for="product-price">Precio:</label>
+                      <input
+                        type="number"
+                        id="product-price"
+                        class="form-control"
+                        placeholder="Precio del Producto"
+                        required
+                      />
+                    </div>
+                    <div class="form-section">
+                      <label for="product-stock">Stock:</label>
+                      <input
+                        type="number"
+                        id="product-stock"
+                        class="form-control"
+                        placeholder="Cantidad en Inventario"
+                        required
+                      />
+                    </div>
+                    <!-- Formulario de Producto -->
+                    <div class="form-section">
+                      <label for="product-ingredients"
+                        >Seleccionar Ingredientes:</label
+                      >
+                      <select
+                        id="product-ingredients"
+                        class="form-control"
+                        multiple
+                        onchange="updateIngredientsList()"
+                        required
+                      >
+                        <!-- Los ingredientes se generarán dinámicamente -->
+                      </select>
+                    </div>
 
-          <form id="product-form">
-            <div class="form-section">
-              <label for="product-name">Nombre del Producto:</label>
-              <input
-                type="text"
-                id="product-name"
-                class="form-control"
-                placeholder="Nombre del Producto"
-                required
-              />
+                    <!-- Lista de ingredientes seleccionados -->
+                    <div id="selected-ingredients-list" class="form-section">
+                      <!-- Los ingredientes seleccionados aparecerán aquí con la cantidad -->
+                    </div>
+
+                    <button type="submit" class="btn btn-success">
+                      Guardar Producto
+                    </button>
+                  </form>
+                </div>
+              </div>
             </div>
-            <div class="form-section">
-              <label for="product-image">Imagen del Producto:</label>
-              <input type="file" id="product-image" class="form-control" />
-            </div>
-            <div class="form-section">
-              <label for="product-category">Categoría:</label>
-              <select id="product-category" class="form-control" required>
-                <option value="Donas">Donas</option>
-                <option value="Repostería">Repostería</option>
-                <option value="Promociones">Promociones</option>
-                <option value="Pan de Temporada">Pan de Temporada</option>
-              </select>
-            </div>
-            <div class="form-section">
-              <label for="product-price">Precio:</label>
-              <input
-                type="number"
-                id="product-price"
-                class="form-control"
-                placeholder="Precio del Producto"
-                required
-              />
-            </div>
-            <div class="form-section">
-              <label for="product-stock">Stock:</label>
-              <input
-                type="number"
-                id="product-stock"
-                class="form-control"
-                placeholder="Cantidad en Inventario"
-                required
-              />
-            </div>
-            <div class="form-section">
-              <label for="product-ingredients">Seleccionar Ingredientes:</label>
-              <select
-                id="product-ingredients"
-                class="form-control"
-                multiple
-                required
-              >
-                <!-- Los ingredientes se generarán dinámicamente -->
-              </select>
-            </div>
-            <button type="submit" class="btn btn-success">
-              Guardar Producto
-            </button>
-          </form>
+          </div>
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Ingredientes y Cantidades</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="products-list">
+              <!-- Los productos se cargarán aquí dinámicamente -->
+            </tbody>
+          </table>
         </div>
 
         <!-- Promociones Tab -->
