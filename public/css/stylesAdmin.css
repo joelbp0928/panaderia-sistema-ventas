@@ -82,3 +82,123 @@ input[type="color"] {
 .d-block {
   display: block !important;
 }
+
+.img-thumbnail{
+  width: 70px; 
+  height: 70px;
+}
+
+
+
+/*nuevios por revisar*/
+.modal-header {
+  background-color: var(--primary-color);
+  color: var(--light-color);
+  
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Modal Styling */
+.modal-dialog {
+  max-width: 800px;
+}
+
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.form-section {
+  margin-bottom: 20px;
+}
+
+/* Checkbox Styling */
+/* 📌 Estilo de cada ingrediente */
+.ingredient-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding: 10px; /* Relleno para separar contenido del borde */
+  border: 1px solid #ccc; /* Borde sutil alrededor de cada ingrediente */
+  border-radius: 8px; /* Bordes redondeados */
+  background-color: var(--light-color); /* Fondo claro */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra sutil para dar profundidad */
+  transition: all 0.3s ease; /* Transición suave */
+}
+/* 📌 Hover: Cuando el usuario pasa el ratón sobre el ingrediente */
+.ingredient-item:hover {
+  background-color: var(--light-color); /* Fondo más oscuro al pasar el ratón */
+  border-color: var(--primary-color); /* Cambio de borde al pasar el ratón */
+}
+
+.ingredient-item input[type="checkbox"] {
+  transform: scale(1.2); /* Aumenta ligeramente el tamaño del checkbox */
+  margin-right: 10px; /* Separación entre el checkbox y el texto */
+}
+
+/* 📌 Estilo para el nombre de cada ingrediente */
+.ingredient-item label {
+  font-size: 1rem;
+  color: #555;
+  font-weight: 600; /* Un poco más de peso para el texto */
+}
+
+/* 📌 Estilo para la cantidad de cada ingrediente */
+.ingredient-item small {
+  font-size: 0.85rem;
+  color: #777;
+}
+
+/* 📌 Añadimos bordes sutiles y separación */
+.ingredient-item input[type="number"] {
+  width: 90px;
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ddd; /* Borde sutil */
+}
+
+/* 📌 Estilo general para el contenedor de ingredientes */
+#selected-ingredients-list {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 📌 Estilo para la vista previa de la imagen */
+#product-image-preview {
+  border-radius: 5px;
+  max-width: 150px;
+  display: block;
+  margin-top: 10px;
+  border: 1px solid #ccc; /* Borde sutil para la imagen */
+  padding: 5px; /* Relleno para separar la imagen del borde */
+}
+
+/* 📌 Responsivo para pantallas pequeñas */
+@media (max-width: 768px) {
+  .ingredient-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .modal-dialog {
+    max-width: 100%;
+  }
+
+  button[type="submit"] {
+    width: auto;
+  }
+}
+
+
+/* 📱 Media query para pantallas pequeñas (menos de 768px de ancho) */
+@media (max-width: 768px) {
+ 
+}

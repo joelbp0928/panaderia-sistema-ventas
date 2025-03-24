@@ -402,6 +402,11 @@
                         id="product-image"
                         class="form-control"
                       />
+                      <img
+                        id="product-image-preview"
+                        style="max-width: 150px; margin-top: 10px"
+                        alt="Vista previa"
+                      />
                     </div>
                     <div class="form-section">
                       <label for="product-category">Categoría:</label>
@@ -438,28 +443,24 @@
                         required
                       />
                     </div>
-                    <!-- Formulario de Producto -->
                     <div class="form-section">
                       <label for="product-ingredients"
                         >Seleccionar Ingredientes:</label
                       >
-                      <select
-                        id="product-ingredients"
-                        class="form-control"
-                        multiple
-                        onchange="updateIngredientsList()"
-                        required
-                      >
-                        <!-- Los ingredientes se generarán dinámicamente -->
-                      </select>
+                      <div id="product-ingredients">
+                        <!-- Los ingredientes se generarán dinámicamente aquí -->
+                      </div>
                     </div>
-
                     <!-- Lista de ingredientes seleccionados -->
-                    <div id="selected-ingredients-list" class="form-section">
-                      <!-- Los ingredientes seleccionados aparecerán aquí con la cantidad -->
-                    </div>
-
-                    <button type="submit" class="btn btn-success">
+                    <div
+                      id="selected-ingredients-list"
+                      class="form-section"
+                    ></div>
+                    <button
+                      type="submit"
+                      class="btn btn-success"
+                      id="product-form-submit"
+                    >
                       Guardar Producto
                     </button>
                   </form>
@@ -467,6 +468,52 @@
               </div>
             </div>
           </div>
+
+          <!-- Modal de Confirmación de Eliminación -->
+          <div
+            class="modal fade"
+            id="deleteProductModal"
+            tabindex="-1"
+            aria-labelledby="deleteProductModalLabel"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="deleteProductModalLabel">
+                    Confirmar Eliminación
+                  </h5>
+                  <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div class="modal-body">
+                  ⚠️ ¿Estás seguro de que deseas eliminar este producto? Esta
+                  acción es irreversible.
+                </div>
+                <div class="modal-footer">
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-danger"
+                    id="confirm-delete-btn"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <table class="table table-striped">
             <thead>
               <tr>
