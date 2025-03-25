@@ -165,6 +165,7 @@
             </tbody>
           </table>
         </div>
+
         <!-- Empleados -->
         <div
           class="tab-pane fade"
@@ -251,6 +252,7 @@
             </tbody>
           </table>
         </div>
+
         <!-- Gestión de Ingredientes -->
         <div
           class="tab-pane fade"
@@ -283,6 +285,7 @@
                     aria-label="Close"
                   ></button>
                 </div>
+                <!-- Modal para agregar/editar ingrediente -->
                 <div class="modal-body">
                   <form id="ingredient-form">
                     <div class="form-section">
@@ -323,6 +326,68 @@
                         required
                       />
                     </div>
+                    <!-- Radio Buttons para elegir Precio Unitario o Precio Total -->
+                    <div class="form-section">
+                      <label for="price-selection"
+                        >Selecciona el tipo de precio:</label
+                      >
+                      <div>
+                        <input
+                          type="radio"
+                          id="price-unit"
+                          name="price-type"
+                          value="unitario"
+                          checked
+                        />
+                        Precio Unitario
+                        <input
+                          type="radio"
+                          id="price-total"
+                          name="price-type"
+                          value="total"
+                        />
+                        Precio Total
+                      </div>
+                    </div>
+                    <!-- Precio Unitario Inputs -->
+                    <div id="unitario-fields" style="display: block">
+                      <label for="ingredient-price">Precio Unitario</label>
+                      <input
+                        type="number"
+                        id="ingredient-price"
+                        class="form-control"
+                      />
+
+                      <label for="cantidad-unitario">Cantidad Unitario</label>
+                      <input
+                        type="number"
+                        id="cantidad-unitario"
+                        class="form-control"
+                      />
+                      
+                      <label for="medida-unitario">Medida</label>
+                      <select id="medida-unitario" class="form-control">
+                        <option value="pz">Piezas</option>
+                        <option value="kg">Kilogramos</option>
+                        <option value="gr">Gramos</option>
+                        <option value="lt">Litros</option>
+                        <option value="ml">Mililitros</option>
+                        <option value="otra">Otra</option>
+                      </select>
+
+                      <span id="calculated-price-total"></span>
+                      <!-- Display price total here -->
+                    </div>
+
+                    <!-- Precio Total Input -->
+                    <div id="total-fields" style="display: none">
+                      <label for="ingredient-price-total">Precio Total</label>
+                      <input
+                        type="number"
+                        id="ingredient-price-total"
+                        class="form-control"
+                      />
+                    </div>
                     <button
                       type="submit"
                       class="btn btn-success"
@@ -341,6 +406,8 @@
                 <th>Nombre</th>
                 <th>Tipo de Medida</th>
                 <th>Cantidad en Stock</th>
+                <th>Precio unitario</th>
+                <th>Precio Total</th>
                 <th>Fecha Registro</th>
                 <th>Acciones</th>
               </tr>
@@ -349,6 +416,52 @@
               <!-- Lista dinámica de ingredientes -->
             </tbody>
           </table>
+          <!-- Modal de Confirmación de Eliminación de ingrediente-->
+          <div
+            class="modal fade"
+            id="deleteIngredientModal"
+            tabindex="-1"
+            aria-labelledby="deleteIngredientModalLabel"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="deleteIngredientModalLabel">
+                    Confirmar Eliminación
+                  </h5>
+                  <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div class="modal-body">
+                  <p>
+                    ⚠️ ¿Estás seguro de que deseas eliminar este ingrediente?
+                    Esta acción es irreversible.
+                  </p>
+                </div>
+                <div class="modal-footer">
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-danger"
+                    id="confirm-delete-btn"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Gestión de Productos -->
@@ -777,52 +890,6 @@
               Guardar Configuración
             </button>
           </form>
-        </div>
-      </div>
-    </div>
-    <!-- Modal de Confirmación de Eliminación -->
-    <div
-      class="modal fade"
-      id="deleteIngredientModal"
-      tabindex="-1"
-      aria-labelledby="deleteIngredientModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="deleteIngredientModalLabel">
-              Confirmar Eliminación
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <p>
-              ⚠️ ¿Estás seguro de que deseas eliminar este ingrediente? Esta
-              acción es irreversible.
-            </p>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              class="btn btn-danger"
-              id="confirm-delete-btn"
-            >
-              Eliminar
-            </button>
-          </div>
         </div>
       </div>
     </div>

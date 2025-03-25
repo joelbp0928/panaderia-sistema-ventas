@@ -202,3 +202,15 @@ input[type="color"] {
 @media (max-width: 768px) {
  
 }
+
+
+
+#total-price-container {
+  margin-top: 10px;
+  display: none; /* Ocultar por defecto */
+}
+
+#ingredient-total-price {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}

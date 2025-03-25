@@ -2,6 +2,7 @@ import { supabase } from "./supabase-config.js"; // 📌 Importar configuración
 import { ref, storage, uploadBytes, getDownloadURL } from "./firebase-config.js"
 import { mostrarToast, marcarErrorCampo, limpiarErrorCampo } from "./manageError.js"; // 📌 Manejo de errores
 import { formatearFecha } from "./formatearFecha.js";
+import { cargarIngredientes } from "./ingredientes.js";
 
 // Hacer accesibles globalmente las funciones necesarias
 window.editarProducto = editarProducto;
@@ -91,6 +92,8 @@ export async function gestionarProducto(event) {
 
         cargarProductos(); // 🔄 Recargar la lista de productos
 
+        cargarIngredientes();
+
         // Limpiar el formulario y ocultarlo
         document.getElementById("product-form").reset();
         const modal = bootstrap.Modal.getInstance(document.getElementById("productModal"));
@@ -126,12 +129,13 @@ async function agregarProducto(data) {
             throw new Error("No se pudo insertar el producto.");
         }
 
+        // Descontar los ingredientes del inventario
+        await updateIngredientInventory(product[0].id, data.ingredientes, data.cantidades);
+
         // Relacionar los ingredientes con el producto
         await associateIngredientsWithProduct(product[0].id, data.ingredientes, data.cantidades);
-
-        // Descontar los ingredientes del inventario
-        await updateIngredientInventory(data.ingredientes, data.cantidades);
-
+        
+        cargarIngredientes();
         // ✅ Mostrar mensaje de éxito
         mostrarToast("✅ Producto agregado correctamente.", "success");
 
@@ -162,12 +166,13 @@ async function actualizarProducto(idProducto, data) {
 
         console.log("Producto actualizado:", idProducto);
 
+        // Descontar los ingredientes del inventario (solo si las cantidades cambiaron)
+        await updateIngredientInventory(idProducto, data.ingredientes, data.cantidades);
+
         // Relacionar los ingredientes con el producto
         await associateIngredientsWithProduct(idProducto, data.ingredientes, data.cantidades);
 
-        // Descontar los ingredientes del inventario
-        await updateIngredientInventory(data.ingredientes, data.cantidades);
-
+        cargarIngredientes();
         // ✅ Mostrar mensaje de éxito
         mostrarToast("✅ Producto actualizado correctamente.", "success");
 
@@ -200,34 +205,72 @@ async function associateIngredientsWithProduct(productId, ingredientIds, cantida
 }
 
 // Función para descontar ingredientes del inventario
-async function updateIngredientInventory(ingredientIds, cantidades) {
+async function updateIngredientInventory(productId, ingredientIds, cantidades) {
+    // Obtener los ingredientes previamente asociados al producto
+    const { data: previousIngredients, error: previousIngredientsError } = await supabase
+        .from("productos_ingredientes")
+        .select("ingrediente_id, cantidad_usada")
+        .eq("producto_id", productId);
+
+    if (previousIngredientsError) throw previousIngredientsError;
+
+    // Si hay ingredientes previamente asociados al producto, comparamos las cantidades
     for (let i = 0; i < ingredientIds.length; i++) {
-        // 🔹 Obtener el ingrediente desde Supabase
-        const { data: ingredient, error } = await supabase
-            .from("ingredientes")
-            .select("id, cantidad")
-            .eq("id", ingredientIds[i])
-            .single();
+        const ingredientId = ingredientIds[i];  // ID del ingrediente
+        const quantity = cantidades[i];  // Cantidad a usar de ese ingrediente
 
-        if (error || !ingredient) {
-            throw new Error("No se pudo obtener el ingrediente.");
+        // Verificamos si el ingrediente ya existía en el producto
+        const previousIngredient = previousIngredients.find(item => item.ingrediente_id === ingredientId);
+
+        // Si el ingrediente no existía previamente, lo descontamos por completo
+        if (!previousIngredient) {
+            console.log("inredientid", ingredientId, " quantity", quantity);
+            await decreaseInventory(ingredientId, quantity);
+        } else {
+            // Si el ingrediente ya existía, calculamos la diferencia de cantidad
+            const difference = quantity - previousIngredient.cantidad_usada;
+            console.log("previo", previousIngredient)
+            console.log("difference= " + difference, " ", quantity, " - ", previousIngredient.cantidad_usada)
+            // Si la cantidad ha aumentado, restamos la diferencia del inventario
+            if (difference !== 0) {
+                await decreaseInventory(ingredientId, difference);
+                console.log("ingredientid", ingredientId, difference)
+            }
         }
-
-        // 🔹 Restar la cantidad de ingrediente usado
-        const newQuantity = ingredient.cantidad - cantidades[i];  // Aquí usamos la cantidad correspondiente
-        if (newQuantity < 0) {
-            throw new Error("No hay suficiente cantidad en inventario.");
-        }
-
-        // Actualizar el inventario
-        const { error: updateError } = await supabase
-            .from("ingredientes")
-            .update({ cantidad: newQuantity })
-            .eq("id", ingredientIds[i]);
-
-        if (updateError) throw updateError;
     }
 }
+
+// Función para descontar la cantidad de un ingrediente del inventario
+async function decreaseInventory(ingredientId, quantity) {
+    // Obtener el ingrediente desde Supabase
+    const { data: ingredient, error } = await supabase
+        .from("ingredientes")
+        .select("id, cantidad")
+        .eq("id", ingredientId)
+        .single();
+
+    if (error || !ingredient) {
+        throw new Error("No se pudo obtener el ingrediente.");
+    }
+
+    // Restar la cantidad de ingrediente usado
+    const newQuantity = ingredient.cantidad - quantity;
+    console.log("new=", newQuantity, " ingredient.cantidad", ingredient.cantidad, " - canridad ", quantity) // Aquí usamos la cantidad correspondiente
+    if (newQuantity < 0) {
+        throw new Error("No hay suficiente cantidad en inventario.");
+    }
+
+    // Actualizar el inventario con la nueva cantidad
+    const { error: updateError } = await supabase
+        .from("ingredientes")
+        .update({ cantidad: newQuantity })
+        .eq("id", ingredientId);
+
+    if (updateError) throw updateError;
+
+    console.log("descontado con exito´'segun")
+}
+
 
 // Función para preseleccionar ingredientes en edición
 async function editarProducto(idProducto) {
@@ -309,6 +352,7 @@ async function removeIngredientFromProduct(ingredientId) {
     } else {
         // Recargar la lista de ingredientes
         cargarProductos();
+        cargarIngredientes();
         mostrarToast("✅ Ingrediente eliminado correctamente", "success");
     }
 }
@@ -358,7 +402,7 @@ async function eliminarProducto(idProducto) {
 
             // Recargar la lista de productos después de eliminar
             cargarProductos();
-
+            cargarIngredientes();
             // Mostrar mensaje de éxito
             mostrarToast("✅ Producto eliminado correctamente.", "success");
         } catch (error) {
@@ -427,7 +471,6 @@ export async function loadIngredients() {
         });
     });
 }
-
 
 // 📌 Función para actualizar la lista de ingredientes seleccionados
 export function updateIngredientsList() {
