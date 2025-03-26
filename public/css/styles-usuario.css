@@ -1,11 +1,14 @@
 /* 🎨 Paleta de colores */
 :root {
-  --vino: #6c1b2d;
   --vino-claro: #9a223d;
   --blanco: #ffffff;
   --gris-claro: #e0dcdc;
   --gris-oscuro: #cccccc;
   --fondo-modal: #f9f9f9;
+
+  --primary-color: #6c1b2d; /* Valor por defecto */
+  --primary-claro: #9a223d;
+  --light-color: #f5f5f5;
 }
 
 /* 🌍 Estilos generales */
@@ -14,7 +17,7 @@ body {
   margin: 0;
   padding: 0;
   background-color: var(--gris-claro);
-  color: var(--vino);
+  color: var(--primary-color);
 }
 
 /* 🔹 Encabezado */
@@ -22,7 +25,7 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: var(--vino);
+  background-color: var(--primary-color);
   padding: 1rem 2rem;
   color: var(--blanco);
 }
@@ -49,7 +52,7 @@ header {
   padding: 0.5rem 1rem;
   margin-left: 0.5rem;
   background-color: var(--blanco);
-  color: var(--vino);
+  color: var(--primary-color);
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -58,7 +61,7 @@ header {
 
 .header-buttons button {
   background-color: var(--blanco);
-  color: var(--vino);
+  color: var(--primary-color);
   border: none;
   margin-left: 1rem;
   padding: 0.5rem 1rem;
@@ -68,7 +71,7 @@ header {
 }
 
 .header-buttons button:hover {
-  background-color: var(--vino-claro);
+  background-color: var(--primary-claro);
   color: var(--blanco);
 }
 
@@ -105,7 +108,7 @@ header {
 
 .category-btn {
   padding: 1rem;
-  background-color: var(--vino);
+  background-color: var(--primary-color);
   color: var(--blanco);
   border: none;
   border-radius: 5px;
@@ -117,42 +120,61 @@ header {
 }
 
 .category-btn:hover {
-  background-color: var(--vino-claro);
+  background-color: var(--primary-claro);
 }
 
 /* 🛍️ Productos */
 #products {
   padding: 2rem;
   text-align: center;
-}
-
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  justify-items: center;
+  align-items: center;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Máximo 5 productos por fila */
+  gap: 10px; /* Reducir el espacio entre las tarjetas */
+  margin-top: 20px; /* Espacio superior */
 }
 
 .product-card {
   text-align: center;
   background-color: var(--blanco);
   border: 1px solid var(--gris-oscuro);
-  border-radius: 8px;
   padding: 1rem;
   width: 100%;
+  height: 100%;
   max-width: 250px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .product-card img {
-  max-width: 100%;
-  border-radius: 8px;
+  width: 100%; /* Asegura que la imagen ocupe el 100% del contenedor */
+  height: 200px; /* Establece una altura fija para todas las imágenes */
+  object-fit: cover; /* Mantiene la proporción de la imagen, recortando si es necesario */
+  margin-bottom: 10px; /* Espacio entre la imagen y el texto */
+  border-radius: 8px; /* Si quieres bordes redondeados */
 }
 
-.add-to-cart-btn {
+.product-card h3 {
+  margin: 0 0 10px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.product-card p {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.product-card .add-to-cart-btn {
   margin-top: 0.5rem;
   padding: 0.5rem 1rem;
-  background-color: var(--vino);
+  background-color: var(--primary-color);
   color: var(--blanco);
   border: none;
   cursor: pointer;
@@ -160,13 +182,33 @@ header {
   font-weight: bold;
 }
 
-.add-to-cart-btn:hover {
-  background-color: var(--vino-claro);
+.product-card .add-to-cart-btn:hover {
+  background-color: #0056b3;
 }
+
+.product-card .add-to-cart-btn:hover {
+  background-color: var(--primary-claro);
+}
+
+/* Hacer que las tarjetas sean responsivas y ajusten el espacio según el tamaño de pantalla */
+@media (max-width: 768px) {
+  #products .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Menos espacio entre productos en pantallas pequeñas */
+    gap: 5px;
+  }
+}
+
+@media (max-width: 480px) {
+  #products .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* En pantallas muy pequeñas, más compactas */
+    gap: 5px;
+  }
+}
+
 
 /* 🔹 Footer */
 footer {
-  background-color: var(--vino);
+  background-color: var(--primary-color);
   color: var(--blanco);
   text-align: center;
   padding: 1rem;
@@ -176,7 +218,7 @@ footer {
 /* 📌 Modales */
 .modal-content {
   background-color: var(--gris-claro);
-  color: var(--vino);
+  color: var(--primary-color);
   border-radius: 10px;
   border: none;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
@@ -184,7 +226,7 @@ footer {
 
 /* 🔹 Ajuste del encabezado del modal */
 .modal-header {
-  background-color: var(--vino);
+  background-color: var(--primary-color);
   color: var(--blanco);
   border-bottom: none;
   padding: 15px;
@@ -197,10 +239,10 @@ footer {
 }
 
 .modal-content a {
-color: var(--vino-claro)
+color: var(--primary-color)
 }
 .modal-content a:hover {
-  color: var(--vino)
+  color: var(--primary-claro)
   }
 
 /* 🔹 Cuerpo del modal */
@@ -221,13 +263,13 @@ color: var(--vino-claro)
 }
 
 .modal-content input:focus {
-  border-color: var(--vino);
+  border-color: var(--primary-color);
   outline: none;
 }
 
 /* 🔹 Botón del modal */
 .modal-content .submit-btn {
-  background-color: var(--vino);
+  background-color: var(--primary-color);
   color: var(--blanco);
   padding: 10px;
   border: none;
@@ -240,7 +282,7 @@ color: var(--vino-claro)
 }
 
 .modal-content .submit-btn:hover {
-  background-color: var(--vino-claro);
+  background-color: var(--primary-claro);
 }
 
 /* 📱 RESPONSIVE */
@@ -279,9 +321,10 @@ color: var(--vino-claro)
 
 /* 📌 Estilos del footer del modal */
 .modal-footer {
-  background-color: var(--vino);
+  background-color: var(--primary-color);
   color: var(--blanco);
   padding: 15px;
   text-align: center;
   border-radius: 0 0 10px 10px;
 }
+

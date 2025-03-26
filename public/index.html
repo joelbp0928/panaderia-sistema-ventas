@@ -16,6 +16,7 @@
       <div class="container d-flex justify-content-between align-items-center">
         <div class="logo">
           <img
+            id="logo-image"
             src="./img/lona logo mr donut.jpg"
             alt="Logo Empresa"
             class="img-fluid"
@@ -51,7 +52,6 @@
 
     <!-- Promociones -->
     <section id="promotions">
-      <h2>Promociones</h2>
       <div class="promo-slider">
         <!-- Aquí se insertarán dinámicamente las promociones -->
       </div>
@@ -60,6 +60,7 @@
     <!-- Categorías -->
     <section id="categories">
       <h2>Categorías</h2>
+      <h5>Estamos trabajando 🏗🚧👷‍♂️</h5>
       <div class="category-grid">
         <button class="category-btn">Donas</button>
         <button class="category-btn">Novedades</button>
@@ -70,21 +71,9 @@
 
     <!-- Productos -->
     <section id="products">
-      <h2>Recomendaciones</h2>
-      <div class="product-grid">
-        <!-- Producto Individual -->
-        <div class="product-card">
-          <img src="./img/dona_chocolate.jpg" alt="Dona de Chocolate" />
-          <h3>Dona de Chocolate</h3>
-          <p>$10.00</p>
-          <button class="add-to-cart-btn">Agregar al Carrito</button>
-        </div>
-        <div class="product-card">
-          <img src="./img/concha de vainilla.jpg" alt="Concha de vainilla" x />
-          <h3>Concha de Vainilla</h3>
-          <p>$10.00</p>
-          <button class="add-to-cart-btn">Agregar al Carrito</button>
-        </div>
+      <h2>Productos</h2>
+      <div class="row" id="products-list">
+        <!-- Los productos se cargarán aquí dinámicamente -->
       </div>
     </section>
 
@@ -338,8 +327,13 @@
 
     <!-- Footer -->
     <footer>
-      <p>&copy; 2024 Mr. Donut. Todos los derechos reservados.</p>
+      <p id="footer-company-name"></p>
     </footer>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script type="module" src="./js/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>

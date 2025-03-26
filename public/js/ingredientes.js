@@ -25,18 +25,40 @@ export function handlePriceChange() {
     const priceType = document.querySelector('input[name="price-type"]:checked').value;
     const stock = parseFloat(document.getElementById("ingredient-stock").value);
     const price = parseFloat(document.getElementById("ingredient-price").value);
+    const cantidadUnitario = parseFloat(document.getElementById("cantidad-unitario").value || 1); // Default a 1 si no se ingresa
+
+    const medidaUnitario = document.getElementById("medida-unitario").value;
+    const medidaIngrediente = document.getElementById("ingredient-measure").value;
+
+    // Si la medida del ingrediente es diferente a la del precio unitario, hacer la conversión
+    let conversionFactor = 1;
+
+    if (medidaUnitario !== medidaIngrediente) {
+        console.log("diferente. ", medidaUnitario, "  ", medidaIngrediente)
+        // Aquí se puede agregar la lógica de conversión (p.ej., 1kg = 1000g)
+        if (medidaIngrediente === "kg" && medidaUnitario === "gr") {
+            conversionFactor = 1000; // 1 kg = 1000 gramos
+        } else if (medidaIngrediente === "gr" && medidaUnitario === "kg") {
+            conversionFactor = 0.001; // 1 g = 0.001 kg
+        }
+        // Puedes agregar más conversiones dependiendo de las unidades que manejes.
+    }
 
     if (priceType === "unitario") {
-        // Calcular el precio total si es precio unitario
         // Mostrar los campos relacionados con el precio unitario
         document.getElementById("unitario-fields").style.display = "block";
         document.getElementById("total-fields").style.display = "none";
-
-        const totalPrice = stock * price;
-        document.getElementById("calculated-price-total").innerText = "Precio Total: " + totalPrice || "";
+        // Calculamos el precio total si es precio unitario
+        const totalPrice = ((price * conversionFactor) / cantidadUnitario) * stock;
+        console.log(totalPrice, " = ((", price, " * ", conversionFactor, " ) / ", cantidadUnitario, ") * ", stock);
+        document.getElementById("calculated-price-total").innerText = "Precio Total: $" + totalPrice;
+        document.getElementById("calculated-price-total").style.display = "inline";
+    } else {
+        // Si es precio total, solo se toma el valor ingresado
+        const totalPrice = price;
+        document.getElementById("calculated-price-total").innerText = "Precio Total: $" + totalPrice;
         document.getElementById("calculated-price-total").style.display = "inline";
 
-    } else {
         // Mostrar el precio unitario si es precio total
         //  document.getElementById("calculated-price-total").style.display = "none";
         // Mostrar los campos relacionados con el precio total
@@ -44,18 +66,17 @@ export function handlePriceChange() {
         document.getElementById("total-fields").style.display = "block";
     }
 }
+
 // 📌 Función para actualizar el precio en tiempo real cuando el usuario cambia la cantidad o el precio
 export function setupRealTimePriceUpdate() {
     // Agregar listeners a los campos para actualizar el precio en tiempo real
     document.getElementById("ingredient-price").addEventListener("input", handlePriceChange);
+    document.getElementById("cantidad-unitario").addEventListener("input", handlePriceChange);
     document.getElementById("ingredient-stock").addEventListener("input", handlePriceChange);
     document.querySelectorAll('input[name="price-type"]').forEach(radio => {
         radio.addEventListener("change", handlePriceChange);
     });
-
-    // Obtener el select de medida unitario
-    const medidaSelect = document.getElementById("ingredient-measure");
-    document.getElementById("medida-unitario").value = medidaSelect;
+    document.getElementById("medida-unitario").addEventListener("change", handlePriceChange); // Escuchar cambios en el select de medida
 }
 // Función para resetear la visualización del precio
 function resetPriceDisplay() {
@@ -71,37 +92,60 @@ export async function gestionarIngrediente(event) {
     const idIngrediente = document.getElementById("ingredient-form").dataset.ingredienteId;
     const nombre = document.getElementById("ingredient-name").value.trim();
     const medida = document.getElementById("ingredient-measure").value;
-    /*  const cantidad = document.getElementById("ingredient-stock").value;
-      const precio_unitario = parseFloat(document.getElementById("ingredient-price").value);
-      const precio_total = document.getElementById("price-unit").checked ? precio_unitario * cantidad : precio;
-  */
+    const cantidad = document.getElementById("ingredient-stock").value;
     const priceType = document.querySelector('input[name="price-type"]:checked').value;
-    const price = parseFloat(document.getElementById("ingredient-price").value);
-    const quantity = parseFloat(document.getElementById("cantidad-unitario").value);
+    const preciounitario = parseFloat(document.getElementById("ingredient-price").value);
+    const cantidadUnitario = parseFloat(document.getElementById("cantidad-unitario").value);
     const medidaUnitario = document.getElementById("medida-unitario").value;
+    const precio_total_ingrediente = parseFloat(document.getElementById("ingredient-price-total").value);
+
     //   console.log("precio total", precio_total)
     let precio_total = 0;
-    let precio_unitario = 0;
+    let precio_unitario = preciounitario;
     // Validaciones
     /*  if (!nombre || !medida || !cantidad) {
           alert("⚠️ Todos los campos son obligatorios.");
           return;
       }*/
+    // Si la medida del ingrediente es diferente a la del precio unitario, hacer la conversión
+    let conversionFactor = 1;
+
+    if (medidaUnitario !== medida) {
+        console.log("diferente. ", medidaUnitario, "  ", medida)
+        // Aquí se puede agregar la lógica de conversión (p.ej., 1kg = 1000g)
+        if (medida === "kg" && medidaUnitario === "gr") {
+            conversionFactor = 1000; // 1 kg = 1000 gramos
+        } else if (medida === "gr" && medidaUnitario === "kg") {
+            conversionFactor = 0.001; // 1 g = 0.001 kg
+        }
+        // Puedes agregar más conversiones dependiendo de las unidades que manejes.
+    }
     if (priceType === "unitario") {
+
         // Precio Unitario: calcular precio total
-        precio_unitario = price;
-        precio_total = price * quantity;
+        precio_total = precio_unitario * cantidadUnitario; // Calculamos el precio total basado en la cantidad y el precio unitario
+        precio_total = ((precio_unitario * conversionFactor) / cantidadUnitario) * cantidad;
+        console.log(precio_total, " = ((", precio_unitario, " * ", conversionFactor, " ) / ", cantidadUnitario, ") * ", cantidad);
     } else {
         // Precio Total: solo usar el valor ingresado
-        precio_total = price;
+        if (medida === "kg") {
+            conversionFactor = 1000; // 1 kg = 1000 gramos
+        } else if (medida === "gr") {
+            conversionFactor = 0.001; // 1 g = 0.001 kg
+        }
+        precio_total = precio_total_ingrediente;
+        precio_unitario = ((precio_total * 100) / (conversionFactor * cantidad));
+        console.log(precio_unitario, " = ", " (( ", precio_total, " * 100) / (", conversionFactor, " * ", cantidad, " ) ")
     }
+    console.log("precio_total: " + precio_total);
+
     try {
         // 🔹 Si idIngrediente existe, actualizamos, si no, agregamos un nuevo ingrediente
         if (idIngrediente) {
             console.log("aqui")
-            await actualizarIngrediente(idIngrediente, { nombre, medida, cantidad, precio_unitario, precio_total, medidaUnitario });
+            await actualizarIngrediente(idIngrediente, { nombre, medida, cantidad, precio_unitario, precio_total });
         } else {
-            await agregarIngrediente({ nombre, medida, cantidad, precio_unitario, precio_total, medidaUnitario });
+            await agregarIngrediente({ nombre, medida, cantidad, precio_unitario, precio_total });
         }
 
         // 🔄 Recargar la lista de ingredientes después de agregar o actualizar
@@ -247,6 +291,8 @@ async function editarIngrediente(idIngrediente) {
         // 🔹 Llenar el formulario con los datos del ingrediente
         document.getElementById("ingredient-name").value = data.nombre;
         document.getElementById("ingredient-measure").value = data.medida;
+        document.getElementById("medida-unitario").value = data.medida;
+
         const cantidad = document.getElementById("ingredient-stock").value = data.cantidad;
         const precio = document.getElementById("ingredient-price").value = data.precio_unitario;
         const totalPrice = document.getElementById("price-unit").checked ? precio * cantidad : precio;

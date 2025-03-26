@@ -591,7 +591,9 @@ export async function cargarProductos() {
                 <td>${producto.categoria}</td>
                 <td>$${producto.precio}</td>
                 <td>${producto.stock}</td>
-                <td>${ingredientesText}</td>  <!-- Ingredientes y cantidades -->
+                <td>${ingredientesText}</td>
+                <td>Proximamente 😊</td>
+                <td>Proximamente 😊</td>
                 <td>
                     <button class="btn btn-sm btn-warning" onclick="editarProducto('${producto.id}')">Editar</button>
                     <button class="btn btn-sm btn-danger" onclick="eliminarProducto('${producto.id}')">Eliminar</button>

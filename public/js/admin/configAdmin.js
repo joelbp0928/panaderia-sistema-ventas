@@ -2,7 +2,6 @@ import { storage, ref, uploadBytes, getDownloadURL } from "../firebase-config.js
 import { mostrarToast } from "../manageError.js";
 import { supabase } from "../supabase-config.js";
 
-
 // 📌 Referencia al formulario
 const formConfig = document.querySelector("#settings form");
 

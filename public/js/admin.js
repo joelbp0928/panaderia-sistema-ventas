@@ -2,6 +2,7 @@ import { mostrarFormularioEmpleado, gestionarEmpleado, cargarEmpleados } from ".
 import { gestionarIngrediente, cargarIngredientes, showIngredientForm, handlePriceChange, setupRealTimePriceUpdate } from "./ingredientes.js";
 import { showProductForm, gestionarProducto, loadIngredients, cargarProductos } from "./productos.js";
 import { verificarAccesoAdmin, verificarSesion } from "./auth-check.js";
+import { cerrarSesion } from "./auth-check.js";
 import { cargarConfiguracion } from "./admin/configAdmin.js";
 window.onload = async function () {
   try {
@@ -25,11 +26,12 @@ window.onload = async function () {
     document.getElementById("product-form").addEventListener("submit", gestionarProducto);
     document.getElementById("btn-agregar-producto").addEventListener("click", showProductForm);
 
-
     // 📌 Función para manejar el cambio entre precio unitario y precio total
     document.getElementById("price-unit").addEventListener("change", handlePriceChange);
     document.getElementById("price-total").addEventListener("change", handlePriceChange);
 
+     // 🔹 Asociar el evento de Cerrar Sesión al botón logout-btn
+     document.getElementById("logout-btn").addEventListener("click", cerrarSesion);
 
     //console.log("✅ Eventos y configuraciones cargados correctamente.");
   } catch (error) {

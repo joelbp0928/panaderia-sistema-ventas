@@ -1,5 +1,5 @@
 import { supabase } from "./supabase-config.js"; // 🔥 Importamos la configuración
-
+import { mostrarToast } from "./manageError.js";
 // Verificar si el usuario tiene permisos de admin
 export async function verificarAccesoAdmin() {
     try {
@@ -77,4 +77,19 @@ export async function verificarSesion() {
     } catch (error) {
         console.error("❌ Error verificando la sesión:", error.message);
     }
+}
+
+
+// 🔹 Cerrar sesión
+export function cerrarSesion() {
+    console.log("cerrar sesion")
+    mostrarToast("Cerrando sesion...", "warning")
+    localStorage.removeItem("user");  // Elimina los datos del usuario almacenados
+    localStorage.removeItem("rol");
+    localStorage.removeItem("nombre");
+    
+    // Redirigir al índice principal después de que el Toast termine
+    setTimeout(() => {
+        window.location.href = "../index.html"; // Redirige a la página principal
+    }, 1000); // Espera 3 segundos para mostrar el toast antes de redirigir
 }

@@ -1,16 +1,14 @@
 //import { auth, db } from "./firebase-conf";
 import { createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
 import { setDoc, doc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
-const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+import { mostrarToast } from "./manageError.js";
+import { supabase } from "./supabase-config.js";
 
-const supabaseUrl = "https://kicwgxkkayxneguidsxe.supabase.co"; 
-const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpY3dneGtrYXl4bmVndWlkc3hlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwNjc2NDgsImV4cCI6MjA1NjY0MzY0OH0.0d-ON6kBYU3Wx3L7-jP-n0wcLYD9Uj0GcxAYULqsDRg"; 
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+//const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 
 export function inicializarAutenticacion() {
-   // document.getElementById("login-btn").addEventListener("click", mostrarLogin);
+    // document.getElementById("login-btn").addEventListener("click", mostrarLogin);
     document.getElementById("logout-btn")?.addEventListener("click", cerrarSesion);
 }
 
@@ -20,10 +18,17 @@ function mostrarLogin() {
 }
 
 // 🔹 Cerrar sesión
-function cerrarSesion() {
-    localStorage.removeItem("user");
-    alert("Sesión cerrada");
-    location.reload();
+export function cerrarSesion() {
+    console.log("cerrar sesion")
+    mostrarToast("Cerrando sesion...", "warning")
+    localStorage.removeItem("user");  // Elimina los datos del usuario almacenados
+    localStorage.removeItem("rol");
+    localStorage.removeItem("nombre");
+    
+    // Redirigir al índice principal después de que el Toast termine
+    setTimeout(() => {
+        window.location.href = "index.html"; // Redirige a la página principal
+    }, 3000); // Espera 3 segundos para mostrar el toast antes de redirigir
 }
 // 📌 Función para iniciar sesión y redirigir según el rol
 async function iniciarSesion(event) {
@@ -45,7 +50,9 @@ async function iniciarSesion(event) {
             password,
         });
 
-        if (error) throw new Error("Correo o contraseña incorrectos. Intenta nuevamente.");
+        if (error) {
+            mostrarToast("❌ Correo o contraseña incorrectos. Intenta nuevamente.", "error");
+        }
 
         const user = data.user;
         if (!user) {
@@ -69,18 +76,29 @@ async function iniciarSesion(event) {
         localStorage.setItem("rol", rol);
         localStorage.setItem("nombre", nombre);
 
-        // 🔹 Mensaje personalizado según el rol
-        if (rol === "admin") {
-            alert(`✅ Bienvenido, ${nombre}. Accediendo al panel de administración.`);
-            window.location.href = './html/admin.html'; // 🔥 Redirige a la página de admin
-        } else {
-            alert(`✅ Bienvenido, ${nombre}. Disfruta de tu experiencia en nuestra tienda.`);
-            window.location.href = "index.html"; // O página de usuario normal
-        }
 
+        // 🔹 Mensaje personalizado según el rol
+        let redirectUrl = "index.html"; // Default redirect URL
+        switch (rol) {
+            case "admin":
+                mostrarToast(`✅ Bienvenido, ${nombre}. Accediendo al panel de administración.`, "success");
+                redirectUrl = './html/admin.html';
+                break;
+            case "cajero":
+                mostrarToast(`✅ Bienvenido, ${nombre}. Accediendo a la página de cajero.`, "success");
+                redirectUrl = './html/cajero.html';
+                break;
+            case "empacador":
+                alert(`✅ Bienvenido, ${nombre}. Accediendo a la página de empacadores.`, "success");
+                redirectUrl = './html/empacadores.html';
+                break;
+            default:
+                mostrarToast("✅ Bienvenido, ${nombre}. Disfruta de tu experiencia en nuestra tienda.", "success");
+        }
+        window.location.href = redirectUrl;
     } catch (error) {
+      //  mostrarToast("❌ Error en el inicio de sesión", "warning");
         console.error("❌ Error en el inicio de sesión:", error);
-        alert(`⚠️ ${error.message}`);
     }
 }
 
@@ -149,7 +167,7 @@ async function registrarUsuario(event) {
                 email,
                 telefono,
                 direccion,
-                rol: "cliente", 
+                rol: "cliente",
                 fechaRegistro: new Date().toISOString()
             }
         ]);

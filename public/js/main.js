@@ -1,34 +1,27 @@
 // Importar otros módulos
-import { cargarPromociones, cargarProductos } from "./config.js";
+import { cargarPromociones, cargarProductos, cargarConfiguracion } from "./config.js";
 import { inicializarCarrito } from "./cart.js";
-import { inicializarAutenticacion } from "./auth.js";
+import { inicializarAutenticacion, cerrarSesion } from "./auth.js";
 
-window.onload = function () {
-    // Cargar elementos principales de la página
-    cargarPromociones();
-    cargarProductos();
 
-    // Inicializar otros módulos
-    inicializarCarrito();
-    inicializarAutenticacion();
+window.onload = async function () {
+    try {
+        // Cargar elementos principales de la página
+        cargarPromociones();
+        cargarProductos();
+
+        // Inicializar otros módulos
+        inicializarCarrito();
+        inicializarAutenticacion();
+
+        cargarConfiguracion();
+
+
+    } catch (error) {
+        console.error("❌ Error en la inicialización de admin.js:", error);
+    }
+
 }
-
-/*
-function cargarConfiguracion() {
-    fetch('/api/config/empresa')
-        .then(response => response.json())
-        .then(data => {
-            document.title = data.nombre_empresa; // Cambia el título de la página
-            document.querySelector(".logo img").src = data.logo_url; // Cambia el logo dinámicamente
-        })
-        .catch(error => console.error("Error cargando la configuración:", error));
-}
-*/
-
-/*document.addEventListener("DOMContentLoaded", function () {
-    cargarPromociones();
-   // cargarProductos();
-});*/
 
 // 🔹 Cargar promociones desde Firebase
 /*function cargarPromociones() {
