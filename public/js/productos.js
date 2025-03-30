@@ -359,6 +359,7 @@ async function removeIngredientFromProduct(ingredientId) {
 
 
 // 📌 Función para eliminar un producto
+
 async function eliminarProducto(idProducto) {
     console.log("elminando Prodcuto:", idProducto);
     // Mostrar el modal
@@ -366,7 +367,7 @@ async function eliminarProducto(idProducto) {
     modal.show();
 
     // Manejar el evento de confirmación del modal
-    document.getElementById("confirm-delete-btn").addEventListener("click", async () => {
+    document.getElementById("confirm-delete-btn-producto").addEventListener("click", async () => {
         try {
             // Llamar a la función de eliminación
             await eliminarProductoBackend(idProducto);  // Llamada a la función que elimina el producto de la DB

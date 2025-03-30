@@ -1,9 +1,10 @@
 import { supabase } from "./supabase-config.js"; // 🔥 Importamos la configuración
 import { mostrarToast } from "./manageError.js";
+//import { cerrarSesionAuth } from "./auth.js";
 // Verificar si el usuario tiene permisos de admin
 export async function verificarAccesoAdmin() {
     try {
-      //  console.log("🔍 Verificando acceso del usuario...");
+        //  console.log("🔍 Verificando acceso del usuario...");
 
         // 🔹 Obtener sesión activa y usuario autenticado
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -11,7 +12,7 @@ export async function verificarAccesoAdmin() {
         if (sessionError || !sessionData.session) throw new Error("No hay sesión activa.");
 
         const userId = sessionData.session.user.id;
-       // console.log("🟢 Usuario autenticado con ID:", userId);
+        // console.log("🟢 Usuario autenticado con ID:", userId);
 
         // 🔹 Consultar el rol del usuario en la base de datos
         const { data: userData, error: userError } = await supabase
@@ -24,7 +25,7 @@ export async function verificarAccesoAdmin() {
             throw new Error("Usuario no encontrado en la base de datos.");
         }
 
-      //  console.log(`✅ Usuario encontrado: ${userData.nombre} (${userData.rol})`);
+        //  console.log(`✅ Usuario encontrado: ${userData.nombre} (${userData.rol})`);
 
         // 🔹 Validar si es un administrador
         if (userData.rol !== "admin") {
@@ -42,7 +43,7 @@ export async function verificarAccesoAdmin() {
 // Verificar si hay un usuario autenticado al cargar la página
 export async function verificarSesion() {
     try {
-      //  console.log("🔍 Verificando sesión activa...");
+        //  console.log("🔍 Verificando sesión activa...");
 
         // 🔹 Obtener sesión activa
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -66,7 +67,8 @@ export async function verificarSesion() {
             console.warn("⚠️ Usuario no encontrado en la base de datos.");
             return;
         }
-
+        // Con este código usando la función mostrarToast:
+        //   mostrarToast(`✅ Bienvenido, ${userData.nombre}. Accediendo al panel de administración.`, "success");
         console.log(`✅ Sesión activa: ${userData.nombre} (${userData.rol})`);
 
         // 🔹 Si el usuario es admin y está en index.html, lo redirige al panel
@@ -81,13 +83,22 @@ export async function verificarSesion() {
 
 
 // 🔹 Cerrar sesión
-export function cerrarSesion() {
+export async function cerrarSesion() {
+ /*   console.log(localStorage);
+    // cerrarSesionAuth();
+    //console.log(localStorage);
     console.log("cerrar sesion")
     mostrarToast("Cerrando sesion...", "warning")
     localStorage.removeItem("user");  // Elimina los datos del usuario almacenados
     localStorage.removeItem("rol");
     localStorage.removeItem("nombre");
-    
+    localStorage.removeItem("_grecaptcha");
+    localStorage.removeItem("sb-kicwgxkkayxneguidsxe-auth-token");
+    console.log(localStorage);
+*/
+
+    let { error } = await supabase.auth.signOut()
+
     // Redirigir al índice principal después de que el Toast termine
     setTimeout(() => {
         window.location.href = "../index.html"; // Redirige a la página principal

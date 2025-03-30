@@ -115,13 +115,13 @@ export async function gestionarEmpleado(event) {
             // console.log(`✏️ Editando empleado con ID: ${idEmpleado}`);
 
             await actualizarEmpleado(idEmpleado, { nombre, email, telefono, fechaNacimiento, puesto, genero });
-            mostrarToast("✅ Empleado actualizado correctamente.", "success");
+         //   mostrarToast("✅ Empleado actualizado correctamente.", "success");
 
         } else {
             // ➕ **Registrar nuevo empleado**
             console.log("➕ Registrando nuevo empleado...");
             await registrarNuevoEmpleado({ nombre, email, telefono, fechaNacimiento, puesto, genero });
-            mostrarToast("✅ Empleado registrado correctamente.", "success");
+           // mostrarToast("✅ Empleado registrado correctamente.", "success");
         }
 
         // 🔄 Refrescar la lista y ocultar el formulario
@@ -190,12 +190,12 @@ async function actualizarEmpleado(idEmpleado, datos) {
         puesto: datos.puesto,
         genero: datos.genero
     }).eq("id", idEmpleado);
+    mostrarToast("✅ Empleado actualizado correctamente.", "success");
 }
 
 // 📌 **Función para registrar un nuevo empleado**
 export async function registrarNuevoEmpleado(datos) {
     try {
-
         // 🔹 **Obtener el admin que está registrando al empleado**
         const { data: session, error: sessionError } = await supabase.auth.getSession();
         if (sessionError || !session.session) throw new Error("No hay sesión activa.");
@@ -204,7 +204,7 @@ export async function registrarNuevoEmpleado(datos) {
         // 🔹 **Crear usuario en la autenticación de Supabase**
         const { data: authUser, error: authError } = await supabase.auth.signUp({
             email: datos.email,
-            password: "Empleado" + Math.floor(Math.random() * 10000) // 🔐 Contraseña temporal
+            password: "Empleado" + Math.floor(Math.random() * 10000) // 🔐 Contraseña temporal;
         });
 
         if (authError) throw authError;
@@ -235,7 +235,7 @@ export async function registrarNuevoEmpleado(datos) {
             }
         ]);
         if (empleadoError) throw empleadoError;
-
+        
         mostrarToast("✅ Empleado registrado correctamente.", "success");
 
     } catch (error) {

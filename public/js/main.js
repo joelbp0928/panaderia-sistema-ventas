@@ -1,7 +1,7 @@
 // Importar otros módulos
 import { cargarPromociones, cargarProductos, cargarConfiguracion } from "./config.js";
 import { inicializarCarrito } from "./cart.js";
-import { inicializarAutenticacion, cerrarSesion } from "./auth.js";
+import { inicializarAutenticacion, cerrarSesionAuth } from "./auth.js";
 
 
 window.onload = async function () {
@@ -12,7 +12,7 @@ window.onload = async function () {
 
         // Inicializar otros módulos
         inicializarCarrito();
-        inicializarAutenticacion();
+  //      inicializarAutenticacion();
 
         cargarConfiguracion();
 

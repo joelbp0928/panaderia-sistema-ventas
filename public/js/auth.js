@@ -18,17 +18,17 @@ function mostrarLogin() {
 }
 
 // 🔹 Cerrar sesión
-export function cerrarSesion() {
+export function cerrarSesionAuth() {
     console.log("cerrar sesion")
-    mostrarToast("Cerrando sesion...", "warning")
+    mostrarToast("Cerrando sesion auth...", "warning")
     localStorage.removeItem("user");  // Elimina los datos del usuario almacenados
     localStorage.removeItem("rol");
     localStorage.removeItem("nombre");
-    
+
     // Redirigir al índice principal después de que el Toast termine
     setTimeout(() => {
         window.location.href = "index.html"; // Redirige a la página principal
-    }, 3000); // Espera 3 segundos para mostrar el toast antes de redirigir
+    }, 1000); // Espera 3 segundos para mostrar el toast antes de redirigir
 }
 // 📌 Función para iniciar sesión y redirigir según el rol
 async function iniciarSesion(event) {
@@ -70,42 +70,70 @@ async function iniciarSesion(event) {
 
         // Extraer datos del usuario
         const { nombre, rol } = userData;
-
+        console.log("userdata", userData)
         // Guardar los datos en localStorage
         localStorage.setItem("user", JSON.stringify(user));
         localStorage.setItem("rol", rol);
         localStorage.setItem("nombre", nombre);
 
 
-        // 🔹 Mensaje personalizado según el rol
+        // Verificar si el usuario es un empleado y buscar su puesto
         let redirectUrl = "index.html"; // Default redirect URL
-        switch (rol) {
-            case "admin":
-                mostrarToast(`✅ Bienvenido, ${nombre}. Accediendo al panel de administración.`, "success");
-                redirectUrl = './html/admin.html';
-                break;
-            case "cajero":
-                mostrarToast(`✅ Bienvenido, ${nombre}. Accediendo a la página de cajero.`, "success");
-                redirectUrl = './html/cajero.html';
-                break;
-            case "empacador":
-                alert(`✅ Bienvenido, ${nombre}. Accediendo a la página de empacadores.`, "success");
-                redirectUrl = './html/empacadores.html';
-                break;
-            default:
-                mostrarToast("✅ Bienvenido, ${nombre}. Disfruta de tu experiencia en nuestra tienda.", "success");
+        if (rol === "empleado") {
+            // Consultar la tabla empleados para obtener el puesto
+            const { data: empleadoData, error: empleadoError } = await supabase
+                .from("empleados")
+                .select("puesto")
+                .eq("usuario_id", user.id)  // Suponiendo que la tabla empleados tiene una columna 'usuario_id' que se relaciona con la tabla usuarios
+                .single();
+
+            if (empleadoError) {
+                throw new Error("No se encontró el puesto del empleado.");
+            }
+
+            // Redirigir según el puesto del empleado
+            const puesto = empleadoData.puesto;
+            switch (puesto) {
+                case "cajero":
+                    mostrarToast(`✅ Bienvenido, ${nombre}. Accediendo a la página de cajero.`, "success");
+                    redirectUrl = './html/cajero.html';
+                    break;
+                case "empacador":
+                    mostrarToast(`✅ Bienvenido, ${nombre}. Accediendo a la página de empacadores.`, "success");
+                    redirectUrl = './html/empacador.html';
+                    break;
+                default:
+                    mostrarToast(`✅ Bienvenido, ${nombre}. Accediendo a la página de empleados.`, "success");
+                    redirectUrl = './html/index.html';
+                    break;
+            }
+        } else {
+            // Si el rol no es "empleado", solo redirigir dependiendo del rol
+            switch (rol) {
+                case "admin":
+                    mostrarToast(`✅ Bienvenido, ${nombre}. Accediendo al panel de administración.`, "success");
+                    redirectUrl = './html/admin.html';
+                    break;
+                case "cliente":
+                    mostrarToast(`✅ Bienvenido, ${nombre}. Disfruta de tu experiencia en nuestra tienda.`, "success");
+                    redirectUrl = './html/index.html';
+                    break;
+                default:
+                    mostrarToast(`✅ Bienvenido, ${nombre}. Disfruta de tu experiencia en nuestra tienda.`, "success");
+            }
         }
-        window.location.href = redirectUrl;
+        // Redirigir al índice principal después de que el Toast termine
+        setTimeout(() => {
+            window.location.href = redirectUrl;; // Redirige a la página principal
+        }, 1000); // Espera 1 segundo para mostrar el toast antes de redirigir
     } catch (error) {
-      //  mostrarToast("❌ Error en el inicio de sesión", "warning");
+        //  mostrarToast("❌ Error en el inicio de sesión", "warning");
         console.error("❌ Error en el inicio de sesión:", error);
     }
 }
 
-
 // 📌 Asociar la función al formulario de inicio de sesión
 document.getElementById("login-form").addEventListener("submit", iniciarSesion);
-
 
 // 📌 Función para registrar un usuario nuevo en Supabase
 async function registrarUsuario(event) {
