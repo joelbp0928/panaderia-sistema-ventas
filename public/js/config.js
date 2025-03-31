@@ -88,11 +88,17 @@ export async function cargarConfiguracion() {
 }
 // Función para aplicar el color primario al sitio
 function aplicarColorPrimario(color) {
+    // Crear un color más oscuro para el hover
+    const colorHover = tinycolor(color).darken(20).toString(); // 20% más oscuro
+    
     // Aplicar color al fondo y a los botones
     document.documentElement.style.setProperty('--primary-color', color);
     document.querySelectorAll('.btn-primary').forEach(button => {
         button.style.backgroundColor = color;
         button.style.borderColor = color;
     });
-    // Si tienes más elementos que dependen de este color, también los puedes actualizar aquí
+    // Aplicar color más oscuro al hover
+    document.documentElement.style.setProperty('--primary-color-obscuro', colorHover);
+    
+
 }

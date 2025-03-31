@@ -1,296 +1,387 @@
-/* General */
+/* Definir una variable para el color primario */
+:root {
+  --primary-color: #6c1b2d; /* Valor por defecto */
+  --primary-color-obscuro: #4b0f23;
+  --light-color: #f5f5f5;
+}
+
+/* Usar la variable en el fondo y botones */
 body {
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f5f5f5; /* Fondo blanco */
-    color: #4b0f23; /* Texto color vino */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    overflow: hidden; /* Evitar desbordamiento */
+  background-color: var(--light-color);
+  font-family: Arial, sans-serif;
+  height: 100vh; /* Ocupa toda la altura de la ventana */
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column; /* Usamos flexbox para estructurar el layout */
 }
 
-/* Diseño general */
-#content {
-    display: flex;
-    height: 10vh; /* Ocupa toda la pantalla */
-    gap: 1rem;
-    padding: 1rem;
-   
-  }
-
-  /* Panel izquierdo (catálogo de productos) */
-#left-panel {
-    flex: 2; /* Ocupa dos tercios del espacio */
-    display: flex;
-    flex-direction: column;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    padding: 1rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    overflow-y: auto;
-  }
-
-
-#product-categories {
-    flex: 1;
-  }
-  
-  .categories-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Ajusta el número de columnas */
-    gap: 1rem;
-  }
-  
-  /* Botones de categoría */
-  .category-btn {
-    background-color: #4b0f23;
-    color: white;
-    padding: 0.8rem;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    text-align: center;
-  }
-  
-  .category-btn:hover {
-    background-color: #731335;
-  }
-  
-  /* Panel derecho (listado de productos y totales) */
-  #right-panel {
-    flex: 1; /* Ocupa un tercio del espacio */
-    display: flex;
-    flex-direction: column;
-    background-color: #fdf2f4;
-    border: 1px solid #ddd;
-    padding: 1rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    overflow-y: auto;
-  }
-  
-  #selected-products {
-    flex: 1; /* Deja espacio suficiente para los totales */
-    margin-bottom: 1rem;
-    overflow-y: auto;
-  }
-  
-  #product-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  #product-table th,
-  #product-table td {
-    padding: 0.5rem;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  #totals {
-    background-color: #f8e8ec;
-    padding: 1rem;
-    border: 1px solid #4b0f23;
-    border-radius: 10px;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  #totals .totals-row {
-    font-size: 1.2rem;
-    margin-bottom: 1rem;
-  }
-  
-  #finalize-btn {
-    background-color: #4b0f23;
-    color: white;
-    padding: 0.8rem;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 100%;
-  }
-  
-  #finalize-btn:hover {
-    background-color: #731335;
-  }
-  
-
+/* Packer-screen ocupará toda la altura disponible menos el footer */
 #packer-screen {
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-    width: 100%;
-    max-width: 1200px;
-    background-color: #fff; /* Fondo blanco */
-    border: 2px solid #4b0f23; /* Borde color vino */
-    border-radius: 10px;
-    height: 100vh;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-    overflow: hidden; /* Evitar barra de scroll */
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1; /* Deja que el contenido se expanda y ocupe el espacio disponible */
+  overflow: hidden;
+}
+footer {
+  height: 8%;
+  margin-top: 3px;
+  text-align: center;
+  padding: 10px;
+  background-color: var(--primary-color);
+  color: white;
+}
+/* Panel izquierdo (catálogo de productos) */
+#left-panel {
+  display: flex;
+  flex-direction: column;
+  background-color: #fdf2f4;
+  border: 1px solid #ddd;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  height: 100%; /* Esto garantiza que la división izquierda esté alineada con las otras dos */
 }
 
-/* Encabezado con imagen */
-#company-header {
-    width: 100%;
-    background-color: #4b0f23; /* Fondo vino */
-    text-align: center;
-    padding: 0.5rem 0;
-}
-
-#company-logo {
-    max-height: 60px; /* Altura máxima de la imagen */
-    height: auto; /* Escala automática para mantener proporciones */
-}
-
-/* Contenido Principal */
-#content {
-    display: grid;
-    grid-template-columns: 1.5fr 2fr 1fr;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    height: 100%;
-    box-sizing: border-box;
-    overflow: hidden;
-}
-
-/* Productos seleccionados */
-#selected-products {
-    background-color: #fdf2f4; /* Fondo claro con tono vino */
-    padding: 0.5rem;
-    border-radius: 10px;
-    border: 1px solid #4b0f23;
-    overflow-y: auto; /* Si los productos exceden, desplaza internamente */
-    font-size: 0.9rem;
-}
-
-#selected-products h2 {
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
-    color: #4b0f23;
-}
-
-/* Categorías */
 #product-categories {
-    background-color: #fdf2f4;
-    padding: 0.5rem;
-    border-radius: 10px;
-    border: 1px solid #4b0f23;
-    overflow-y: auto; /* Ajusta si hay muchos productos */
+  flex: 1;
 }
 
-.categories-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 5px;
-}
-
-.category-btn {
-    background-color: #4b0f23; /* Fondo color vino */
-    color: #fff; /* Texto blanco */
-    border: none;
-    padding: 0.8rem;
-    font-size: 0.9rem;
-    border-radius: 5px;
-    cursor: pointer;
-    text-align: center;
-}
-
-/* Totales */
-#totals {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    background-color: #fdf2f4;
-    border-radius: 10px;
-    border: 1px solid #4b0f23;
-}
-
-#finalize-btn {
-    width: 100%;
+#category-buttons {
+    display: grid; /* Usamos Grid para hacer que los botones sean responsivos */
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Los botones ocupan un mínimo de 150px, y se ajustan automáticamente */
+    gap: 0.5rem; /* Espaciado entre los botones */
     padding: 1rem;
-    font-size: 1rem;
-    background-color: #4b0f23;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
 }
 
-/* Tabla productos */
+/* Botones de categoría */
+.category-btn {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  text-align: center;
+  transition: background-color 0.3s ease; /* Transición suave para el hover */
+
+}
+
+.category-btn:hover {
+  background-color: var(--primary-color-obscuro);
+  font-size: 1rem; /* Aumentar tamaño en hover para que sea más notorio */
+}
+
+/* Panel derecho (listado de productos y totales) */
+#right-panel {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--light-color);
+  border: 1px solid #ddd;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  height: 100%; /* Esto garantiza que la división izquierda esté alineada con las otras dos */
+}
+
+#selected-products {
+  flex: 1; /* Deja espacio suficiente para los totales */
+  margin-bottom: 1rem;
+  overflow-y: auto;
+}
+
 #product-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-    margin: 0 auto;
+  width: 100%;
+  border-collapse: collapse;
 }
 
 #product-table th,
 #product-table td {
-    text-align: center;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
+  padding: 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+#totals {
+  background-color: var(--light-color);
+  padding: 1rem;
+  border: 1px solid ;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#totals .totals-row {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+#finalize-btn {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+}
+
+#finalize-btn:hover {
+  background-color: var(--primary-color-obscuro);
+}
+
+/* Encabezado con imagen */
+#company-header {
+  display: flex;
+  justify-content: space-between; /* Espaciado entre el logo y el contenido a la derecha */
+  align-items: center; /* Alinea los elementos verticalmente al centro */
+  background-color: var(--primary-color); /* Fondo vino */
+  padding: 0.2rem 1rem; /* Hacemos el encabezado más delgado */
+  position: relative; /* Permite posicionar elementos dentro de él */
+}
+
+header img {
+  width: 150px;
+  margin-bottom: 10px;
+  display: block;
+}
+/* Contenedor para el nombre del usuario y el botón de cerrar sesión */
+#header-right {
+  display: flex;
+  flex-direction: column; /* Coloca los elementos (nombre de usuario y botón) en una columna */
+  align-items: flex-end; /* Alinea el contenido a la derecha */
+}
+
+
+/* Nombre del usuario */
+#employee-name {
+  color: white; /* Hacemos el texto blanco para que resalte */
+  font-size: 1rem; /* Tamaño del texto */
+  margin-bottom: 0.3rem; /* Un poco de espacio debajo del nombre */
+}
+/* Contenedor para los botones y la notificación de pedidos */
+#header-left {
+  display: flex;
+  align-items: center; /* Alinea verticalmente */
+  gap: 1rem; /* Espaciado entre los elementos */
+}
+
+/* Contenido Principal */
+#content {
+  display: grid;
+  grid-template-columns: 1.5fr 2fr 1fr;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  height: 66vh; 
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Productos seleccionados */
+#selected-products {
+  background-color: #fdf2f4; /* Fondo claro con tono vino */
+  padding: 0.5rem;
+  border-radius: 10px;
+  border: 1px solid #4b0f23;
+  overflow-y: auto; /* Si los productos exceden, desplaza internamente */
+  font-size: 0.9rem;
+}
+
+#selected-products h2 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: var(--primary-color);
+}
+
+/* Categorías */
+#product-categories {
+  background-color: #fdf2f4;
+  padding: 0.5rem;
+  border-radius: 10px;
+  border: 1px solid --primary-color;
+  overflow-y: auto; /* Ajusta si hay muchos productos */
+}
+
+.category-btn {
+  background-color: var(--primary-color); /* Fondo color vino */
+  color: #fff; /* Texto blanco */
+  border: none;
+  padding: 0.8rem;
+  font-size: 0.9rem;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+}
+
+/* Totales */
+#totals {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: #fdf2f4;
+  border-radius: 10px;
+  border: 1px solid --primary-color;
+}
+
+#finalize-btn {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Tabla productos */
+#product-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin: 0 auto;
+}
+
+#product-table th,
+#product-table td {
+  text-align: center;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
 }
 
 #product-table thead th {
-    background-color: #4b0f23;
-    color: #fff;
+  background-color: var(--primary-color);
+  color: #fff;
 }
 
 /* Estilo para productos individuales */
 .product {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    background-color: #fdf2f4;
-    padding: 0.5rem;
-    border-radius: 10px;
-    border: 1px solid #4b0f23;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .product img {
-    max-width: 100%;
-    max-height: 100px;
-    margin-bottom: 0.5rem;
-    border-radius: 5px;
-  }
-  
-  .product h3 {
-    font-size: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background-color: #fdf2f4;
+  padding: 0.5rem;
+  border-radius: 10px;
+  border: 1px solid --primary-color;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.product img {
+  max-width: 100%;
+  max-height: 100px;
+  margin-bottom: 0.5rem;
+  border-radius: 5px;
+}
+
+.product h3 {
+  font-size: 1rem;
+  color: var(--primary-color);
+  margin: 0.5rem 0;
+}
+
+.product p {
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.category-btn {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.category-btn:hover {
+  background-color: var(--primary-color-obscuro);
+}
+
+/* Botón redondo de pedidos */
+#orders-btn {
+  background-color: #ff4500;
+  color: white;
+  font-size: 14px;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Notificación de pedidos pendientes */
+#order-notification {
+  background-color: #ff0000;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#orders-btn:hover {
+  background-color: #e43f00;
+}
+
+/* Estilos para mostrar el nombre del empleado */
+.employee-name-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* Alinea el nombre a la derecha */
+  margin-right: 20px;
+}
+
+#selected-products h2 {
+    font-size: 1.5rem; /* Aumentar tamaño de los encabezados */
     color: #4b0f23;
-    margin: 0.5rem 0;
-  }
-  
-  .product p {
-    font-size: 0.9rem;
-    color: #333;
-  }
-  
-  .categories-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  
-  .category-btn {
-    background-color: #4b0f23;
-    color: white;
-    padding: 0.8rem;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    text-align: center;
-  }
-  
-  .category-btn:hover {
-    background-color: #731335;
-  }
-  
-  
+}
+
+#product-table th,
+#product-table td {
+    font-size: 1rem; /* Aumentar tamaño de la fuente en la tabla */
+}
+
+#totals .totals-row {
+    font-size: 1.4rem; /* Aumentar tamaño de los totales */
+}
+
+#total {
+    font-size: 1.6rem; /* Aumentar tamaño del total */
+}
+
+#finalize-btn {
+    font-size: 1.2rem; /* Aumentar tamaño del texto en el botón de finalizar */
+}
+
+/* Estilo del botón de cerrar sesión */
+#logout-btn {
+  background-color: #d9534f; /* Color rojo de alerta */
+  border: none;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.3s ease;
+}
+
+#logout-btn:hover {
+  background-color: #c9302c; /* Color más oscuro cuando se hace hover */
+}

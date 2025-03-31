@@ -17,10 +17,10 @@
         contraseña.
       </p>
 
-      <form id="reset-password-form">
+      <form id="forgot-password-form">
         <div class="mb-3">
           <label for="email" class="form-label">Correo Electrónico</label>
-          <input type="email" class="form-control" id="email" required />
+          <input type="email" class="form-control" id="recovery-email" required />
         </div>
         <button type="submit" class="btn btn-primary">Enviar Enlace</button>
       </form>
@@ -31,56 +31,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-    <script type="module">
-      import { supabase } from "../js/supabase-config.js";
-      // Obtener el correo del parámetro en la URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get("token");
- //     console.log("Email:", email);
-
-      // Manejar el formulario de restablecimiento de contraseña
-      document
-        .getElementById("reset-password-form")
-        .addEventListener("submit", async (event) => {
-          event.preventDefault();
-
-          // Obtener el correo electrónico ingresado
-          const emailInput = document.getElementById("email").value;
-
-          // Verificar si el correo electrónico ingresado coincide con el que recibimos
-   /*       if (emailInput !== email) {
-            alert(
-              "El correo ingresado no coincide con el correo de la invitación."
-            );
-            return;
-          }*/
-
-          try {
-            // Enviar el enlace de restablecimiento de contraseña
-            const { data, error } =
-              await supabase.auth.resetPasswordForEmail(emailInput);
-            
-            if (error) {
-              console.error(
-                "Error al enviar el enlace de restablecimiento:",
-                error.message
-              );
-              alert(
-                "Error al enviar el enlace de restablecimiento: " +
-                  error.message
-              );
-            } else {
-              console.log("Enlace de restablecimiento enviado con éxito.");
-              alert(
-                "Te hemos enviado un enlace para restablecer tu contraseña."
-              );
-              window.location.href = "../index.html"; // Redirigir al login después de enviar el correo
-            }
-          } catch (error) {
-            console.error("Error al procesar la solicitud:", error.message);
-            alert("Error al procesar la solicitud: " + error.message);
-          }
-        });
-    </script>
+    <script type="module" src="../js/send-email-password.js"></script>
   </body>
 </html>

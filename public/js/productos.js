@@ -27,6 +27,8 @@ export function showProductForm(/*product = null*/) {
     quantityInputs.forEach(input => {
         input.style.display = "none"; // Ocultar todos los inputs de cantidad
     });
+    // Cargar las categorías al abrir el formulario
+    cargarCategorias();
 }
 
 // 📌 Función para gestionar el producto (crear o actualizar)
@@ -37,7 +39,7 @@ export async function gestionarProducto(event) {
     const nombre = document.getElementById("product-name").value.trim();
     const precio = parseFloat(document.getElementById("product-price").value);
     const stock = parseInt(document.getElementById("product-stock").value);
-    const categoria = document.getElementById("product-category").value;
+    const categoria = document.getElementById("product-category").value; // Obtener el ID de la categoría seleccionada
     // Obtener los ingredientes seleccionados y sus cantidades
     const ingredientes = Array.from(document.querySelectorAll("#product-ingredients input[type='checkbox']:checked"));
     const ingredientesSeleccionados = ingredientes.map(checkbox => checkbox.value);  // Ingredientes seleccionados
@@ -114,7 +116,7 @@ async function agregarProducto(data) {
                 nombre: data.nombre,
                 precio: data.precio,
                 stock: data.stock,
-                categoria: data.categoria,
+                categoria_id: data.categoria, // Guardar el ID de la categoría
                 imagen_url: data.imagen_url,
             }])
             .select(); // Asegúrate de obtener los datos después de la inserción
@@ -134,7 +136,7 @@ async function agregarProducto(data) {
 
         // Relacionar los ingredientes con el producto
         await associateIngredientsWithProduct(product[0].id, data.ingredientes, data.cantidades);
-        
+
         cargarIngredientes();
         // ✅ Mostrar mensaje de éxito
         mostrarToast("✅ Producto agregado correctamente.", "success");
@@ -154,7 +156,7 @@ async function actualizarProducto(idProducto, data) {
                 nombre: data.nombre,
                 precio: data.precio,
                 stock: data.stock,
-                categoria: data.categoria,
+                categoria_id: data.categoria, // Guardar el ID de la categoría
                 imagen_url: data.imagen_url,
             })
             .eq("id", idProducto);
@@ -529,13 +531,41 @@ export function updateIngredientQuantity(ingredientId) {
     }
 }
 
+// Cargar las categorías desde la base de datos
+async function cargarCategorias() {
+    try {
+        // Obtener las categorías desde Supabase
+        const { data: categorias, error } = await supabase.from("categorias").select("*");
+
+        if (error) throw error;
+
+        const selectCategoria = document.getElementById("product-category");
+        selectCategoria.innerHTML = ''; // Limpiar las opciones previas
+
+        // Añadir la opción "Seleccionar categoría" como primer valor
+        const defaultOption = document.createElement("option");
+        defaultOption.text = "Seleccionar Categoría";
+        selectCategoria.appendChild(defaultOption);
+
+        // Crear una opción para cada categoría
+        categorias.forEach(categoria => {
+            const option = document.createElement("option");
+            option.value = categoria.id;
+            option.text = categoria.nombre;
+            selectCategoria.appendChild(option);
+        });
+    } catch (error) {
+        console.error("Error al cargar categorías:", error);
+    }
+}
+
 // 📌 Función para cargar productos desde Supabase y mostrarlos en una tabla
 export async function cargarProductos() {
     try {
         // 🔹 Obtener los productos desde Supabase
         const { data: productos, error: productosError } = await supabase
             .from("productos")
-            .select("id, nombre, precio, stock, categoria, imagen_url"); // Obtener las columnas necesarias
+            .select("id, nombre, precio, stock, categoria:categoria_id(nombre), imagen_url"); // Obtener las columnas necesarias
 
         if (productosError) throw productosError;
 
@@ -586,10 +616,13 @@ export async function cargarProductos() {
                 return `${ingredient.nombre}: ${ingredient.cantidad} ${ingredient.medida}`;
             }).join(", ");
 
+            // Mostrar el nombre de la categoría en lugar del ID
+            const categoriaNombre = producto.categoria ? producto.categoria.nombre : "Sin Categoría";
+
             fila.innerHTML = `
                 <td><img src="${imagen}" alt="${producto.nombre}" class="img-thumbnail"></td>
                 <td>${producto.nombre}</td>
-                <td>${producto.categoria}</td>
+                <td>${categoriaNombre}</td>
                 <td>$${producto.precio}</td>
                 <td>${producto.stock}</td>
                 <td>${ingredientesText}</td>
@@ -606,6 +639,6 @@ export async function cargarProductos() {
         });
     } catch (error) {
         console.error("❌ Error al cargar productos:", error);
-        mostrarToast(`❌ Error: ${error.message}`, "error");
+        mostrarToast(`❌ Error al cargar productos`, "error");
     }
 }

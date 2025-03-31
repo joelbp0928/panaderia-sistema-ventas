@@ -1,11 +1,5 @@
-//import { auth, db } from "./firebase-conf";
-import { createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-import { setDoc, doc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
-import { mostrarToast } from "./manageError.js";
 import { supabase } from "./supabase-config.js";
-
-//const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
+import { mostrarToast } from "./manageError.js";
 
 export function inicializarAutenticacion() {
     // document.getElementById("login-btn").addEventListener("click", mostrarLogin);
@@ -18,20 +12,22 @@ function mostrarLogin() {
 }
 
 // 🔹 Cerrar sesión
-export function cerrarSesionAuth() {
-    console.log("cerrar sesion")
-    mostrarToast("Cerrando sesion auth...", "warning")
-    localStorage.removeItem("user");  // Elimina los datos del usuario almacenados
-    localStorage.removeItem("rol");
-    localStorage.removeItem("nombre");
+export async function cerrarSesionAuth() {
+    try {
+        await supabase.auth.signOut(); // Cierra la sesión en Supabase
+        mostrarToast("✅ Cerrando sesión...", "warning");
+        // Redirigir al índice principal después de que el Toast termine
+        setTimeout(() => {
+            window.location.href = "index.html"; // Redirige a la página principal
+        }, 1000); // Espera 1 segundos para mostrar el toast antes de redirigir
+    } catch (error) {
+        console.error("❌ Error al cerrar sesión:", error.message);
+        mostrarToast("❌ Error al cerrar sesión", "error");
+    }
 
-    // Redirigir al índice principal después de que el Toast termine
-    setTimeout(() => {
-        window.location.href = "index.html"; // Redirige a la página principal
-    }, 1000); // Espera 3 segundos para mostrar el toast antes de redirigir
 }
 // 📌 Función para iniciar sesión y redirigir según el rol
-async function iniciarSesion(event) {
+export async function iniciarSesion(event) {
     event.preventDefault();
 
     // Obtener datos del formulario
@@ -132,8 +128,6 @@ async function iniciarSesion(event) {
     }
 }
 
-// 📌 Asociar la función al formulario de inicio de sesión
-document.getElementById("login-form").addEventListener("submit", iniciarSesion);
 
 // 📌 Función para registrar un usuario nuevo en Supabase
 async function registrarUsuario(event) {
@@ -213,21 +207,4 @@ async function registrarUsuario(event) {
 }
 
 // 📌 Asociar la función al formulario
-document.getElementById("signup-form").addEventListener("submit", registrarUsuario);
-
-// 🔹 Recuperar contraseña
-document.getElementById("forgot-password-form")?.addEventListener("submit", function (e) {
-    e.preventDefault();
-    const emailInput = document.getElementById("recovery-email").value;
-    const alertBox = document.getElementById("forgot-password-alert");
-
-    if (emailInput === "") {
-        alertBox.classList.remove("d-none", "alert-success");
-        alertBox.classList.add("alert-danger");
-        alertBox.textContent = "Por favor, ingresa un correo válido.";
-    } else {
-        alertBox.classList.remove("d-none", "alert-danger");
-        alertBox.classList.add("alert-success");
-        alertBox.textContent = "Se ha enviado un enlace de recuperación a tu correo.";
-    }
-});
+//document.getElementById("signup-form").addEventListener("submit", registrarUsuario);

@@ -1,21 +1,25 @@
 // Importar otros módulos
 import { cargarPromociones, cargarProductos, cargarConfiguracion } from "./config.js";
+import { verificarSesion } from './auth-check.js'; // Importa la función para verificar la sesión
 import { inicializarCarrito } from "./cart.js";
-import { inicializarAutenticacion, cerrarSesionAuth } from "./auth.js";
+import { iniciarSesion } from "./auth.js";
 
+import "./forgot-password.js";
 
 window.onload = async function () {
     try {
+        verificarSesion();
         // Cargar elementos principales de la página
         cargarPromociones();
         cargarProductos();
 
         // Inicializar otros módulos
         inicializarCarrito();
-  //      inicializarAutenticacion();
+        //      inicializarAutenticacion();
 
         cargarConfiguracion();
-
+        // 📌 Asociar la función al formulario de inicio de sesión
+        document.getElementById("login-form").addEventListener("submit", iniciarSesion);
 
     } catch (error) {
         console.error("❌ Error en la inicialización de admin.js:", error);

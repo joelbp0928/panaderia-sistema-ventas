@@ -20,19 +20,19 @@ export function marcarErrorCampo(campoID, mensaje) {
     }
 }
 
-/**
- * 📌 Limpia los errores de un campo cuando se corrige
- * @param {string} campoID - El ID del campo a limpiar
- */
-export function limpiarErrorCampo(campoID) {
-    const campo = document.getElementById(campoID);
-    campo.classList.remove("is-invalid");
 
-    // Eliminar mensaje de error si existe
-    const errorMensaje = campo.parentNode.querySelector(".invalid-feedback");
-    if (errorMensaje) {
-        errorMensaje.remove();
-    }
+export function limpiarErrorCampo(campoIds) {
+    // Iterar sobre el array de IDs
+    campoIds.forEach((campoID) => {
+        const campo = document.getElementById(campoID);
+        campo.classList.remove("is-invalid"); // Eliminar la clase de error
+
+        // Eliminar mensaje de error si existe
+        const errorMensaje = campo.parentNode.querySelector(".invalid-feedback");
+        if (errorMensaje) {
+            errorMensaje.remove();
+        }
+    });
 }
 
 /**

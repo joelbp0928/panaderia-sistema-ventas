@@ -185,63 +185,91 @@
           <button class="btn btn-primary mb-3" id="btn-agregar-empleado">
             Agregar Empleado
           </button>
-          <form id="form-empleado" class="d-none">
-            <div class="mb-3">
-              <label for="empleado-nombre">Nombre</label>
-              <input
-                type="text"
-                class="form-control"
-                id="empleado-nombre"
-                required
-              />
+          <!-- Modal para Agregar/Editar Empleado -->
+          <div
+            class="modal fade"
+            id="empleadoModal"
+            tabindex="-1"
+            aria-labelledby="empleadoModalLabel"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="empleadoModalLabel">
+                    Agregar Empleado
+                  </h5>
+                  <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div class="modal-body">
+                  <!-- Formulario de empleado -->
+                  <form id="form-empleado">
+                    <div class="mb-3">
+                      <label for="empleado-nombre">Nombre</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="empleado-nombre"
+                        required
+                      />
+                    </div>
+                    <div class="mb-3">
+                      <label for="empleado-email">Email</label>
+                      <input
+                        type="email"
+                        class="form-control"
+                        id="empleado-email"
+                        required
+                      />
+                    </div>
+                    <div class="mb-3">
+                      <label for="empleado-telefono">Teléfono</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="empleado-telefono"
+                        required
+                      />
+                    </div>
+                    <div class="mb-3">
+                      <label for="empleado-genero">Género</label>
+                      <select class="form-control" id="empleado-genero">
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
+                        <option value="Otro">Otro</option>
+                      </select>
+                    </div>
+                    <div class="mb-3">
+                      <label for="empleado-fecha">Fecha de Nacimiento</label>
+                      <input
+                        type="date"
+                        class="form-control"
+                        id="empleado-fecha"
+                        required
+                      />
+                    </div>
+                    <div class="mb-3">
+                      <label for="empleado-puesto">Puesto</label>
+                      <select class="form-control" id="empleado-puesto">
+                        <option value="cajero">Cajero</option>
+                        <option value="empacador">Empacador</option>
+                        <option value="admin">Administrador</option>
+                      </select>
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                      Guardar Empleado
+                    </button>
+                  </form>
+                </div>
+              </div>
             </div>
-            <div class="mb-3">
-              <label for="empleado-email">Email</label>
-              <input
-                type="email"
-                class="form-control"
-                id="empleado-email"
-                required
-              />
-            </div>
-            <div class="mb-3">
-              <label for="empleado-telefono">Teléfono</label>
-              <input
-                type="text"
-                class="form-control"
-                id="empleado-telefono"
-                required
-              />
-            </div>
-            <div class="mb-3">
-              <label for="empleado-genero">Género</label>
-              <select class="form-control" id="empleado-genero">
-                <option value="Masculino">Masculino</option>
-                <option value="Femenino">Femenino</option>
-                <option value="Otro">Otro</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="empleado-fecha">Fecha de Nacimiento</label>
-              <input
-                type="date"
-                class="form-control"
-                id="empleado-fecha"
-                required
-              />
-            </div>
-            <div class="mb-3">
-              <label for="empleado-puesto">Puesto</label>
-              <select class="form-control" id="empleado-puesto">
-                <option value="cajero">Cajero</option>
-                <option value="empacador">Empacador</option>
-                <option value="admin">Administrador</option>
-              </select>
-            </div>
-            <button type="submit" class="btn btn-success">
-              Guardar Empleado
-            </button>
-          </form>
+          </div>
+
           <table class="table table-striped" id="tabla-empleados">
             <thead>
               <tr>
@@ -580,12 +608,7 @@
                         class="form-control"
                         required
                       >
-                        <option value="Donas">Donas</option>
-                        <option value="Repostería">Repostería</option>
-                        <option value="Promociones">Promociones</option>
-                        <option value="Pan de Temporada">
-                          Pan de Temporada
-                        </option>
+                        <!-- Las categorías se llenarán aquí dinámicamente -->
                       </select>
                     </div>
                     <div class="form-section">
@@ -699,17 +722,76 @@
           </table>
         </div>
 
-        <!-- Categorias -->
+        <!-- Categorías -->
         <div
           class="tab-pane fade"
           id="categorias"
           role="tabpanel"
           aria-labelledby="settings-tab"
         >
-          <h2>Configuracion de Categorias</h2>
-          <form>
-            <h2>Estamos trabajando 🏗🚧👷‍♂️</h2>
-          </form>
+          <h2>Configuración de Categorías</h2>
+
+          <!-- Botón para agregar una categoría -->
+          <button class="btn btn-primary mb-3" id="btn-agregar-categoria">
+            Agregar Categoría
+          </button>
+
+          <!-- Modal para agregar/editar categoría -->
+          <div
+            class="modal fade"
+            id="categoriaModal"
+            tabindex="-1"
+            aria-labelledby="categoriaModalLabel"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="categoriaModalLabel">
+                    Agregar Categoría
+                  </h5>
+                  <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div class="modal-body">
+                  <form id="form-categoria">
+                    <div class="mb-3">
+                      <label for="categoria-nombre" class="form-label"
+                        >Nombre de la Categoría</label
+                      >
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="categoria-nombre"
+                        required
+                      />
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                      Guardar Categoría
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Listado de categorías -->
+          <h3>Categorías Existentes</h3>
+          <table class="table table-striped" id="tabla-categorias">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Aquí se cargarán dinámicamente las categorías -->
+            </tbody>
+          </table>
         </div>
 
         <!-- Promociones Tab -->
