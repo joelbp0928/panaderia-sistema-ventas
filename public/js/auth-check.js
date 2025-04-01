@@ -10,6 +10,7 @@ export async function verificarAccesoAdmin() {
         if (sessionError || !sessionData.session) {
             mostrarToast("🟠 No hay sesión activa.", "warnign");
             console.log("🟠 No hay sesión activa.");
+            window.location.href = "../index.html";
             return;
         }
 
@@ -43,7 +44,7 @@ export async function verificarAccesoAdmin() {
 // Verificar si hay un usuario autenticado al cargar la página
 export async function verificarSesion() {
     try {
-        //  console.log("🔍 Verificando sesión activa...");
+          console.log("🔍 Verificando sesión activa...");
 
         // 🔹 Obtener sesión activa
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -51,6 +52,7 @@ export async function verificarSesion() {
         if (sessionError || !sessionData.session) {
             mostrarToast("🟠 No hay sesión activa.", "warning");
             console.log("🟠 No hay sesión activa.");
+            window.location.href = "../index.html";
             return;
         }
 

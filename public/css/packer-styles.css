@@ -24,10 +24,10 @@ body {
   overflow: hidden;
 }
 footer {
-  height: 8%;
+  height: 5%;
   margin-top: 3px;
   text-align: center;
-  padding: 10px;
+  padding: 5px;
   background-color: var(--primary-color);
   color: white;
 }
@@ -49,10 +49,13 @@ footer {
 }
 
 #category-buttons {
-    display: grid; /* Usamos Grid para hacer que los botones sean responsivos */
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Los botones ocupan un mínimo de 150px, y se ajustan automáticamente */
-    gap: 0.5rem; /* Espaciado entre los botones */
-    padding: 1rem;
+  display: grid; /* Usamos Grid para hacer que los botones sean responsivos */
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(150px, 1fr)
+  ); /* Los botones ocupan un mínimo de 150px, y se ajustan automáticamente */
+  gap: 0.5rem; /* Espaciado entre los botones */
+  padding: 1rem;
 }
 
 /* Botones de categoría */
@@ -66,7 +69,6 @@ footer {
   font-size: 1rem;
   text-align: center;
   transition: background-color 0.3s ease; /* Transición suave para el hover */
-
 }
 
 .category-btn:hover {
@@ -85,38 +87,6 @@ footer {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
   height: 100%; /* Esto garantiza que la división izquierda esté alineada con las otras dos */
-}
-
-#selected-products {
-  flex: 1; /* Deja espacio suficiente para los totales */
-  margin-bottom: 1rem;
-  overflow-y: auto;
-}
-
-#product-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-#product-table th,
-#product-table td {
-  padding: 0.5rem;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-
-#totals {
-  background-color: var(--light-color);
-  padding: 1rem;
-  border: 1px solid ;
-  border-radius: 10px;
-  text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-#totals .totals-row {
-  font-size: 1.2rem;
-  margin-bottom: 1rem;
 }
 
 #finalize-btn {
@@ -155,7 +125,6 @@ header img {
   align-items: flex-end; /* Alinea el contenido a la derecha */
 }
 
-
 /* Nombre del usuario */
 #employee-name {
   color: white; /* Hacemos el texto blanco para que resalte */
@@ -172,26 +141,29 @@ header img {
 /* Contenido Principal */
 #content {
   display: grid;
-  grid-template-columns: 1.5fr 2fr 1fr;
+  grid-template-columns: 1fr 2fr;
   gap: 0.5rem;
   padding: 0.5rem;
-  height: 66vh; 
+  height: 66vh;
   box-sizing: border-box;
   overflow: hidden;
 }
 
 /* Productos seleccionados */
 #selected-products {
+  display: flex;
   background-color: #fdf2f4; /* Fondo claro con tono vino */
   padding: 0.5rem;
   border-radius: 10px;
-  border: 1px solid #4b0f23;
+  border: 1px solid var(--primary-color); /* Usa la variable aquí */
   overflow-y: auto; /* Si los productos exceden, desplaza internamente */
   font-size: 0.9rem;
+  flex-direction: column;
+  height: 100%; /* Asegura que ocupe todo el alto disponible */
 }
 
 #selected-products h2 {
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   margin-bottom: 0.5rem;
   color: var(--primary-color);
 }
@@ -201,7 +173,7 @@ header img {
   background-color: #fdf2f4;
   padding: 0.5rem;
   border-radius: 10px;
-  border: 1px solid --primary-color;
+  border: 1px solid var(--primary-color);;
   overflow-y: auto; /* Ajusta si hay muchos productos */
 }
 
@@ -217,16 +189,18 @@ header img {
 }
 
 /* Totales */
+
+/* Aseguramos que el botón de "Imprimir Ticket" siempre esté al fondo */
 #totals {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background-color: #fdf2f4;
+  margin-top: auto; /* Esto empuja la sección de totales hacia el fondo */
+  background-color: var(--light-color);
+  padding: 1rem;
+  border: 1px solid #ddd;
   border-radius: 10px;
-  border: 1px solid --primary-color;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
 }
+
 
 #finalize-btn {
   width: 100%;
@@ -259,7 +233,13 @@ header img {
   color: #fff;
 }
 
+#product-table tbody.empty {
+  text-align: center;
+  font-style: italic;
+  color: #888;
+}
 /* Estilo para productos individuales */
+/* Ajustar el contenedor de los productos */
 .product {
   display: flex;
   flex-direction: column;
@@ -268,26 +248,35 @@ header img {
   background-color: #fdf2f4;
   padding: 0.5rem;
   border-radius: 10px;
-  border: 1px solid --primary-color;
+  border: 1px solid #ddd;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: 200px; /* Establecemos una altura fija */
+  justify-content: space-between; /* Esto asegura que el texto y la imagen se alineen correctamente */
+  max-width: 180px; /* Limitar el ancho máximo de cada tarjeta */
+  transition: background-color 0.3s ease; /* Transición suave para el hover */
 }
 
+.product:hover {
+  background-color: var(--primary-color-obscuro);
+  font-size: 1rem; /* Aumentar tamaño en hover para que sea más notorio */
+}
+
+/* Establecer una imagen uniforme para todos los productos */
 .product img {
   max-width: 100%;
-  max-height: 100px;
+  height: auto;
+  object-fit: contain; /* Esto garantiza que la imagen se ajuste sin deformarse */
+  max-height: 120px; /* Ajustamos la altura máxima de la imagen */
   margin-bottom: 0.5rem;
   border-radius: 5px;
 }
 
-.product h3 {
-  font-size: 1rem;
-  color: var(--primary-color);
-  margin: 0.5rem 0;
-}
-
+/* Aseguramos que los textos estén alineados correctamente */
+.product h3,
 .product p {
-  font-size: 0.9rem;
-  color: #333;
+  margin: 0; /* Eliminar márgenes */
+  font-size: 1rem; /* Tamaño consistente para el texto */
+  color: var(--primary-color); /* Para el nombre del producto */
 }
 
 .categories-grid {
@@ -347,26 +336,21 @@ header img {
   margin-right: 20px;
 }
 
-#selected-products h2 {
-    font-size: 1.5rem; /* Aumentar tamaño de los encabezados */
-    color: #4b0f23;
-}
-
 #product-table th,
 #product-table td {
-    font-size: 1rem; /* Aumentar tamaño de la fuente en la tabla */
+  font-size: 1rem; /* Aumentar tamaño de la fuente en la tabla */
 }
 
 #totals .totals-row {
-    font-size: 1.4rem; /* Aumentar tamaño de los totales */
+  font-size: 1.4rem; /* Aumentar tamaño de los totales */
 }
 
 #total {
-    font-size: 1.6rem; /* Aumentar tamaño del total */
+  font-size: 1.4rem; /* Aumentar tamaño del total */
 }
 
 #finalize-btn {
-    font-size: 1.2rem; /* Aumentar tamaño del texto en el botón de finalizar */
+  font-size: 1.2rem; /* Aumentar tamaño del texto en el botón de finalizar */
 }
 
 /* Estilo del botón de cerrar sesión */
@@ -384,4 +368,65 @@ header img {
 
 #logout-btn:hover {
   background-color: #c9302c; /* Color más oscuro cuando se hace hover */
+}
+
+/* Contenedor de productos con 4 por fila */
+#products-buttons {
+  display: grid; /* Usamos Grid para hacer que los botones sean responsivos */
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(150px, 1fr)
+  ); /* Los botones ocupan un mínimo de 150px, y se ajustan automáticamente */
+  gap: 0.5rem; /* Espaciado entre los botones */
+  padding: 1rem;
+}
+/* Estilo para los productos */
+.product-card {
+  width: 100%;
+  text-align: center;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 5px;
+}
+
+/* Aseguramos que las imágenes no se estiren demasiado */
+.product img {
+  max-width: 100%;
+  height: 100%;
+  border-radius: 15px;
+}
+
+/* Tamaño pequeño para el ícono de regresar */
+.product i {
+  font-size: 20px;
+}
+
+/* Estilo del botón de eliminar (bote de basura) */
+#delete-btn {
+  display: none; /* Inicialmente oculto */
+  cursor: pointer;
+  font-size: 24px;
+  color: #d9534f; /* Color rojo para el icono de eliminar */
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+#delete-btn:hover {
+  color: #c9302c; /* Cambio de color cuando se hace hover */
+}
+
+/* Estilo para la fila seleccionada */
+.selected-row {
+  background-color: #f8d7da; /* Fondo rojo suave */
+}
+
+#product-table tbody {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#product-table tbody.empty {
+  text-align: center;
+  font-style: italic;
+  color: #888;
 }

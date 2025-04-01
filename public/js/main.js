@@ -8,7 +8,7 @@ import "./forgot-password.js";
 
 window.onload = async function () {
     try {
-        verificarSesion();
+    //    verificarSesion();
         // Cargar elementos principales de la página
         cargarPromociones();
         cargarProductos();
