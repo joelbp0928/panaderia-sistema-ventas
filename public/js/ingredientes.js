@@ -1,5 +1,5 @@
 import { supabase } from "./supabase-config.js"; // 📌 Importar configuración de Supabase
-import { mostrarToast, marcarErrorCampo, limpiarErrorCampo } from "./manageError.js"; // 📌 Manejo de errores
+import { mostrarToast, marcarErrorCampo, limpiarErrorCampo, hideLoading, showLoading } from "./manageError.js"; // 📌 Manejo de errores
 import { formatearFecha } from "./formatearFecha.js";
 import { loadIngredients } from "./productos.js";
 
@@ -11,67 +11,97 @@ let selectedIngredientId = null;
 window.editarIngrediente = editarIngrediente;
 window.eliminarIngrediente = eliminarIngrediente;
 document.addEventListener('DOMContentLoaded', () => {
+    showLoading(); // Mostrar spinner al cargar la página
+
+    // Configurar eventos y cargar datos
     setupRowSelection();
+    setupRealTimePriceUpdate();
+
+    // Cargar ingredientes iniciales
+    cargarIngredientes().finally(() => {
+        hideLoading(); // Asegurarse de ocultar si hay error
+    });
 
     document.addEventListener('click', (e) => {
         if (!e.target.closest('#ingredient-table') && !e.target.closest('.button-container')) {
             clearSelection();
+            setupRowSelection()
         }
     });
 });
 // Mostrar el formulario para agregar o editar ingrediente
 export function showIngredientForm() {
     const modal = new bootstrap.Modal(document.getElementById("ingredientModal"));
-    modal.show(); // Mostrar el modal
-    handlePriceChange();
-    document.getElementById("ingredient-form").reset();
+
+    // Resetear el formulario completamente
+    const form = document.getElementById("ingredient-form");
+    form.reset();
+    form.dataset.ingredienteId = "";
+
+    // Establecer el tipo de precio predeterminado (unitario)
+    document.querySelector('input[name="price-type"][value="unitario"]').checked = true;
+
+    // Mostrar campos iniciales
+    document.getElementById("unitario-fields").style.display = "block";
+    document.getElementById("total-fields").style.display = "none";
+
+    // Limpiar campos calculados
+    document.getElementById("calculated-price-total").style.display = "none";
+
+    // Cambiar texto del botón de submit
     document.querySelector("#ingredient-form button[type='submit']").innerText = "Guardar Ingrediente";
+
+    // Mostrar el modal
+    modal.show();
+
+    // Forzar el cálculo inicial
+    handlePriceChange();
 }
 
 // Función para manejar el cambio entre precio unitario y precio total
 export function handlePriceChange() {
     const priceType = document.querySelector('input[name="price-type"]:checked').value;
-    const stock = parseFloat(document.getElementById("ingredient-stock").value);
-    const price = parseFloat(document.getElementById("ingredient-price").value);
-    const priceTotal = parseFloat(document.getElementById("ingredient-price-total").value);
-    const cantidad_unitario = parseFloat(document.getElementById("cantidad-unitario").value || 1); // Default a 1 si no se ingresa
 
-    const medida_unitario = document.getElementById("medida-unitario").value;
-    const medidaIngrediente = document.getElementById("ingredient-measure").value;
-
-    // Si la medida del ingrediente es diferente a la del precio unitario, hacer la conversión
-    let conversionFactor = 1;
-
-    if (medida_unitario !== medidaIngrediente) {
-        console.log("diferente. ", medida_unitario, "  ", medidaIngrediente)
-        // Aquí se puede agregar la lógica de conversión (p.ej., 1kg = 1000g)
-        if (medidaIngrediente === "kg" && medida_unitario === "gr") {
-            conversionFactor = 1000; // 1 kg = 1000 gramos
-        } else if (medidaIngrediente === "gr" && medida_unitario === "kg") {
-            conversionFactor = 0.001; // 1 g = 0.001 kg
-        }
-        // Puedes agregar más conversiones dependiendo de las unidades que manejes.
-    }
-
+    // Mostrar/ocultar campos según el tipo de precio seleccionado
     if (priceType === "unitario") {
-        // Mostrar los campos relacionados con el precio unitario
         document.getElementById("unitario-fields").style.display = "block";
         document.getElementById("total-fields").style.display = "none";
-        // Calculamos el precio total si es precio unitario
-        const totalPrice = ((price * conversionFactor) / cantidad_unitario) * stock;
-        console.log(totalPrice, " = ((", price, " * ", conversionFactor, " ) / ", cantidad_unitario, ") * ", stock);
-        document.getElementById("calculated-price-total").innerText = "Precio Total: $" + totalPrice;
-        document.getElementById("calculated-price-total").style.display = "inline";
     } else {
-        // Si es precio total, solo se toma el valor ingresado
-        const preciouni = (priceTotal / stock)
-        console.log(preciouni, " = ", priceTotal, " / ", stock)
-        document.getElementById("calculated-price-total").innerText = "Precio Total: $" + priceTotal;
-        document.getElementById("calculated-price-total").style.display = "inline";
-
-        // Mostrar los campos relacionados con el precio total
         document.getElementById("unitario-fields").style.display = "none";
         document.getElementById("total-fields").style.display = "block";
+    }
+
+    // Solo continuar con cálculos si los campos requeridos tienen valores
+    try {
+        const stock = parseFloat(document.getElementById("ingredient-stock").value) || 0;
+        const price = parseFloat(document.getElementById("ingredient-price").value) || 0;
+        const priceTotal = parseFloat(document.getElementById("ingredient-price-total").value) || 0;
+        const cantidad_unitario = parseFloat(document.getElementById("cantidad-unitario").value) || 1;
+
+        const medida_unitario = document.getElementById("medida-unitario").value;
+        const medidaIngrediente = document.getElementById("ingredient-measure").value;
+
+        let conversionFactor = 1;
+
+        if (medida_unitario !== medidaIngrediente) {
+            if (medidaIngrediente === "kg" && medida_unitario === "gr") {
+                conversionFactor = 1000;
+            } else if (medidaIngrediente === "gr" && medida_unitario === "kg") {
+                conversionFactor = 0.001;
+            }
+        }
+
+        if (priceType === "unitario") {
+            const totalPrice = ((price * conversionFactor) / cantidad_unitario) * stock;
+            document.getElementById("calculated-price-total").innerText = "Precio Total: $" + totalPrice.toFixed(2);
+            document.getElementById("calculated-price-total").style.display = "inline";
+        } else {
+            const preciouni = (priceTotal / stock);
+            document.getElementById("calculated-price-total").innerText = "Precio Unitario: $" + preciouni.toFixed(2);
+            document.getElementById("calculated-price-total").style.display = "inline";
+        }
+    } catch (error) {
+        console.error("Error en cálculos:", error);
     }
 }
 
@@ -91,54 +121,53 @@ export function setupRealTimePriceUpdate() {
 export async function gestionarIngrediente(event) {
     event.preventDefault(); // Evita la recarga de la página
 
-   // 🔹 Obtener datos del formulario
-   const idIngrediente = document.getElementById("ingredient-form").dataset.ingredienteId;
-   const nombre = document.getElementById("ingredient-name").value.trim();
-   const medida = document.getElementById("ingredient-measure").value;
-   const cantidad = parseFloat(document.getElementById("ingredient-stock").value);
-   const priceType = document.querySelector('input[name="price-type"]:checked').value;
-   const preciounitario = parseFloat(document.getElementById("ingredient-price").value);
-   const precio_total_ingrediente = parseFloat(document.getElementById("ingredient-price-total").value);
+    // 🔹 Obtener datos del formulario
+    const idIngrediente = document.getElementById("ingredient-form").dataset.ingredienteId;
+    const nombre = document.getElementById("ingredient-name").value.trim();
+    const medida = document.getElementById("ingredient-measure").value;
+    const cantidad = parseFloat(document.getElementById("ingredient-stock").value);
+    const priceType = document.querySelector('input[name="price-type"]:checked').value;
+    const preciounitario = parseFloat(document.getElementById("ingredient-price").value);
+    const precio_total_ingrediente = parseFloat(document.getElementById("ingredient-price-total").value);
 
-   // 🔹 Inicializar variables para medida y cantidad unitaria
-   let medida_unitario = medida;
-   let cantidad_unitario = cantidad;
+    // 🔹 Inicializar variables para medida y cantidad unitaria
+    let medida_unitario = medida;
+    let cantidad_unitario = cantidad;
 
-   // Si es precio unitario, obtener los valores del formulario
-   if (priceType === "unitario") {
-       medida_unitario = document.getElementById("medida-unitario").value;
-       cantidad_unitario = parseFloat(document.getElementById("cantidad-unitario").value);
-   }
+    // Si es precio unitario, obtener los valores del formulario
+    if (priceType === "unitario") {
+        medida_unitario = document.getElementById("medida-unitario").value;
+        cantidad_unitario = parseFloat(document.getElementById("cantidad-unitario").value);
+    }
 
-   let precio_total = 0;
-   let precio_unitario = preciounitario;
-   let conversionFactor = 1;
+    let precio_total = 0;
+    let precio_unitario = preciounitario;
+    let conversionFactor = 1;
 
-   if (medida_unitario !== medida) {
-       console.log("diferente. ", medida_unitario, "  ", medida);
-       if (medida === "kg" && medida_unitario === "gr") {
-           conversionFactor = 1000;
-       } else if (medida === "gr" && medida_unitario === "kg") {
-           conversionFactor = 0.001;
-       }
-   }
+    if (priceType === "unitario") {
+        if (medida_unitario !== medida) {
+            console.log("diferente. ", medida_unitario, "  ", medida);
+            if (medida === "kg" && medida_unitario === "gr") {
+                conversionFactor = 1000;
+            } else if (medida === "gr" && medida_unitario === "kg") {
+                conversionFactor = 0.001;
+            }
+        }
+        precio_total = ((precio_unitario * conversionFactor) / cantidad_unitario) * cantidad;
+        console.log(precio_total, " = ((", precio_unitario, " * ", conversionFactor, " ) / ", cantidad_unitario, ") * ", cantidad);
+    } else {
+        cantidad_unitario = 1;
+        precio_total = precio_total_ingrediente;
+        precio_unitario = precio_total_ingrediente / cantidad;
+    }
 
-   if (priceType === "unitario") {
-       precio_total = ((precio_unitario * conversionFactor) / cantidad_unitario) * cantidad;
-       console.log(precio_total, " = ((", precio_unitario, " * ", conversionFactor, " ) / ", cantidad_unitario, ") * ", cantidad);
-   } else {
-       precio_total = precio_total_ingrediente;
-       precio_unitario = precio_total_ingrediente / cantidad;
-   }
-
-   console.log("precio_total: " + precio_total);
+    console.log("precio_total: " + precio_total);
     try {
         // 🔹 Si idIngrediente existe, actualizamos, si no, agregamos un nuevo ingrediente
         if (idIngrediente) {
-            console.log("aqui")
             await actualizarIngrediente(idIngrediente, { nombre, medida, cantidad, precio_unitario, precio_total, medida_unitario, cantidad_unitario });
         } else {
-            await agregarIngrediente({ nombre, medida, cantidad, precio_unitario, precio_total });
+            await agregarIngrediente({ nombre, medida, cantidad, precio_unitario, precio_total, medida_unitario, cantidad_unitario });
         }
 
         // 🔄 Recargar la lista de ingredientes después de agregar o actualizar
@@ -157,7 +186,7 @@ export async function gestionarIngrediente(event) {
 
 // 📌 Agregar un nuevo ingrediente
 export async function agregarIngrediente(datos) {
-    const { nombre, medida, cantidad, precio_unitario, precio_total } = datos;
+    const { nombre, medida, cantidad, precio_unitario, precio_total, medida_unitario, cantidad_unitario } = datos;
     console.log("datos", datos)
     // Validaciones
     if (!nombre || !medida || !cantidad || !precio_total) {
@@ -175,6 +204,8 @@ export async function agregarIngrediente(datos) {
                 fechaRegistro: new Date().toISOString(),
                 precio_unitario: precio_unitario,
                 precio_total: precio_total,
+                medida_unitario,
+                cantidad_unitario
             },
         ]);
 
@@ -194,6 +225,8 @@ export async function agregarIngrediente(datos) {
 
 // 📌 Función para cargar los ingredientes desde Supabase y mostrarlos
 export async function cargarIngredientes() {
+    // Mostrar spinner de carga
+    showLoading();
     try {
         const { data, error } = await supabase
             .from("ingredientes")
@@ -211,18 +244,23 @@ export async function cargarIngredientes() {
 
             const fechaRegistro = formatearFecha(ingrediente.fechaRegistro);
             fila.innerHTML = `
-                <td>${ingrediente.nombre}</td>
-                <td>$${Number(ingrediente.precio_total).toFixed(2)}</td>
-                <td>${ingrediente.cantidad} ${ingrediente.medida}</td>
-                <td>$${Number(ingrediente.precio_unitario).toFixed(2)} x ${ingrediente.cantidad_unitario} ${ingrediente.medida_unitario}</td>
-                <td>${fechaRegistro}</td>
-            `;
+            <td>${ingrediente.nombre}</td>
+            <td>${formatCurrency(ingrediente.precio_total)}</td>
+            <td>${formatNumber(ingrediente.cantidad)} ${ingrediente.medida}</td>
+            <td>${formatCurrency(ingrediente.precio_unitario)} x ${formatNumber(ingrediente.cantidad_unitario)} ${ingrediente.medida_unitario}</td>
+            <td>${fechaRegistro}</td>
+        `;
             listaIngredientes.appendChild(fila);
         });
-        // Limpiar selección al recargar
-        clearSelection();
+
     } catch (error) {
         console.error("❌ Error al cargar ingredientes:", error);
+        // Mostrar notificación de error
+        mostrarToast("Error al cargar ingredientes", "error");
+    } finally {
+        hideLoading(); // Ocultar spinner independientemente del resultado
+        clearSelection(); // Limpiar selección al recargar
+        setupRowSelection()
     }
 }
 
@@ -282,24 +320,33 @@ async function editarIngrediente(idIngrediente) {
         // 🔹 Llenar el formulario con los datos del ingrediente
         document.getElementById("ingredient-name").value = data.nombre;
         document.getElementById("ingredient-measure").value = data.medida;
-        document.getElementById("medida-unitario").value = data.medida_unitario;
+        document.getElementById("ingredient-stock").value = data.cantidad;
 
-        const cantidad = document.getElementById("ingredient-stock").value = data.cantidad;
-        const precio = document.getElementById("ingredient-price").value = data.precio_unitario;
-        const cantidad_unitario = document.getElementById("cantidad-unitario").value = data.cantidad_unitario;
-        const totalPrice = document.getElementById("price-unit").value = data.precio_total;
-        document.getElementById("calculated-price-total").innerText = "Total: " + totalPrice || "";
 
+        // Determinar si es precio unitario o total
+        if (data.precio_unitario && data.cantidad_unitario) {
+            document.querySelector('input[name="price-type"][value="unitario"]').checked = true;
+            document.getElementById("ingredient-price").value = data.precio_unitario;
+            document.getElementById("cantidad-unitario").value = data.cantidad_unitario;
+            document.getElementById("medida-unitario").value = data.medida_unitario;
+        } else {
+            document.querySelector('input[name="price-type"][value="total"]').checked = true;
+            document.getElementById("ingredient-price-total").value = data.precio_total;
+        }
+        // Asegurar que los campos numéricos tengan valores válidos
+        const priceTotalInput = document.getElementById("ingredient-price-total");
+        if (priceTotalInput && !priceTotalInput.value) {
+            priceTotalInput.value = data.precio_total || 0;
+        }
         // 📌 Cambiar el título del modal y el botón de acción
         document.getElementById("ingredientModalLabel").innerText = "Editar Ingrediente";
         document.querySelector('#ingredient-form button[type="submit"').innerText = "Actualizar Ingrediente";
-
+        // Actualizar visualización
+        handlePriceChange();
         // 📌 Establecer el ID en el formulario para actualizar
         const formulario = document.getElementById("ingredient-form");
         formulario.dataset.ingredienteId = idIngrediente;
         console.log(formulario);
-
-
     } catch (error) {
         console.error("❌ Error al cargar el ingrediente para edición:", error);
         mostrarToast(`❌ Error al cargar el ingrediente para edición.`, "error");
@@ -367,6 +414,7 @@ function setupRowSelection() {
             eliminarIngrediente(selectedIngredientId);
             // Limpiar selección después de eliminar
             clearSelection();
+            
         }
     });
 
@@ -391,4 +439,20 @@ function clearSelection() {
         document.getElementById('delete-btn').classList.remove('active');
         document.getElementById('edit-cuantity-modal-btn').classList.remove('active');
     }
+}
+
+// Función para formatear moneda (con $, comas y 2 decimales)
+function formatCurrency(value) {
+    return '$' + formatNumber(value, 2);
+}
+
+// Función para formatear números con comas y decimales opcionales
+function formatNumber(value, decimals = 0) {
+    const number = Number(value);
+    if (isNaN(number)) return '0';
+
+    return number.toLocaleString('en-US', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    });
 }

@@ -110,6 +110,20 @@
             Promociones
           </button>
         </li>
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            id="inventario-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#inventario"
+            type="button"
+            role="tab"
+            aria-controls="Inventario"
+            aria-selected="false"
+          >
+            Inventario
+          </button>
+        </li>
         <!-- Botón para estadísticas -->
         <li class="nav-item">
           <button
@@ -281,7 +295,6 @@
                 <th>Teléfono</th>
                 <th>Registrado por</th>
                 <th>Fecha Registro</th>
-                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -469,6 +482,9 @@
                         type="number"
                         id="ingredient-price-total"
                         class="form-control"
+                        step="0.01"
+                        min="0"
+                        value="0"
                       />
                     </div>
                     <button
@@ -998,6 +1014,17 @@
               </li>
             </ul>
           </div>
+        </div>
+
+        <!-- Inventario -->
+        <div
+          class="tab-pane fade"
+          id="inventario"
+          role="tabpanel"
+          aria-labelledby="settings-tab"
+        >
+          <h2>Gestión de Inventario</h2>
+          <h2>Estamos trabajando 🏗🚧👷‍♂️</h2>
         </div>
 
         <!-- Estadísticas de Ventas -->

@@ -64,3 +64,28 @@ export function mostrarToast(mensaje, tipo) {
         }
     }).showToast(); // Mostramos el mensaje utilizando la función showToast() de Toastify
 }
+
+
+// Función para mostrar el spinner de carga
+export function showLoading() {
+    // Evitar múltiples spinners
+    if (document.getElementById('loading-overlay')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'loading-overlay';
+    overlay.className = 'loading-overlay';
+    overlay.innerHTML = `
+        <div class="spinner-border text-primary loading-spinner" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+// Función para ocultar el spinner
+export function hideLoading() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.remove();
+    }
+}
