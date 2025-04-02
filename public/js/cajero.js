@@ -1,3 +1,26 @@
+import { cargarConfiguracion } from "./config.js";
+
+window.onload = async function () {
+    cargarConfiguracion();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 document.getElementById('submit-payment').addEventListener('click', () => {
     const total = 44.00; // Total del ticket
     const amountGiven = parseFloat(document.getElementById('amount-input').value) || 0;

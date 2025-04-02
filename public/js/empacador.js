@@ -1,10 +1,12 @@
 import { cargarPromociones, cargarProductos, cargarConfiguracion } from "./config.js";
 import { verificarSesion, cerrarSesion } from './auth-check.js'; // Importa la función para verificar la sesión
 import { supabase } from "./supabase-config.js";
-import { mostrarToast } from "./manageError.js";
+import { marcarErrorCampo, mostrarToast } from "./manageError.js";
 
 let productosSeleccionados = []; // Array para almacenar los productos seleccionados
-let productoSeleccionadoParaEliminar = null; // Almacena el producto seleccionado para eliminar
+let selectedProductId = null; // ID del producto seleccionado para editar la cantidad
+let editQuantityModal = null; // Variable global para guardar la instancia
+
 
 window.onload = async function () {
     await verificarSesion(); // Verificar si la sesión está activa
@@ -15,7 +17,29 @@ window.onload = async function () {
     // 🔹 Asociar el evento de Cerrar Sesión al botón logout-btn
     document.getElementById("logout-btn").addEventListener("click", cerrarSesion);
     document.getElementById("orders-btn").addEventListener("click", showOrders);
+  //  document.getElementById("edit-cuantity-modal-btn").addEventListener("click", showEditQuantityModal);
 }
+
+// Mostrar modal para editar cantidad
+function showEditQuantityModal(productId, currentQuantity) {
+    selectedProductId = productId;
+    const quantityInput = document.getElementById("quantity-input");
+    quantityInput.value = currentQuantity;
+    quantityInput.dataset.fresh = "true"; // Marcar que el input está "fresco" (primer dígito reemplazará)
+
+    // Cierra cualquier modal existente y elimina el backdrop
+    if (editQuantityModal) {
+        editQuantityModal.hide();
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(backdrop => backdrop.remove());
+    }
+
+    // Crea una nueva instancia del modal
+    editQuantityModal = new bootstrap.Modal(document.getElementById("editQuantityModal"));
+    editQuantityModal.show();
+
+}
+
 
 // Función para cargar las categorías desde la base de datos y agregarlas al HTML
 async function cargarCategorias() {
@@ -152,9 +176,9 @@ function actualizarTabla() {
             <td colspan="4">No hay productos seleccionados</td>
         </tr>
     `;
-    document.getElementById("delete-btn").style.display = "none"; // Mostrar el botón de eliminar
-     // Actualizar el total en la sección de totales
-     document.getElementById("total").textContent = "$0.00";
+        document.getElementById("delete-btn").style.display = "none"; // Mostrar el botón de eliminar
+        // Actualizar el total en la sección de totales
+        document.getElementById("total").textContent = "$0.00";
     } else {
         let totalGeneral = 0; // Para calcular el total general
 
@@ -183,7 +207,7 @@ function actualizarTabla() {
 
         // Actualizar el total en la sección de totales
         document.getElementById("total").textContent = `$${totalGeneral.toFixed(2)}`;
-        
+
     }
 }
 
@@ -192,29 +216,173 @@ function seleccionarFila(row, producto) {
     // Si la fila ya está seleccionada, desmarcarla
     if (row.classList.contains('selected-row')) {
         row.classList.remove('selected-row');
-        productoSeleccionadoParaEliminar = null; // Deseleccionar el producto
-        document.getElementById("delete-btn").style.display = "none"; // Mostrar el botón de eliminar
+        selectedProductId = null; // Deseleccionar el producto
+        document.getElementById("delete-btn").style.display = "none"; // ocultar el botón de eliminar
+        document.getElementById("edit-cuantity-modal-btn").style.display = "none"; // ocultar
     } else {
         // Si la fila no está seleccionada, marcarla
         const filas = document.querySelectorAll("#product-table tbody tr");
         filas.forEach(fila => fila.classList.remove('selected-row')); // Desmarcar todas las filas
         row.classList.add('selected-row'); // Marcar la fila seleccionada
-        productoSeleccionadoParaEliminar = producto; // Guardar el producto seleccionado
+        selectedProductId = producto; // Guardar el producto seleccionado
         document.getElementById("delete-btn").style.display = "inline-block"; // Mostrar el botón de eliminar
+        document.getElementById("edit-cuantity-modal-btn").style.display = "inline-block"; // Mostrar el botón de eliminar
+
+        // Llamar al modal de editar cantidad y pasar la cantidad del producto seleccionado
+        document.getElementById("edit-cuantity-modal-btn").addEventListener("click", function () {
+            showEditQuantityModal(producto.id, producto.cantidad);
+        });
+    }
+}
+
+// Manejar los botones del teclado numérico
+document.querySelectorAll(".num-btn").forEach(button => {
+    button.addEventListener("click", function () {
+        const value = this.getAttribute("data-num");
+        const quantityInput = document.getElementById("quantity-input");
+
+        // Si es un número, lo agregamos al campo de entrada
+        if (value !== "C" && value !== "OK" && value !== "backspace") {
+            // Si el campo está vacío o es el primer dígito después de abrir el modal
+            if (quantityInput.value === "0" || quantityInput.dataset.fresh === "true") {
+                quantityInput.value = value; // Reemplazar el valor
+                quantityInput.dataset.fresh = "false"; // Marcar que ya no es "fresco"
+            } else {
+                quantityInput.value += value; // Concatenar normalmente
+            }
+        }
+        // Limpiar el campo de entrada (borrar todo)
+        else if (value === "C") {
+            quantityInput.value = ""; // Borrar todo
+            quantityInput.dataset.fresh = "true"; // Marcar como fresco al limpiar
+        }
+        // Retroceder (borrar un solo número)
+        else if (value === "backspace") {
+            // Borrar el último carácter del campo de entrada
+            if (quantityInput.value.length <= 1) {
+                quantityInput.value = "0";
+                quantityInput.dataset.fresh = "true"; // Marcar como fresco al borrar todo
+            } else {
+                quantityInput.value = quantityInput.value.slice(0, -1);
+            }
+        }
+        // Confirmar la cantidad
+        else if (value === "OK") {
+            const newQuantity = parseInt(quantityInput.value); // Obtener el valor ingresado
+
+            // Verificar que la cantidad sea válida
+            if (newQuantity > 0) {
+                // Actualizar la cantidad en el producto seleccionado
+                updateProductQuantity(selectedProductId, newQuantity);
+                // Cerrar el modal después de actualizar
+                const modal = bootstrap.Modal.getInstance(document.getElementById("editQuantityModal"));
+                modal.hide();
+              //  document.querySelector('.modal-backdrop').remove(); // Elimina el backdrop manualmente
+
+            } else {
+                mostrarToast("La cantidad debe ser mayor que 0.", "warning");
+                marcarErrorCampo("quantity-input", "Ingrese cantidad mayor a 0.")
+
+            }
+        }
+    });
+});
+
+// Función para actualizar la cantidad del producto en la lista de productos seleccionados
+function updateProductQuantity(productId, newQuantity) {
+    // Buscar el producto seleccionado en la lista
+    const producto = productosSeleccionados.find(p => p.id === productId);
+
+    // Si el producto se encuentra, actualizar la cantidad
+    if (producto) {
+        producto.cantidad = newQuantity;
+        producto.total = producto.cantidad * producto.precio; // Actualizar el total del producto
+
+        // Actualizar la tabla de productos seleccionados
+        actualizarTabla();
+    } else {
+        console.error("Producto no encontrado en la lista.");
     }
 }
 
 // Función para eliminar el producto seleccionado
 document.getElementById("delete-btn").addEventListener('click', () => {
-    if (productoSeleccionadoParaEliminar) {
+    if (selectedProductId) {
         // Eliminar el producto de la lista
-        productosSeleccionados = productosSeleccionados.filter(p => p.id !== productoSeleccionadoParaEliminar.id);
+        productosSeleccionados = productosSeleccionados.filter(p => p.id !== selectedProductId.id);
 
         // Actualizar la tabla
         actualizarTabla();
-        productoSeleccionadoParaEliminar = null; // Restablecer la selección
+        selectedProductId = null; // Restablecer la selección
     }
 });
+
+// Función para mostrar el ticket y llenarlo con los detalles de la compra
+document.getElementById("finalize-btn").addEventListener("click", function () {
+    mostrarTicket();
+});
+
+function mostrarTicket() {
+    const ticketContent = document.getElementById("ticket-content");
+    const productosTable = document.getElementById("product-table").getElementsByTagName('tbody')[0];
+
+    let totalGeneral = 0; // Para calcular el total general
+    let ticketHTML = `
+        <h4>Ticket de Compra</h4>
+        <p><strong>Fecha:</strong> ${new Date().toLocaleString()}</p>
+        <p><strong>Empacador:</strong> Panchos </p> <!-- Puedes cambiar esto según cómo manejas al empacador -->
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    // Agregar productos a la tabla del ticket
+    productosSeleccionados.forEach(producto => {
+        ticketHTML += `
+            <tr>
+                <td>${producto.nombre}</td>
+                <td>${producto.cantidad}</td>
+                <td>$${producto.precio.toFixed(2)}</td>
+                <td>$${producto.total.toFixed(2)}</td>
+            </tr>
+        `;
+        totalGeneral += producto.total;
+    });
+
+    ticketHTML += `
+        </tbody>
+    </table>
+    <p><strong>Total: </strong>$${totalGeneral.toFixed(2)}</p>
+    `;
+
+    ticketContent.innerHTML = ticketHTML; // Inyectamos el contenido del ticket en el modal
+
+    // Mostrar el modal de previsualización
+    const modal = new bootstrap.Modal(document.getElementById('ticketModal'));
+    modal.show();
+}
+
+// Función para imprimir el ticket
+document.getElementById("print-ticket-btn").addEventListener("click", function () {
+    const ticketContent = document.getElementById("ticket-content").innerHTML;
+
+    const printWindow = window.open('', '', 'height=500, width=500');
+    printWindow.document.write('<html><head><title>Ticket de Compra</title>');
+    printWindow.document.write('<style>body { font-family: Arial, sans-serif; font-size: 14px; padding: 20px;} table { width: 100%; border-collapse: collapse;} table, th, td { border: 1px solid black;} th, td { padding: 8px; text-align: left;} </style>');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write(ticketContent);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.print(); // Inicia la impresión
+});
+
 
 // Función para manejar el clic en "Pedidos"
 function showOrders() {

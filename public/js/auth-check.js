@@ -44,7 +44,7 @@ export async function verificarAccesoAdmin() {
 // Verificar si hay un usuario autenticado al cargar la página
 export async function verificarSesion() {
     try {
-          console.log("🔍 Verificando sesión activa...");
+       //   console.log("🔍 Verificando sesión activa...");
 
         // 🔹 Obtener sesión activa
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -73,7 +73,7 @@ export async function verificarSesion() {
 
         // Mostrar el nombre del usuario en el encabezado
         const employeeName = document.getElementById('employee-name');
-        employeeName.textContent = `Sesión activa: ${userData.nombre}`; // Actualiza el nombre del usuario
+        employeeName.textContent = `Sesión: ${userData.nombre}`; // Actualiza el nombre del usuario
 
         console.log(`✅ Sesión activa: ${userData.nombre} (${userData.rol})`);
 
@@ -85,6 +85,7 @@ export async function verificarSesion() {
     } catch (error) {
         mostrarToast("❌ Error verificando la sesión.", "error");
         console.error("❌ Error verificando la sesión:", error.message);
+       // window.location.href = "../index.html";
     }
 }
 

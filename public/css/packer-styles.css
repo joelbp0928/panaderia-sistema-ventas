@@ -73,7 +73,7 @@ footer {
 
 .category-btn:hover {
   background-color: var(--primary-color-obscuro);
-  font-size: 1rem; /* Aumentar tamaño en hover para que sea más notorio */
+  transform: scale(1.05); /* Aumenta el tamaño del producto al hacer hover */
 }
 
 /* Panel derecho (listado de productos y totales) */
@@ -144,7 +144,7 @@ header img {
   grid-template-columns: 1fr 2fr;
   gap: 0.5rem;
   padding: 0.5rem;
-  height: 66vh;
+  height: 100vh;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -253,12 +253,11 @@ header img {
   height: 200px; /* Establecemos una altura fija */
   justify-content: space-between; /* Esto asegura que el texto y la imagen se alineen correctamente */
   max-width: 180px; /* Limitar el ancho máximo de cada tarjeta */
-  transition: background-color 0.3s ease; /* Transición suave para el hover */
+  transition: background-color 0.3s ease, transform 0.3s ease; /* Transición suave para el hover */
 }
 
 .product:hover {
-  background-color: var(--primary-color-obscuro);
-  font-size: 1rem; /* Aumentar tamaño en hover para que sea más notorio */
+  transform: scale(1.1); /* Aumenta el tamaño del producto al hacer hover */
 }
 
 /* Establecer una imagen uniforme para todos los productos */
@@ -355,7 +354,6 @@ header img {
 
 /* Estilo del botón de cerrar sesión */
 #logout-btn {
-  background-color: #d9534f; /* Color rojo de alerta */
   border: none;
   color: white;
   padding: 0.5rem;
@@ -367,8 +365,9 @@ header img {
 }
 
 #logout-btn:hover {
-  background-color: #c9302c; /* Color más oscuro cuando se hace hover */
+  color: #a59f9f; /* Color más oscuro cuando se hace hover */
 }
+
 
 /* Contenedor de productos con 4 por fila */
 #products-buttons {
@@ -401,13 +400,22 @@ header img {
   font-size: 20px;
 }
 
+/* Estilo del contenedor de los botones (flex para alinearlos horizontalmente) */
+.button-container {
+  display: flex;
+  justify-content: flex-start; /* Alinea los botones a la izquierda */
+  align-items: center; /* Centra los botones verticalmente */
+  gap: 20px; /* Espacio entre los botones, puedes ajustar este valor */
+  margin-left: 32px; /* Empuja los botones más a la izquierda */
+  margin-bottom: 10px; /* Espacio inferior */
+}
+
 /* Estilo del botón de eliminar (bote de basura) */
 #delete-btn {
   display: none; /* Inicialmente oculto */
   cursor: pointer;
   font-size: 24px;
   color: #d9534f; /* Color rojo para el icono de eliminar */
-  margin-bottom: 10px;
   text-align: center;
 }
 
@@ -415,9 +423,21 @@ header img {
   color: #c9302c; /* Cambio de color cuando se hace hover */
 }
 
+/* Estilo del botón de actualizar cantidad (lápiz) */
+#edit-cuantity-modal-btn {
+  display: none; /* Inicialmente oculto */
+  cursor: pointer;
+  font-size: 24px;
+  color: #4f96d9; /* Color azul para el icono de editar */
+  text-align: center;
+}
+
+#edit-cuantity-modal-btn:hover {
+  color: #4b7ead; /* Cambio de color cuando se hace hover */
+}
 /* Estilo para la fila seleccionada */
 .selected-row {
-  background-color: #f8d7da; /* Fondo rojo suave */
+  background-color: #b8b5b6; /* Fondo rojo suave */
 }
 
 #product-table tbody {
@@ -429,4 +449,36 @@ header img {
   text-align: center;
   font-style: italic;
   color: #888;
+}
+
+
+/* Estilos para el teclado numérico */
+.numeric-keyboard {
+  text-align: center;
+}
+
+.numeric-keyboard .buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.num-btn {
+  padding: 10px;
+  font-size: 18px;
+  background-color: var(--primary-color);
+  border: 1px solid var(--primary-color-obscuro);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.num-btn:hover {
+  background-color: var(--primary-color-obscuro);
+}
+
+#quantity-input {
+  text-align: center;
+  font-size: 20px;
+  margin-bottom: 20px;
+  padding: 10px;
 }

@@ -83,6 +83,20 @@ export async function gestionarProducto(event) {
             imagen_url: imagenURL
         };
 
+        // Calculando el precio unitario y total
+        const { costoTotal, costoUnitario } = await calcularCostoProducto(ingredientesSeleccionados, cantidades, stock);
+
+        console.log(`Costo total: $${costoTotal}, Costo unitario: $${costoUnitario}`);
+
+        // Validación de precio y total antes de proceder
+        if (isNaN(costoUnitario) || isNaN(costoTotal)) {
+            throw new Error("El precio unitario o el precio total no son válidos.");
+        }
+
+        // Guardar el producto con los nuevos valores de precio unitario y total
+        formData.precio_unitario = costoUnitario;
+        formData.precio_total = costoTotal;
+
         // Si el producto tiene un ID (editando un producto)
         if (idProducto) {
             // Actualizar el producto en la base de datos
@@ -93,8 +107,7 @@ export async function gestionarProducto(event) {
         }
 
         cargarProductos(); // 🔄 Recargar la lista de productos
-
-        cargarIngredientes();
+        cargarIngredientes(); // 🔄 Recargar la lista de ingredientes
 
         // Limpiar el formulario y ocultarlo
         document.getElementById("product-form").reset();
@@ -107,14 +120,138 @@ export async function gestionarProducto(event) {
     }
 }
 
+// Función para calcular el costo total y unitario del producto
+async function calcularCostoProducto(ingredientesSeleccionados, cantidades, cantidadProducto) {
+    let costoTotalProducto = 0;
+
+    try {
+        const detallesIngredientes = await Promise.all(ingredientesSeleccionados.map(async (ingredienteId, index) => {
+            const cantidadUsada = cantidades[index];
+
+            // Verificamos que la cantidad sea válida
+            if (isNaN(cantidadUsada) || cantidadUsada <= 0) {
+                console.error(`Cantidad inválida para el ingrediente ${ingredienteId}: ${cantidadUsada}`);
+                return 0; // Si la cantidad es inválida, retornamos 0
+            }
+
+            // Obtener el precio total y la cantidad inicial del ingrediente desde Supabase
+            const { data: ingrediente, error } = await supabase
+                .from("ingredientes")
+                .select("precio_total, cantidad_inicio") // Precio total y cantidad inicial en inventario
+                .eq("id", ingredienteId)
+                .single();
+
+            if (error) {
+                throw new Error(`Error al obtener el ingrediente con ID ${ingredienteId}`);
+            }
+
+            // Validar que el precio total sea un número válido
+            const precioIngrediente = parseFloat(ingrediente.precio_total);  // Precio total del ingrediente
+            const cantidadIngrediente = parseFloat(ingrediente.cantidad_inicio);  // Cantidad comprada del ingrediente
+
+            if (isNaN(precioIngrediente) || isNaN(cantidadIngrediente)) {
+                console.error(`Precio o cantidad inválido para el ingrediente ${ingredienteId}`);
+                return 0; // Si el precio o cantidad no son válidos, retornamos 0
+            }
+
+            // Calcular el precio unitario del ingrediente
+            const precioUnitarioIngrediente = precioIngrediente / cantidadIngrediente;
+
+            // Calcular el costo de este ingrediente para la cantidad que usamos
+            return precioUnitarioIngrediente * cantidadUsada;
+        }));
+
+        // Sumar los costos de todos los ingredientes seleccionados
+        costoTotalProducto = detallesIngredientes.reduce((total, precio) => total + precio, 0);
+
+        // Verificar si el costo total es válido
+        if (isNaN(costoTotalProducto)) {
+            console.error("El costo total calculado es NaN");
+            return { costoTotal: 0, costoUnitario: 0 };  // Retorna 0 si el cálculo falla
+        }
+
+        // Costo unitario por producto (costo total dividido por la cantidad de productos)
+        const costoUnitario = costoTotalProducto / cantidadProducto;
+
+        return { costoTotal: costoTotalProducto, costoUnitario: costoUnitario };
+
+    } catch (error) {
+        console.error("Error calculando el costo del producto:", error);
+        return { costoTotal: 0, costoUnitario: 0 };  // Retorna 0 si ocurre un error
+    }
+}
+
+// Función para calcular el precio unitario del producto
+async function calcularPrecioUnitario(ingredientesSeleccionados, cantidades) {
+    let precioUnitario = 0;
+    // Recuperamos los detalles de los ingredientes seleccionados
+    try {
+        const ingredientesDetalles = await Promise.all(ingredientesSeleccionados.map(async (ingredienteId, index) => {
+            // Verificar que la cantidad sea un valor válido
+            const cantidadIngrediente = cantidades[index];
+            if (isNaN(cantidadIngrediente) || cantidadIngrediente <= 0) {
+                console.error(`Cantidad inválida para el ingrediente ${ingredienteId}: ${cantidadIngrediente}`);
+                return 0; // Si la cantidad no es válida, retornamos 0
+            }
+            // Obtener el precio total y la cantidad en stock del ingrediente desde Supabase
+            const { data: ingrediente, error } = await supabase
+                .from("ingredientes")
+                .select("precio_total, cantidad_inicio")
+                .eq("id", ingredienteId)
+                .single(); // Aseguramos que estamos obteniendo solo un ingrediente por ID
+
+            if (error) {
+                throw new Error(`Error al obtener el ingrediente con ID ${ingredienteId}`);
+            }
+
+            // Mostrar los datos recuperados para depuración
+            console.log(`Ingrediente ID: ${ingredienteId}, Precio Total: ${ingrediente.precio_total}, Stock: ${ingrediente.cantidad_inicio}`);
+
+            // Validar que el precio sea un número válido
+            const precioIngrediente = parseFloat(ingrediente.precio_total);
+            if (isNaN(precioIngrediente)) {
+                console.error(`Precio inválido para el ingrediente ${ingredienteId}: ${ingrediente.precio_total}`);
+                return 0; // Si el precio no es válido, retornamos 0
+            }
+
+            return precioIngrediente * cantidadIngrediente; // Retornamos el costo de este ingrediente
+        }));
+
+        // Sumar los precios de todos los ingredientes seleccionados
+        precioUnitario = ingredientesDetalles.reduce((total, precio) => total + precio, 0);
+        // Verificamos si el precio unitario es válido
+        if (isNaN(precioUnitario)) {
+            console.error("El precio unitario calculado es NaN");
+            return 0; // Si no es válido, retornamos 0
+        }
+        return precioUnitario;
+
+    } catch (error) {
+        console.error("Error calculando el precio unitario:", error);
+        return 0; // Retorna 0 si ocurre un error
+    }
+}
+
+// Función para calcular el precio total del producto
+function calcularPrecioTotal(precioUnitario, stock) {
+    if (isNaN(precioUnitario) || isNaN(stock)) {
+        console.error("Precio unitario o stock inválido:", precioUnitario, stock);
+        return 0; // Si hay valores inválidos, retornamos 0
+    }
+    return precioUnitario * stock; // El precio total es el precio unitario multiplicado por el stock
+}
+
 // Crear un nuevo producto en la base de datos
 async function agregarProducto(data) {
     try {
+        console.log(data)
         const { data: product, error } = await supabase
             .from("productos")
             .insert([{
                 nombre: data.nombre,
                 precio: data.precio,
+                precio_unitario: data.precio_unitario,  // Asegúrate de incluir este campo
+                precio_total: data.precio_total,      // Asegúrate de incluir este campo
                 stock: data.stock,
                 categoria_id: data.categoria, // Guardar el ID de la categoría
                 imagen_url: data.imagen_url,
@@ -155,6 +292,8 @@ async function actualizarProducto(idProducto, data) {
             .update({
                 nombre: data.nombre,
                 precio: data.precio,
+                precio_unitario: data.precio_unitario,  // Asegúrate de incluir este campo
+                precio_total: data.precio_total,      // Asegúrate de incluir este campo
                 stock: data.stock,
                 categoria_id: data.categoria, // Guardar el ID de la categoría
                 imagen_url: data.imagen_url,
@@ -565,7 +704,7 @@ export async function cargarProductos() {
         // 🔹 Obtener los productos desde Supabase
         const { data: productos, error: productosError } = await supabase
             .from("productos")
-            .select("id, nombre, precio, stock, categoria:categoria_id(nombre), imagen_url"); // Obtener las columnas necesarias
+            .select("id, nombre, precio, precio_unitario, precio_total, stock, categoria:categoria_id(nombre), imagen_url");
 
         if (productosError) throw productosError;
 
@@ -626,8 +765,8 @@ export async function cargarProductos() {
                 <td>$${producto.precio}</td>
                 <td>${producto.stock}</td>
                 <td>${ingredientesText}</td>
-                <td>Proximamente 😊</td>
-                <td>Proximamente 😊</td>
+                <td>$${producto.precio_unitario}</td>
+                <td>$${producto.precio_total}</td>
                 <td>
                     <button class="btn btn-sm btn-warning" onclick="editarProducto('${producto.id}')">Editar</button>
                     <button class="btn btn-sm btn-danger" onclick="eliminarProducto('${producto.id}')">Eliminar</button>
