@@ -14,16 +14,16 @@ window.eliminarIngrediente = eliminarIngrediente;
 
 // 🚀 INICIALIZACIÓN AL CARGAR LA PÁGINA
 document.addEventListener('DOMContentLoaded', () => {
-    showLoading(); // Mostrar spinner al cargar la página
+   // showLoading(); // Mostrar spinner al cargar la página
 
     // Configuración inicial
     setupRowSelection(); // Manejo de selección de filas
     setupRealTimePriceUpdate(); // Actualizaciones en tiempo real
 
     // Cargar ingredientes iniciales
-    cargarIngredientes().finally(() => {
-        hideLoading(); // Asegurarse de ocultar si hay error
-    });
+  //  cargarIngredientes().finally(() => {
+    //    hideLoading(); // Asegurarse de ocultar si hay error
+   // });
 
     // Manejo de clics fuera de la tabla
     document.addEventListener('click', (e) => {
@@ -248,7 +248,7 @@ export async function agregarIngrediente(datos) {
 // 📌 Función para cargar los ingredientes desde Supabase y mostrarlos
 export async function cargarIngredientes() {
     // Mostrar spinner de carga
-    showLoading();
+  //  showLoading();
     try {
         const { data, error } = await supabase
             .from("ingredientes")
@@ -278,7 +278,7 @@ export async function cargarIngredientes() {
         console.error("❌ Error al cargar ingredientes:", error);
         mostrarToast("Error al cargar ingredientes", "error");
     } finally {
-        hideLoading(); // Ocultar spinner independientemente del resultado
+   //     hideLoading(); // Ocultar spinner independientemente del resultado
         clearSelection(); // Limpiar selección al recargar
         //   setupRowSelection()
     }

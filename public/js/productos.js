@@ -1,8 +1,12 @@
 import { supabase } from "./supabase-config.js"; // 📌 Importar configuración de Supabase
 import { ref, storage, uploadBytes, getDownloadURL } from "./firebase-config.js"
-import { mostrarToast, marcarErrorCampo, limpiarErrorCampo } from "./manageError.js"; // 📌 Manejo de errores
+import { mostrarToast, marcarErrorCampo, limpiarErrorCampo, showLoading } from "./manageError.js"; // 📌 Manejo de errores
 import { formatearFecha } from "./formatearFecha.js";
 import { cargarIngredientes } from "./ingredientes.js";
+
+// 🏷️ VARIABLES GLOBALES DE ESTADO
+let selectedProductRow = null;
+let selectedProductId = null;
 
 // Hacer accesibles globalmente las funciones necesarias
 window.editarProducto = editarProducto;
@@ -10,6 +14,28 @@ window.eliminarProducto = eliminarProducto;
 window.updateIngredientsList = updateIngredientsList;
 window.updateIngredientQuantity = updateIngredientQuantity;
 window.removeIngredientFromProduct = removeIngredientFromProduct;
+
+// 🚀 INICIALIZACIÓN AL CARGAR LA PÁGINA
+document.addEventListener("DOMContentLoaded", function () {
+    setupProductRowSelection();
+    cargarProductos();
+
+    // Evento para agregar producto
+    document.getElementById("btn-agregar-producto").addEventListener("click", () => {
+        clearProductSelection();
+        showProductForm();
+    });
+
+    // Evento para formulario
+    document.getElementById("product-form").addEventListener("submit", gestionarProducto);
+
+    // Deseleccionar al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#products-list') && !e.target.closest('.product-actions')) {
+            clearProductSelection();
+        }
+    });
+});
 
 // 📌 Mostrar el formulario de producto dentro del modal
 export function showProductForm(/*product = null*/) {
@@ -62,7 +88,6 @@ export async function gestionarProducto(event) {
     try {
         let imagenURL = "";  // Inicializamos la URL de la imagen
 
-
         // Si se selecciona una nueva imagen, subimos la imagen
         if (imagenFile) {
             const storageRef = ref(storage, `productos/${imagenFile.name}`);
@@ -84,18 +109,18 @@ export async function gestionarProducto(event) {
         };
 
         // Calculando el precio unitario y total
-        const { costoTotal, costoUnitario } = await calcularCostoProducto(ingredientesSeleccionados, cantidades, stock);
+     //   const { costoTotal, costoUnitario } = await calcularCostoProducto(ingredientesSeleccionados, cantidades, stock);
 
-        console.log(`Costo total: $${costoTotal}, Costo unitario: $${costoUnitario}`);
+      //  console.log(`Costo total: $${costoTotal}, Costo unitario: $${costoUnitario}`);
 
         // Validación de precio y total antes de proceder
-        if (isNaN(costoUnitario) || isNaN(costoTotal)) {
-            throw new Error("El precio unitario o el precio total no son válidos.");
-        }
+    //    if (isNaN(costoUnitario) || isNaN(costoTotal)) {
+      //      throw new Error("El precio unitario o el precio total no son válidos.");
+      //  }
 
         // Guardar el producto con los nuevos valores de precio unitario y total
-        formData.precio_unitario = costoUnitario;
-        formData.precio_total = costoTotal;
+     //   formData.precio_unitario = costoUnitario;
+      //  formData.precio_total = costoTotal;
 
         // Si el producto tiene un ID (editando un producto)
         if (idProducto) {
@@ -112,8 +137,11 @@ export async function gestionarProducto(event) {
         // Limpiar el formulario y ocultarlo
         document.getElementById("product-form").reset();
         const modal = bootstrap.Modal.getInstance(document.getElementById("productModal"));
-        modal.hide(); // Mostrar el modal de producto
+        modal.hide(); // cerrar el modal de producto
 
+        // Recargar y limpiar selección
+      //  await cargarProductos();
+        clearProductSelection();
     } catch (error) {
         console.error("❌ Error al guardar el producto:", error);
         mostrarToast("❌ Error al guardar el producto", "error");
@@ -269,10 +297,10 @@ async function agregarProducto(data) {
         }
 
         // Descontar los ingredientes del inventario
-        await updateIngredientInventory(product[0].id, data.ingredientes, data.cantidades);
+      //  await updateIngredientInventory(product[0].id, data.ingredientes, data.cantidades);
 
         // Relacionar los ingredientes con el producto
-        await associateIngredientsWithProduct(product[0].id, data.ingredientes, data.cantidades);
+      //  await associateIngredientsWithProduct(product[0].id, data.ingredientes, data.cantidades);
 
         cargarIngredientes();
         // ✅ Mostrar mensaje de éxito
@@ -417,6 +445,7 @@ async function decreaseInventory(ingredientId, quantity) {
 async function editarProducto(idProducto) {
     console.log("editando Producto:", idProducto);
     showProductForm();
+    selectProductRow(idProducto);
 
     // Obtener los detalles del producto desde Supabase
     const { data: producto, error } = await supabase
@@ -476,7 +505,7 @@ async function editarProducto(idProducto) {
 }
 
 
-// 📌 Función para eliminar un ingrediente del producto
+// ✏️ Carga los datos de un producto para editar
 async function removeIngredientFromProduct(ingredientId) {
     const idProducto = document.getElementById("product-form").dataset.productId;
 
@@ -499,8 +528,7 @@ async function removeIngredientFromProduct(ingredientId) {
 }
 
 
-// 📌 Función para eliminar un producto
-
+// 🗑️ Elimina un producto con confirmación
 async function eliminarProducto(idProducto) {
     console.log("elminando Prodcuto:", idProducto);
     // Mostrar el modal
@@ -512,12 +540,11 @@ async function eliminarProducto(idProducto) {
         try {
             // Llamar a la función de eliminación
             await eliminarProductoBackend(idProducto);  // Llamada a la función que elimina el producto de la DB
-
-            // Cerrar el modal después de la eliminación
-            modal.hide();
+            modal.hide(); // Cerrar el modal después de la eliminación
+            clearProductSelection();
         } catch (error) {
             console.error("❌ Error al eliminar el producto:", error);
-            mostrarToast(`❌ Error: ${error.message}`, "error");
+            mostrarToast(`❌ Error al eliminar el producto.`, "error");
         }
     });
 
@@ -698,7 +725,7 @@ async function cargarCategorias() {
     }
 }
 
-// 📌 Función para cargar productos desde Supabase y mostrarlos en una tabla
+// 📋 Carga la lista de productos
 export async function cargarProductos() {
     try {
         // 🔹 Obtener los productos desde Supabase
@@ -749,10 +776,11 @@ export async function cargarProductos() {
 
             // Crear una fila para el producto
             const fila = document.createElement("tr");
+            fila.dataset.id = producto.id;  // Añadir data-id para selección
 
             // Crear las celdas de la fila con la información del producto
             const ingredientesText = producto.ingredientes.map((ingredient) => {
-                return `${ingredient.nombre}: ${ingredient.cantidad} ${ingredient.medida}`;
+                return `${ingredient.nombre}: ${ingredient.cantidad} ${ingredient.medida} x `;
             }).join(", ");
 
             // Mostrar el nombre de la categoría en lugar del ID
@@ -767,10 +795,6 @@ export async function cargarProductos() {
                 <td>${ingredientesText}</td>
                 <td>$${producto.precio_unitario}</td>
                 <td>$${producto.precio_total}</td>
-                <td>
-                    <button class="btn btn-sm btn-warning" onclick="editarProducto('${producto.id}')">Editar</button>
-                    <button class="btn btn-sm btn-danger" onclick="eliminarProducto('${producto.id}')">Eliminar</button>
-                </td>
             `;
 
             // Agregar la fila a la tabla
@@ -780,4 +804,72 @@ export async function cargarProductos() {
         console.error("❌ Error al cargar productos:", error);
         mostrarToast(`❌ Error al cargar productos`, "error");
     }
+}
+
+//🖱️ Configura la selección de filas
+function setupProductRowSelection() {
+    const table = document.getElementById('products-list');
+    if (!table) return;
+
+    table.addEventListener('click', (e) => {
+        const row = e.target.closest('tr[data-id]');
+        if (!row) return;
+
+        const productId = row.dataset.id;
+        if (selectedProductId === productId) {
+            clearProductSelection();
+        } else {
+            selectProductRow(productId);
+        }
+    });
+
+    const deleteBtn = document.getElementById('delete-product-btn');
+    const editBtn = document.getElementById('edit-product-btn');
+
+    // Evento para el botón de eliminar
+    deleteBtn.addEventListener('click', () => {
+        if (selectedProductId) {
+            eliminarProducto(selectedProductId);
+        }
+    });
+
+    // Evento para el botón de editar
+    editBtn.addEventListener('click', () => {
+        if (selectedProductId) {
+            editarProducto(selectedProductId);
+        }
+    });
+}
+
+//🔘 Selecciona una fila de producto
+function selectProductRow(productId) {
+    clearProductSelection();
+
+    const row = document.querySelector(`#products-list tr[data-id="${productId}"]`);
+    if (!row) return;
+
+    row.classList.add('selected-row');
+    selectedProductRow = row;
+    selectedProductId = productId;
+
+    // Mostrar botones de acción
+    const deleteBtn = document.getElementById('delete-product-btn');
+    const editBtn = document.getElementById('edit-product-btn');
+    if (deleteBtn) deleteBtn.style.display = 'inline-block';
+    if (editBtn) editBtn.style.display = 'inline-block';
+}
+
+//🧹 Limpia la selección actual
+function clearProductSelection() {
+    if (selectedProductRow) {
+        selectedProductRow.classList.remove('selected-row');
+        selectedProductRow = null;
+        selectedProductId = null;
+    }
+
+    // Ocultar botones de acción
+    const deleteBtn = document.getElementById('delete-product-btn');
+    const editBtn = document.getElementById('edit-product-btn');
+    if (deleteBtn) deleteBtn.style.display = 'none';
+    if (editBtn) editBtn.style.display = 'none';
 }

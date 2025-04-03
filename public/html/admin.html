@@ -18,10 +18,10 @@
     <header>
       <img id="site-logo-preview" src="" alt="Vista previa del logo" />
       <h1>Panel de Administración</h1>
-      <span id="employee-name">Sesion: Nombre del Usuario</span>
       <button id="logout-btn" class="btn">
         <i class="fas fa-sign-out-alt fa-2x"></i>
       </button>
+      <span id="employee-name">Sesion: </span>
     </header>
     <!-- Navegación de pestañas -->
     <div class="container mt-4">
@@ -284,7 +284,17 @@
               </div>
             </div>
           </div>
-
+          <!-- Contenedor para los botones de eliminar y editar cantidad -->
+          <div class="button-container">
+            <!-- Botón de eliminar (bote de basura) -->
+            <div id="delete-employee-btn" class="button-delete">
+              <i class="fa-solid fa-trash"></i>
+            </div>
+            <!-- Botón de actualizar cantidad (lápiz) -->
+            <div id="edit-employee-btn" class="button-edit">
+              <i class="fa-regular fa-pen-to-square"></i>
+            </div>
+          </div>
           <table class="table table-striped" id="tabla-empleados">
             <thead>
               <tr>
@@ -502,12 +512,11 @@
           <!-- Contenedor para los botones de eliminar y editar cantidad -->
           <div class="button-container">
             <!-- Botón de eliminar (bote de basura) -->
-            <div id="delete-btn">
+            <div id="delete-btn" class="button-delete">
               <i class="fa-solid fa-trash"></i>
             </div>
-
             <!-- Botón de actualizar cantidad (lápiz) -->
-            <div id="edit-cuantity-modal-btn">
+            <div id="edit-cuantity-modal-btn" class="button-edit">
               <i class="fa-regular fa-pen-to-square"></i>
             </div>
           </div>
@@ -684,7 +693,6 @@
               </div>
             </div>
           </div>
-
           <!-- Modal de Confirmación de Eliminación -->
           <div
             class="modal fade"
@@ -729,7 +737,17 @@
               </div>
             </div>
           </div>
-
+          <!-- Contenedor para los botones de eliminar y editar cantidad -->
+          <div class="button-container">
+            <!-- Botón de eliminar (bote de basura) -->
+            <div id="delete-product-btn" class="button-delete">
+              <i class="fa-solid fa-trash"></i>
+            </div>
+            <!-- Botón de actualizar cantidad (lápiz) -->
+            <div id="edit-product-btn" class="button-edit">
+              <i class="fa-regular fa-pen-to-square"></i>
+            </div>
+          </div>
           <table class="table table-striped">
             <thead>
               <tr>
@@ -738,10 +756,9 @@
                 <th>Categoría</th>
                 <th>Precio</th>
                 <th>Stock</th>
-                <th>Ingredientes y Cantidades</th>
+                <th>Ingredientes, Cantidades y Precio</th>
                 <th>Costo Unitario</th>
                 <th>Costo Total</th>
-                <th>Acciones</th>
               </tr>
             </thead>
             <tbody id="products-list">
@@ -806,20 +823,68 @@
               </div>
             </div>
           </div>
-
-          <!-- Listado de categorías -->
-          <h3>Categorías Existentes</h3>
+          <!-- Contenedor para los botones de eliminar y editar cantidad -->
+          <div class="button-container">
+            <!-- Botón de eliminar (bote de basura) -->
+            <div id="delete-category-btn" class="button-delete">
+              <i class="fa-solid fa-trash"></i>
+            </div>
+            <!-- Botón de actualizar cantidad (lápiz) -->
+            <div id="edit-category-btn" class="button-edit">
+              <i class="fa-regular fa-pen-to-square"></i>
+            </div>
+          </div>
           <table class="table table-striped" id="tabla-categorias">
             <thead>
               <tr>
+                <th>Orden</th>
                 <th>Nombre</th>
-                <th>Acciones</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="categorias-container">
               <!-- Aquí se cargarán dinámicamente las categorías -->
             </tbody>
           </table>
+          <!-- Modal de confirmación para eliminar (añadir al final del body) -->
+          <div
+            class="modal fade"
+            id="deleteCategoryModal"
+            tabindex="-1"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Confirmar Eliminación</h5>
+                  <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div class="modal-body">
+                  <!-- El contenido se llena dinámicamente -->
+                </div>
+                <div class="modal-footer">
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-danger"
+                    id="confirm-delete-btn-categoria"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Promociones Tab -->

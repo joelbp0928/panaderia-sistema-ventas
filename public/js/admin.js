@@ -4,22 +4,25 @@ import { showProductForm, gestionarProducto, loadIngredients, cargarProductos } 
 //import { gestionarCategorias } from "./categorias.js";
 import { verificarAccesoAdmin, verificarSesion, cerrarSesion } from "./auth-check.js";
 import { cargarConfiguracion } from "./admin/configAdmin.js";
+import { showLoading, hideLoading } from "./manageError.js";
 
 import './categorias.js';
 window.onload = async function () {
   try {
+    showLoading();
+    await cargarConfiguracion(); // ✅ Cargar la configuración de la tienda
     // 🔹 Cargar elementos principales de la página
     await verificarAccesoAdmin();
     await verificarSesion();
+    hideLoading();
     await cargarEmpleados();
-    await cargarConfiguracion(); // ✅ Cargar la configuración de la tienda
     await cargarIngredientes(); // 🔹 Cargar los ingredientes
     await loadIngredients(); // 🔹 Cargar los ingredientes para el producto
     await cargarProductos();
-
     await handlePriceChange();
     await setupRealTimePriceUpdate();
 
+    
     // 🔹 Event listeners después de cargar el DOM
     document.getElementById("btn-agregar-empleado").addEventListener("click", mostrarFormularioEmpleado);
     document.getElementById("form-empleado").addEventListener("submit", gestionarEmpleado);

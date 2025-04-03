@@ -1,7 +1,12 @@
 import { cargarConfiguracion } from "./config.js";
+import { verificarSesion, cerrarSesion } from './auth-check.js'; // Importa la función para verificar la sesión
 
 window.onload = async function () {
+    await verificarSesion(); // Verificar si la sesión está activa
     cargarConfiguracion();
+
+    document.getElementById("logout-btn").addEventListener("click", cerrarSesion);
+    
 }
 
 

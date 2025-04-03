@@ -14,14 +14,28 @@ body {
 header {
   background-color: var(--primary-color);
   color: white;
-  padding: 20px;
-  text-align: center;
+  height: 120px; /* Altura fija */
+  display: flex; /* Activa Flexbox */
+  align-items: center; /* Centra verticalmente los hijos */
+  justify-content: space-between; /* Distribuye el espacio entre elementos */
+  padding: 0 20px; /* Padding horizontal (izq/der) */
 }
 
 header img {
   width: 150px;
-  margin-bottom: 10px;
-  display: block;
+  height: auto; /* Mantiene la proporción de la imagen */
+}
+
+header h1, header #employee-name {
+  margin: 0; /* Elimina márgenes predeterminados */
+  padding: 0 10px; /* Espaciado interno opcional */
+}
+
+#logout-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
 }
 
 .nav-tabs .nav-link {
@@ -84,8 +98,8 @@ input[type="color"] {
   display: block !important;
 }
 
-.img-thumbnail{
-  width: 70px; 
+.img-thumbnail {
+  width: 70px;
   height: 70px;
 }
 
@@ -93,7 +107,6 @@ input[type="color"] {
 .modal-header {
   background-color: var(--primary-color);
   color: var(--light-color);
-  
 }
 
 .container {
@@ -105,7 +118,6 @@ input[type="color"] {
 .modal-dialog {
   max-width: 800px;
 }
-
 
 .modal-title {
   font-size: 1.5rem;
@@ -196,10 +208,8 @@ input[type="color"] {
   }
 }
 
-
 /* 📱 Media query para pantallas pequeñas (menos de 768px de ancho) */
 @media (max-width: 768px) {
- 
 }
 
 #total-price-container {
@@ -214,10 +224,10 @@ input[type="color"] {
 
 #logout-btn {
   position: absolute;
-  color:white;
+  color: white;
   top: 10px;
   right: 10px;
-  z-index: 10;  /* Asegúrate de que se muestre sobre otros elementos */
+  z-index: 10; /* Asegúrate de que se muestre sobre otros elementos */
 }
 #logout-btn:hover {
   color: #a59f9f; /* Color más oscuro cuando se hace hover */
@@ -233,9 +243,8 @@ input[type="color"] {
   margin-bottom: 10px; /* Espacio inferior */
 }
 
-
 /* Estilo del botón de eliminar (bote de basura) */
-#delete-btn {
+.button-delete {
   display: none; /* Inicialmente oculto */
   cursor: pointer;
   font-size: 24px;
@@ -243,12 +252,12 @@ input[type="color"] {
   text-align: center;
 }
 
-#delete-btn:hover {
+.button-delete:hover {
   color: #c9302c; /* Cambio de color cuando se hace hover */
 }
 
 /* Estilo del botón de actualizar cantidad (lápiz) */
-#edit-cuantity-modal-btn {
+.button-edit {
   display: none; /* Inicialmente oculto */
   cursor: pointer;
   font-size: 24px;
@@ -256,7 +265,7 @@ input[type="color"] {
   text-align: center;
 }
 
-#edit-cuantity-modal-btn:hover {
+.button-edit:hover {
   color: #4b7ead; /* Cambio de color cuando se hace hover */
 }
 /* Estilo para la fila seleccionada */
@@ -281,7 +290,7 @@ input[type="color"] {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(105, 105, 105, 0.7); /* Gris semitransparente */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -291,4 +300,32 @@ input[type="color"] {
 .loading-spinner {
   width: 3rem;
   height: 3rem;
+}
+
+/* Estilos para el drag and drop */
+.draggable {
+  transition: all 0.3s ease;
+}
+
+.dragging {
+  opacity: 0.5;
+  background-color: #f8f9fa;
+  border: 1px dashed #ccc;
+}
+
+.handle {
+  cursor: move;
+  user-select: none;
+}
+
+.handle:hover {
+  background-color: #f1f1f1;
+}
+
+#categorias-container tr {
+  cursor: move;
+}
+
+#categorias-container tr:hover {
+  background-color: #f8f9fa;
 }
