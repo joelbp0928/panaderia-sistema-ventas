@@ -248,7 +248,7 @@ export async function agregarIngrediente(datos) {
 // 📌 Función para cargar los ingredientes desde Supabase y mostrarlos
 export async function cargarIngredientes() {
     // Mostrar spinner de carga
-  //  showLoading();
+    showLoading();
     try {
         const { data, error } = await supabase
             .from("ingredientes")
@@ -268,7 +268,7 @@ export async function cargarIngredientes() {
             fila.innerHTML = `
             <td>${ingrediente.nombre}</td>
             <td>${formatCurrency(ingrediente.precio_total)} x ${formatNumber(ingrediente.cantidad)} ${ingrediente.medida}</td>
-            <td>${formatCurrency(ingrediente.precio_unitario)} x ${formatNumber(ingrediente.cantidad_unitario)} ${ingrediente.medida_unitario}</td>
+           <!-- <td>${formatCurrency(ingrediente.precio_unitario)} x ${formatNumber(ingrediente.cantidad_unitario)} ${ingrediente.medida_unitario}</td>-->
             <td>${fechaRegistro}</td>
         `;
             listaIngredientes.appendChild(fila);
@@ -278,7 +278,7 @@ export async function cargarIngredientes() {
         console.error("❌ Error al cargar ingredientes:", error);
         mostrarToast("Error al cargar ingredientes", "error");
     } finally {
-   //     hideLoading(); // Ocultar spinner independientemente del resultado
+       hideLoading(); // Ocultar spinner independientemente del resultado
         clearSelection(); // Limpiar selección al recargar
         //   setupRowSelection()
     }

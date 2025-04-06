@@ -15,9 +15,9 @@ window.eliminarEmpleado = eliminarEmpleado;
 
 // 🚀 INICIALIZACIÓN AL CARGAR LA PÁGINA
 document.addEventListener("DOMContentLoaded", function () {
- //   showLoading();
+    //   showLoading();
     setupEmployeeRowSelection();
- //   cargarEmpleados().finally(() => hideLoading());
+    //   cargarEmpleados().finally(() => hideLoading());
 
     // Evento para agregar empleado
     document.getElementById("btn-agregar-empleado").addEventListener("click", () => {
@@ -260,7 +260,7 @@ export async function eliminarEmpleado(idEmpleado) {
 // 📋 Carga la lista de empleados
 export async function cargarEmpleados() {
     try {
-     //   showLoading();
+        showLoading();
         const { data, error } = await supabase
             .from("empleados")
             .select(`
@@ -289,7 +289,7 @@ export async function cargarEmpleados() {
         mostrarToast("❌ Error al cargar empleados.", "error")
         console.error("❌ Error al cargar empleados:", error);
     } finally {
-       // hideLoading();
+        hideLoading();
     }
 }
 
@@ -347,7 +347,6 @@ function selectEmployeeRow(employeeId) {
     // Mostrar botones de acción si existen
     const deleteBtn = document.getElementById('delete-employee-btn');
     const editBtn = document.getElementById('edit-employee-btn');
-    console.log("mostrar")
     if (deleteBtn) deleteBtn.style.display = 'inline-block';
     if (editBtn) editBtn.style.display = 'inline-block';
 }
@@ -388,45 +387,45 @@ async function actualizarEmpleado(idEmpleado, datos) {
 // 📌 **Función para registrar un nuevo empleado**
 export async function registrarNuevoEmpleado(datos) {
     try {
-         // 🔹 **Obtener el admin que está registrando al empleado**
-         const { data: session, error: sessionError } = await supabase.auth.getSession();
-         if (sessionError || !session.session) throw new Error("No hay sesión activa.");
-         const adminId = session.session.user.id;
- 
-         // 🔹 **Crear usuario en la autenticación de Supabase**
-         const { data: authUser, error: authError } = await supabase.auth.signUp({
-             email: datos.email,
-             password: "Empleado" + Math.floor(Math.random() * 10000) // 🔐 Contraseña temporal;
-         });
- 
-         if (authError) throw authError;
-         const usuarioId = authUser.user.id;
- 
-         // 🔹 **Insertar en `usuarios`**
-         const { error: usuarioError } = await supabase.from("usuarios").insert([
-             {
-                 id: usuarioId,
-                 email: datos.email,
-                 nombre: datos.nombre,
-                 telefono: datos.telefono,
-                 fechaNacimiento: datos.fechaNacimiento,
-                 rol: "empleado",
-                 fechaRegistro: new Date().toISOString()
-             }
-         ]);
-         if (usuarioError) throw usuarioError;
- 
-         // 🔹 **Insertar en `empleados`**
-         const { error: empleadoError } = await supabase.from("empleados").insert([
-             {
-                 id: usuarioId,
-                 usuario_id: usuarioId,
-                 genero: datos.genero,
-                 puesto: datos.puesto,
-                 creado_por: adminId
-             }
-         ]);
-         if (empleadoError) throw empleadoError;
+        // 🔹 **Obtener el admin que está registrando al empleado**
+        const { data: session, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session.session) throw new Error("No hay sesión activa.");
+        const adminId = session.session.user.id;
+
+        // 🔹 **Crear usuario en la autenticación de Supabase**
+        const { data: authUser, error: authError } = await supabase.auth.signUp({
+            email: datos.email,
+            password: "Empleado" + Math.floor(Math.random() * 10000) // 🔐 Contraseña temporal;
+        });
+
+        if (authError) throw authError;
+        const usuarioId = authUser.user.id;
+
+        // 🔹 **Insertar en `usuarios`**
+        const { error: usuarioError } = await supabase.from("usuarios").insert([
+            {
+                id: usuarioId,
+                email: datos.email,
+                nombre: datos.nombre,
+                telefono: datos.telefono,
+                fechaNacimiento: datos.fechaNacimiento,
+                rol: "empleado",
+                fechaRegistro: new Date().toISOString()
+            }
+        ]);
+        if (usuarioError) throw usuarioError;
+
+        // 🔹 **Insertar en `empleados`**
+        const { error: empleadoError } = await supabase.from("empleados").insert([
+            {
+                id: usuarioId,
+                usuario_id: usuarioId,
+                genero: datos.genero,
+                puesto: datos.puesto,
+                creado_por: adminId
+            }
+        ]);
+        if (empleadoError) throw empleadoError;
 
         mostrarToast("✅ Empleado registrado correctamente.", "success");
 

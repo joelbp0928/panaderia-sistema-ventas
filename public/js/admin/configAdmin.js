@@ -1,6 +1,7 @@
 import { storage, ref, uploadBytes, getDownloadURL } from "../firebase-config.js";
 import { mostrarToast } from "../manageError.js";
 import { supabase } from "../supabase-config.js";
+import { cargarConfiguracion } from "../config.js"
 
 // 📌 Referencia al formulario
 const formConfig = document.querySelector("#settings form");
@@ -60,7 +61,7 @@ formConfig.addEventListener("submit", async (event) => {
 
 
 // 📌 Cargar configuración actual
-export async function cargarConfiguracion() {
+/*export async function cargarConfiguracion() {
     try {
         // 🔹 Obtener la configuración desde la base de datos
         const { data, error } = await supabase
@@ -75,8 +76,8 @@ export async function cargarConfiguracion() {
 
         const configuracion = data[0]; // Solo hay una configuración
 
-         // 🔹 Actualizar el nombre de la empresa en el footer
-         document.getElementById("footer-company-name").textContent = configuracion.nombre_empresa || ""; // Usar el nombre de la empresa de la DB, si está disponible
+        // 🔹 Actualizar el nombre de la empresa en el footer
+        document.getElementById("footer-company-name").textContent = configuracion.nombre_empresa || ""; // Usar el nombre de la empresa de la DB, si está disponible
 
         // 🔹 Actualizar la UI con los datos obtenidos
         document.getElementById("site-name").value = configuracion.nombre_empresa || "";
@@ -100,14 +101,19 @@ export async function cargarConfiguracion() {
 
 // Función para aplicar el color primario al sitio
 function aplicarColorPrimario(color) {
+    // Crear un color más oscuro para el hover
+    const colorHover = tinycolor(color).darken(20).toString(); // 20% más oscuro
+
     // Aplicar color al fondo y a los botones
     document.documentElement.style.setProperty('--primary-color', color);
     document.querySelectorAll('.btn-primary').forEach(button => {
         button.style.backgroundColor = color;
         button.style.borderColor = color;
     });
-    // Si tienes más elementos que dependen de este color, también los puedes actualizar aquí
+    // Aplicar color más oscuro al hover
+    document.documentElement.style.setProperty('--primary-color-obscuro', colorHover);
 }
 
 // 📌 Cargar la configuración cuando la página se cargue
 document.addEventListener("DOMContentLoaded", cargarConfiguracion);
+*/

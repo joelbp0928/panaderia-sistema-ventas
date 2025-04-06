@@ -1,6 +1,6 @@
 import { supabase } from "./supabase-config.js"; // 📌 Importar configuración de Supabase
 import { ref, storage, uploadBytes, getDownloadURL } from "./firebase-config.js"
-import { mostrarToast, marcarErrorCampo, limpiarErrorCampo, showLoading } from "./manageError.js"; // 📌 Manejo de errores
+import { mostrarToast, marcarErrorCampo, limpiarErrorCampo, showLoading, hideLoading } from "./manageError.js"; // 📌 Manejo de errores
 import { formatearFecha } from "./formatearFecha.js";
 import { cargarIngredientes } from "./ingredientes.js";
 
@@ -583,6 +583,7 @@ async function eliminarProducto(idProducto) {
 
 // Función para agregar o editar el producto con los ingredientes
 export async function loadIngredients() {
+   // showLoading();
     const { data, error } = await supabase
         .from("ingredientes")
         .select("*");
@@ -728,6 +729,7 @@ async function cargarCategorias() {
 // 📋 Carga la lista de productos
 export async function cargarProductos() {
     try {
+        showLoading();
         // 🔹 Obtener los productos desde Supabase
         const { data: productos, error: productosError } = await supabase
             .from("productos")
@@ -803,6 +805,8 @@ export async function cargarProductos() {
     } catch (error) {
         console.error("❌ Error al cargar productos:", error);
         mostrarToast(`❌ Error al cargar productos`, "error");
+    }finally{
+        hideLoading();
     }
 }
 

@@ -78,6 +78,13 @@ export async function cargarConfiguracion() {
         document.title = data.nombre_empresa || 'Vista Cliente'; // Si no hay nombre en la DB, usa 'Vista Cliente'
         // 🔹 Actualizar el nombre de la empresa en el footer
         document.getElementById("footer-company-name").textContent = data.nombre_empresa || ""; // Usar el nombre de la empresa de la DB, si está disponible
+        // Verificar si el elemento existe antes de modificar su valor
+        const colorInput = document.getElementById("primary-color");
+
+        if (colorInput) {
+            // Si el elemento existe, asignamos el valor
+            colorInput.value = data.color_primario || "#6c1b2d";
+        }
         // Actualizar color de fondo
         aplicarColorPrimario(data.color_primario); // Aplicar el color al sitio
 
@@ -90,7 +97,7 @@ export async function cargarConfiguracion() {
 function aplicarColorPrimario(color) {
     // Crear un color más oscuro para el hover
     const colorHover = tinycolor(color).darken(20).toString(); // 20% más oscuro
-    
+
     // Aplicar color al fondo y a los botones
     document.documentElement.style.setProperty('--primary-color', color);
     document.querySelectorAll('.btn-primary').forEach(button => {
@@ -99,6 +106,70 @@ function aplicarColorPrimario(color) {
     });
     // Aplicar color más oscuro al hover
     document.documentElement.style.setProperty('--primary-color-obscuro', colorHover);
-    
+
 
 }
+
+// Función para cargar las categorías desde la base de datos
+async function cargarCategorias() {
+    try {
+        const { data, error } = await supabase
+            .from("categorias")
+            .select("id, nombre")
+            .order("id", { ascending: true }); // Obtener las categorías en el orden de su ID
+
+        if (error) {
+            throw error;
+        }
+
+        const categoryButtonsContainer = document.getElementById("category-buttons");
+
+        // Limpiar cualquier contenido anterior
+        categoryButtonsContainer.innerHTML = "";
+
+        // Crear un botón para cada categoría obtenida
+        data.forEach((categoria) => {
+            const categoryButton = document.createElement("button");
+            categoryButton.classList.add("category-btn");
+            categoryButton.textContent = categoria.nombre;
+
+            // Agregar un event listener para cada botón
+            categoryButton.onclick = () => {
+                toggleCategory(categoria.id);
+            };
+
+            categoryButtonsContainer.appendChild(categoryButton);
+        });
+    } catch (error) {
+        console.error("Error al cargar las categorías:", error.message);
+    }
+}
+
+// Función que se llama cuando se hace clic en una categoría
+async function toggleCategory(categoryId) {
+    console.log("Categoría seleccionada:", categoryId);
+
+    try {
+        // Obtener los productos que pertenecen a la categoría seleccionada
+        const { data: productos, error } = await supabase
+            .from("productos")
+            .select("id, nombre, precio, imagen_url")
+            .eq("categoria_id", categoryId); // Filtrar por la categoría seleccionada
+
+        if (error) {
+            throw error;
+        }
+
+        // Mostrar los productos en la consola
+        console.log("Productos de la categoría:", productos);
+
+        // Aquí puedes agregar más código para mostrar los productos en el frontend si lo deseas
+        // Ejemplo:
+        // mostrarProductosEnElFrontend(productos);
+    } catch (error) {
+        console.error("Error al cargar los productos:", error.message);
+    }
+}
+
+// Cargar categorías cuando se carga la página
+document.addEventListener("DOMContentLoaded", cargarCategorias);

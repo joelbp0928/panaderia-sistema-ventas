@@ -58,15 +58,15 @@ header h1, header #employee-name {
   color: white;
 }
 
+/* Añade !important para forzar la sobreescritura */
 .btn-primary:hover,
 .btn-warning:hover,
 .btn-info:hover,
 .btn-success:hover,
 .btn-danger:hover {
-  background-color: var(--primary-color-obscuro);
-  border-color: var(--primary-color-obscuro);
+  background-color: var(--primary-color-obscuro) !important;
+  border-color: var(--primary-color-obscuro) !important;
 }
-
 /*------------------------------------------------------------------------------------------       */
 
 .tab-content {
@@ -315,6 +315,7 @@ input[type="color"] {
 
 .handle {
   cursor: move;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -328,4 +329,66 @@ input[type="color"] {
 
 #categorias-container tr:hover {
   background-color: #f8f9fa;
+}
+
+
+/* Estilos para los botones de acción */
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Espaciado entre botones */
+.d-flex.gap-2 {
+  gap: 0.5rem;
+}
+
+/* Deshabilitar efectos hover en botones deshabilitados */
+.btn:disabled {
+  pointer-events: none;
+  opacity: 0.65;
+}
+
+/* Estilo para fila seleccionada */
+.selected-row {
+  background-color: rgba(0, 123, 255, 0.1) !important;
+  box-shadow: inset 0 0 0 2px var(--primary-color);
+}
+
+/* Estilos para el panel de promociones */
+#promo-recommendations {
+  padding: 20px;
+}
+
+.suggestions {
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.discount-option {
+  padding: 15px;
+  margin: 15px 0;
+  background-color: #f1f1f1;
+  border-radius: 5px;
+}
+
+/* Mejorar la visualización de selects múltiples */
+select[multiple] {
+  min-height: 150px;
+}
+
+/* Estilos para los badges de estado */
+.badge {
+  font-size: 0.8em;
+  padding: 5px 10px;
+}
+.table-card-title{
+background-color: var(--primary-color);
+color: var(--light-color);
+}
+
+#products-list-promotion{
+  display: none;
 }

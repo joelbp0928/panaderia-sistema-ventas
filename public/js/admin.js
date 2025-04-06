@@ -1,28 +1,22 @@
-import { mostrarFormularioEmpleado, gestionarEmpleado, cargarEmpleados } from "./empleados.js";
 import { gestionarIngrediente, cargarIngredientes, showIngredientForm, handlePriceChange, setupRealTimePriceUpdate } from "./ingredientes.js";
 import { showProductForm, gestionarProducto, loadIngredients, cargarProductos } from "./productos.js";
-//import { gestionarCategorias } from "./categorias.js";
+import { mostrarFormularioEmpleado, gestionarEmpleado, cargarEmpleados } from "./empleados.js";
 import { verificarAccesoAdmin, verificarSesion, cerrarSesion } from "./auth-check.js";
-import { cargarConfiguracion } from "./admin/configAdmin.js";
+import  "./admin/configAdmin.js";
+import { cargarConfiguracion } from "./config.js"
 import { showLoading, hideLoading } from "./manageError.js";
+import { cargarPromociones } from './promociones.js';
+import { cargarCategorias } from './categorias.js';
 
-import './categorias.js';
 window.onload = async function () {
   try {
+    // 🔹 Cargar elementos principales de la página
     showLoading();
     await cargarConfiguracion(); // ✅ Cargar la configuración de la tienda
-    // 🔹 Cargar elementos principales de la página
     await verificarAccesoAdmin();
     await verificarSesion();
     hideLoading();
-    await cargarEmpleados();
-    await cargarIngredientes(); // 🔹 Cargar los ingredientes
-    await loadIngredients(); // 🔹 Cargar los ingredientes para el producto
-    await cargarProductos();
-    await handlePriceChange();
-    await setupRealTimePriceUpdate();
 
-    
     // 🔹 Event listeners después de cargar el DOM
     document.getElementById("btn-agregar-empleado").addEventListener("click", mostrarFormularioEmpleado);
     document.getElementById("form-empleado").addEventListener("submit", gestionarEmpleado);
@@ -36,8 +30,8 @@ window.onload = async function () {
     document.getElementById("price-unit").addEventListener("change", handlePriceChange);
     document.getElementById("price-total").addEventListener("change", handlePriceChange);
 
-     // 🔹 Asociar el evento de Cerrar Sesión al botón logout-btn
-     document.getElementById("logout-btn").addEventListener("click", cerrarSesion);
+    // 🔹 Asociar el evento de Cerrar Sesión al botón logout-btn
+    document.getElementById("logout-btn").addEventListener("click", cerrarSesion);
 
     //console.log("✅ Eventos y configuraciones cargados correctamente.");
   } catch (error) {
@@ -45,14 +39,41 @@ window.onload = async function () {
   }
 };
 
-
+// Escuchar cambios de pestaña
+document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+  tab.addEventListener('shown.bs.tab', function (event) {
+    switch (event.target.id) {
+      case "clients-tab":
+        break;
+      case "employees-tab":
+        cargarEmpleados();
+        break;
+      case "ingredients-tab":
+        cargarIngredientes();
+        handlePriceChange();
+        setupRealTimePriceUpdate();
+        break;
+      case "products-tab":
+        loadIngredients(); // 🔹 Cargar los ingredientes para el producto
+        cargarProductos();
+        break;
+      case "categorias-tab":
+        cargarCategorias();
+        break;
+        case "promotion-recommendations":
+          cargarPromociones();
+          break;
+      // otros casos...
+    }
+  });
+});
 
 
 
 
 
 //-------------------------------------------------------------------------------------------------------------
-function updateDiscountOptions() {
+/*function updateDiscountOptions() {
   // Ocultar todas las configuraciones
   document.querySelectorAll(".discount-option").forEach((option) => {
     option.classList.add("d-none");
@@ -107,7 +128,7 @@ function showPromotionForm() {
 function cancelPromotion() {
   document.getElementById("promotion-form").style.display = "none";
 }
-
+*/
 // Función para crear o editar una promoción
 /*  document
   .getElementById("create-promo-btn")
@@ -144,7 +165,7 @@ function cancelPromotion() {
       alert("Por favor, llena todos los campos correctamente.");
     }
   });
-*/
+*//*
 function updatePromotionList() {
   const promoList = document.getElementById("promotion-list");
   promoList.innerHTML = "";
@@ -213,3 +234,4 @@ function updateSalesChart() {
 }
 
 document.addEventListener("DOMContentLoaded", initializeSalesChart);
+*/

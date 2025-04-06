@@ -9,14 +9,13 @@ let selectedCategoryId = null;
 let categoriasOrdenadas = [];
 
 // 🌐 EXPOSICIÓN DE FUNCIONES AL SCOPE GLOBAL
-window.editarCategoria = editarCategoria;
+//window.editarCategoria = editarCategoria;
 window.eliminarCategoria = eliminarCategoria;
 
 // 🚀 INICIALIZACIÓN AL CARGAR LA PÁGINA
 document.addEventListener("DOMContentLoaded", function () {
     setupCategoryRowSelection();
-    cargarCategorias();
-
+    
     // Evento para agregar categoría
     document.getElementById("btn-agregar-categoria").addEventListener("click", () => {
         clearCategorySelection();
@@ -39,9 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // 🧩 FUNCIONES PRINCIPALES
 
-/**
- * 🖼️ Muestra el formulario para agregar/editar categorías
- */
+//🖼️ Muestra el formulario para agregar/editar categorías
 export function mostrarFormularioCategoria() {
     const form = document.getElementById("form-categoria");
     const modal = new bootstrap.Modal(document.getElementById("categoriaModal"));
@@ -52,9 +49,7 @@ export function mostrarFormularioCategoria() {
     modal.show();
 }
 
-/**
- * 🔄 Gestiona el envío del formulario (crear/actualizar)
- */
+//🔄 Gestiona el envío del formulario (crear/actualizar)
 async function gestionarCategoria() {
     const botonGuardar = document.querySelector("#form-categoria button[type='submit']");
     botonGuardar.disabled = true;
@@ -72,19 +67,15 @@ async function gestionarCategoria() {
         if (idCategoria) {
             // ✏️ Actualizar categoría existente
             // Mantener el orden actual al editar
-            const ordenActual = document.getElementById("form-categoria").dataset.ordenActual || 
-                              categoriasOrdenadas.find(c => c.id === idCategoria)?.orden || 
-                              categoriasOrdenadas.length + 1;
+            const ordenActual = document.getElementById("form-categoria").dataset.ordenActual ||
+                categoriasOrdenadas.find(c => c.id === idCategoria)?.orden ||
+                categoriasOrdenadas.length + 1;
             await actualizarCategoria(idCategoria, nombre, ordenActual);
         } else {
             // ➕ Registrar nueva categoría
             await registrarNuevaCategoria(nombre);
         }
 
-        // Cerrar el modal después de guardar
-        const modal = bootstrap.Modal.getInstance(document.getElementById("categoriaModal")) ||
-            new bootstrap.Modal(document.getElementById("categoriaModal"));
-        modal.hide();
 
         // 🔄 Refrescar la lista
         await cargarCategorias();
@@ -92,53 +83,50 @@ async function gestionarCategoria() {
 
     } catch (error) {
         console.error("❌ Error al guardar categoría:", error);
-        mostrarToast("❌ Error al guardar categoría", "error");
+        mostrarToast("❌ Error al guardar categoría.", "error");
     } finally {
+        bootstrap.Modal.getInstance(document.getElementById("ingredientModal")).hide();
         botonGuardar.disabled = false;
     }
 }
 
 // 📋 Carga la lista de categorías
-async function cargarCategorias() {
+export async function cargarCategorias() {
+    showLoading();
     try {
         const { data, error } = await supabase
-        .from('categorias')
-        .select('*')
-        .order('orden', { ascending: true });
+            .from('categorias')
+            .select('*')
+            .order('orden', { ascending: true });
 
         if (error) throw error;
 
         categoriasOrdenadas = data;
+        console.log("Categorias cargadas:", categoriasOrdenadas); // Log para revisar los datos
+
         renderizarCategorias();
-
-      /*  const tablaCategorias = document.querySelector("#tabla-categorias tbody");
-        tablaCategorias.innerHTML = "";
-
-        data.forEach(categoria => {
-            const fila = document.createElement("tr");
-            fila.dataset.id = categoria.id; // Añadir data-id para selección
-            fila.innerHTML = `
-                <td>${categoria.nombre}</td>
-            `;
-            tablaCategorias.appendChild(fila);
-        });*/
 
     } catch (error) {
         console.error("❌ Error al cargar categorías:", error);
-        mostrarToast("❌ Error al cargar categorías", "error");
+        mostrarToast("❌ Error al cargar categorías.", "error");
     }
+    hideLoading();
 }
 
 // ✏️ Carga los datos de una categoría para editar
 export async function editarCategoria(idCategoria) {
     try {
+        mostrarFormularioCategoria();
         // Mantener el mismo orden al editar
-        const categoria = categoriasOrdenadas.find(c => c.id === idCategoria);
+        console.log("Buscando categoría con id:", idCategoria);
+        const categoria = categoriasOrdenadas.find(c => c.id === Number(idCategoria)); // Convierte a número
+        console.log("Categoría encontrada:", categoria);
+        if (!categoria) throw new Error("No se pudo cargar la categoría");
         if (categoria) {
             document.getElementById("form-categoria").dataset.ordenActual = categoria.orden;
         }
 
-        if (error || !categoria) throw new Error("No se pudo cargar la categoría");
+        if (!categoria) throw new Error("No se pudo cargar la categoría");
 
         // 🔹 Llenar el formulario con los datos
         document.getElementById("categoria-nombre").value = categoria.nombre;
@@ -149,16 +137,14 @@ export async function editarCategoria(idCategoria) {
         document.getElementById("categoriaModalLabel").textContent = "Editar Categoría";
         document.querySelector("#form-categoria button[type='submit']").textContent = "Actualizar Categoría";
 
-        // Mostrar el modal
-        const modal = new bootstrap.Modal(document.getElementById("categoriaModal"));
-        modal.show();
+ 
 
         // Seleccionar fila
         selectCategoryRow(idCategoria);
 
     } catch (error) {
         console.error("❌ Error al cargar categoría:", error);
-        mostrarToast("❌ Error al cargar categoría", "error");
+        mostrarToast("❌ Error al cargar categoría.", "error");
     }
 }
 
@@ -196,7 +182,14 @@ export async function eliminarCategoria(idCategoria) {
             console.error("❌ Error al eliminar categoría:", error);
             mostrarToast("❌ Error al eliminar categoría", "error");
         } finally {
+
             modal.hide();
+
+            // Eliminar el backdrop manualmente si no se elimina automáticamente
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
         }
     };
 }
@@ -280,35 +273,42 @@ async function actualizarCategoria(idCategoria, nombre, orden) {
         .eq("id", idCategoria);
 
     if (error) throw error;
+    const modal = new bootstrap.Modal(document.getElementById('categoriaModal'));
+    modal.hide();
+
+    // Eliminar el backdrop manualmente si no se elimina automáticamente
+    const backdrop = document.querySelector('.modal-backdrop');
+    if (backdrop) {
+        backdrop.remove();
+    }
     mostrarToast("✅ Categoría actualizada correctamente", "success");
 }
 
 async function registrarNuevaCategoria(nombre) {
     try {
-        const orden = categoriasOrdenadas.length > 0 ? 
+        const orden = categoriasOrdenadas.length > 0 ?
             Math.max(...categoriasOrdenadas.map(c => c.orden)) + 1 : 1;
-        
+
         const { error } = await supabase
             .from("categorias")
             .insert([{ nombre, orden }]);
 
         if (error) throw error;
-        
+
         mostrarToast("✅ Categoría creada correctamente", "success");
         await cargarCategorias();
-        
+
     } catch (error) {
         console.log("❌ Error registrando nueva categoria.", "error");
     }
 }
-
 
 // 🖱️ Función para renderizar las categorías con capacidad de arrastre
 function renderizarCategorias() {
     const container = document.getElementById("categorias-container");
     container.innerHTML = "";
 
-    categoriasOrdenadas.forEach((categoria, index) => {
+    categoriasOrdenadas.forEach((categoria) => {
         const fila = document.createElement("tr");
         fila.dataset.id = categoria.id;
         fila.draggable = true;
@@ -321,16 +321,26 @@ function renderizarCategorias() {
             <td class="handle" style="cursor: move;">≡</td>
             <td>${categoria.nombre}</td>
         `;
-
         // Eventos para drag and drop
         fila.addEventListener('dragstart', handleDragStart);
         fila.addEventListener('dragover', handleDragOver);
         fila.addEventListener('drop', handleDrop);
         fila.addEventListener('dragend', handleDragEnd);
 
+        // La fila completa sigue siendo seleccionable
+        fila.addEventListener('click', (e) => {
+            if (!e.target.closest('.handle') && !e.target.closest('button')) {
+                const categoryId = fila.dataset.id;
+                if (selectedCategoryId === categoryId) {
+                    clearCategorySelection();
+                } else {
+                    selectCategoryRow(categoryId);
+                }
+            }
+        });
+
         container.appendChild(fila);
     });
-
     // Inicializar botones de acción
     setupCategoryRowSelection();
 }
@@ -348,7 +358,7 @@ function handleDragStart(e) {
 function handleDragOver(e) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    
+
     const afterElement = getDragAfterElement(e.clientY);
     if (afterElement == null) {
         document.getElementById("categorias-container").appendChild(draggedItem);
@@ -369,11 +379,11 @@ function handleDragEnd() {
 
 function getDragAfterElement(y) {
     const draggableElements = [...document.querySelectorAll('#categorias-container tr:not(.dragging)')];
-    
+
     return draggableElements.reduce((closest, child) => {
         const box = child.getBoundingClientRect();
         const offset = y - box.top - box.height / 2;
-        
+
         if (offset < 0 && offset > closest.offset) {
             return { offset: offset, element: child };
         } else {
@@ -386,23 +396,23 @@ function getDragAfterElement(y) {
 async function actualizarOrdenCategorias() {
     const filas = document.querySelectorAll('#categorias-container tr');
     const nuevosIdsOrdenados = Array.from(filas).map(fila => fila.dataset.id);
-    
+
     try {
         showLoading();
-        
+
         // Crear transacción para actualizar todos los órdenes
-        const updates = nuevosIdsOrdenados.map((id, index) => 
+        const updates = nuevosIdsOrdenados.map((id, index) =>
             supabase.from('categorias').update({ orden: index + 1 }).eq('id', id)
         );
-        
+
         await Promise.all(updates);
-        
+
         // Volver a cargar para asegurar consistencia
         await cargarCategorias();
-        
+
     } catch (error) {
         console.error("❌ Error al actualizar orden:", error);
-        mostrarToast("❌ Error al actualizar orden de categorías", "error");
+        mostrarToast("❌ Error al actualizar orden de categorías.", "error");
     } finally {
         hideLoading();
     }
