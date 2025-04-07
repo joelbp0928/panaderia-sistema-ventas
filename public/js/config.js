@@ -59,8 +59,6 @@ export async function cargarProductos() {
     }
 }
 
-
-
 export async function cargarConfiguracion() {
     try {
         // Obtenemos la configuración de la base de datos
@@ -96,7 +94,7 @@ export async function cargarConfiguracion() {
 // Función para aplicar el color primario al sitio
 function aplicarColorPrimario(color) {
     // Crear un color más oscuro para el hover
-    const colorHover = tinycolor(color).darken(20).toString(); // 20% más oscuro
+    const colorHover = tinycolor(color).darken(10).toString(); // 20% más oscuro
 
     // Aplicar color al fondo y a los botones
     document.documentElement.style.setProperty('--primary-color', color);
@@ -106,8 +104,6 @@ function aplicarColorPrimario(color) {
     });
     // Aplicar color más oscuro al hover
     document.documentElement.style.setProperty('--primary-color-obscuro', colorHover);
-
-
 }
 
 // Función para cargar las categorías desde la base de datos

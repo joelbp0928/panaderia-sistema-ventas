@@ -2,8 +2,8 @@ import { gestionarIngrediente, cargarIngredientes, showIngredientForm, handlePri
 import { showProductForm, gestionarProducto, loadIngredients, cargarProductos } from "./productos.js";
 import { mostrarFormularioEmpleado, gestionarEmpleado, cargarEmpleados } from "./empleados.js";
 import { verificarAccesoAdmin, verificarSesion, cerrarSesion } from "./auth-check.js";
-import  "./admin/configAdmin.js";
-import { cargarConfiguracion } from "./config.js"
+import { cargarConfiguracion} from "./admin/configAdmin.js";
+//import { cargarConfiguracion } from "./config.js"
 import { showLoading, hideLoading } from "./manageError.js";
 import { cargarPromociones } from './promociones.js';
 import { cargarCategorias } from './categorias.js';
@@ -235,3 +235,9 @@ function updateSalesChart() {
 
 document.addEventListener("DOMContentLoaded", initializeSalesChart);
 */
+
+// Evento que mueve el foco fuera del modal cuando se cierra
+document.addEventListener("hidden.bs.modal", function (event) {
+  // Mueve el foco a otro elemento fuera del modal (ejemplo: el botón de inicio de sesión)
+  document.getElementById("product-form-submit")?.focus();
+});

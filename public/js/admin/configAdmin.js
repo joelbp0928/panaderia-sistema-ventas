@@ -1,7 +1,7 @@
 import { storage, ref, uploadBytes, getDownloadURL } from "../firebase-config.js";
 import { mostrarToast } from "../manageError.js";
 import { supabase } from "../supabase-config.js";
-import { cargarConfiguracion } from "../config.js"
+
 
 // 📌 Referencia al formulario
 const formConfig = document.querySelector("#settings form");
@@ -61,7 +61,7 @@ formConfig.addEventListener("submit", async (event) => {
 
 
 // 📌 Cargar configuración actual
-/*export async function cargarConfiguracion() {
+export async function cargarConfiguracion() {
     try {
         // 🔹 Obtener la configuración desde la base de datos
         const { data, error } = await supabase
@@ -76,8 +76,8 @@ formConfig.addEventListener("submit", async (event) => {
 
         const configuracion = data[0]; // Solo hay una configuración
 
-        // 🔹 Actualizar el nombre de la empresa en el footer
-        document.getElementById("footer-company-name").textContent = configuracion.nombre_empresa || ""; // Usar el nombre de la empresa de la DB, si está disponible
+         // 🔹 Actualizar el nombre de la empresa en el footer
+         document.getElementById("footer-company-name").textContent = configuracion.nombre_empresa || ""; // Usar el nombre de la empresa de la DB, si está disponible
 
         // 🔹 Actualizar la UI con los datos obtenidos
         document.getElementById("site-name").value = configuracion.nombre_empresa || "";
@@ -85,7 +85,7 @@ formConfig.addEventListener("submit", async (event) => {
         aplicarColorPrimario(configuracion.color_primario); // Aplicar el color al sitio
 
         // 🔹 Verificar si el elemento del logo existe antes de asignar la imagen
-        const logoElement = document.getElementById("site-logo-preview");
+        const logoElement = document.getElementById("logo-image");
         if (logoElement && configuracion.logo_url) {
             logoElement.src = configuracion.logo_url;
             //  console.log("✅ Logo cargado correctamente:", configuracion.logo_url);
@@ -101,19 +101,18 @@ formConfig.addEventListener("submit", async (event) => {
 
 // Función para aplicar el color primario al sitio
 function aplicarColorPrimario(color) {
-    // Crear un color más oscuro para el hover
-    const colorHover = tinycolor(color).darken(20).toString(); // 20% más oscuro
+     // Crear un color más oscuro para el hover
+     const colorHover = tinycolor(color).darken(10).toString(); // 20% más oscuro
 
-    // Aplicar color al fondo y a los botones
-    document.documentElement.style.setProperty('--primary-color', color);
-    document.querySelectorAll('.btn-primary').forEach(button => {
-        button.style.backgroundColor = color;
-        button.style.borderColor = color;
-    });
-    // Aplicar color más oscuro al hover
-    document.documentElement.style.setProperty('--primary-color-obscuro', colorHover);
+     // Aplicar color al fondo y a los botones
+     document.documentElement.style.setProperty('--primary-color', color);
+     document.querySelectorAll('.btn-primary').forEach(button => {
+         button.style.backgroundColor = color;
+         button.style.borderColor = color;
+     });
+     // Aplicar color más oscuro al hover
+     document.documentElement.style.setProperty('--primary-color-obscuro', colorHover);
 }
 
 // 📌 Cargar la configuración cuando la página se cargue
 document.addEventListener("DOMContentLoaded", cargarConfiguracion);
-*/
