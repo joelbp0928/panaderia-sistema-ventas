@@ -186,7 +186,7 @@ input[type="color"] {
 #product-image-preview {
   border-radius: 5px;
   max-width: 150px;
-  display: block;
+  display: none;
   margin-top: 10px;
   border: 1px solid #ccc; /* Borde sutil para la imagen */
   padding: 5px; /* Relleno para separar la imagen del borde */
@@ -391,4 +391,14 @@ color: var(--light-color);
 
 #products-list-promotion{
   display: none;
+}
+
+.preview-image{
+  max-height: 150px; 
+  display: none;
+}
+
+.ingredient-quantity {
+  width: 80px; /* Ancho fijo para consistencia */
+  text-align: right; /* Alinear números a la derecha */
 }

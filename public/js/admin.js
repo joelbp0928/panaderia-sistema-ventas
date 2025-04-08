@@ -199,7 +199,7 @@ function editPromotion(index) {
 function deletePromotion(index) {
   promotions.splice(index, 1);
   updatePromotionList();
-}
+}*/
 
 let salesChart;
 const salesData = {
@@ -234,7 +234,7 @@ function updateSalesChart() {
 }
 
 document.addEventListener("DOMContentLoaded", initializeSalesChart);
-*/
+
 
 // Evento que mueve el foco fuera del modal cuando se cierra
 document.addEventListener("hidden.bs.modal", function (event) {

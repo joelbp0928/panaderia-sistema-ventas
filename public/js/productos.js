@@ -2,24 +2,22 @@ import { supabase } from "./supabase-config.js"; // 📌 Importar configuración
 import { ref, storage, uploadBytes, getDownloadURL, deleteObject } from "./firebase-config.js"
 import { mostrarToast, marcarErrorCampo, limpiarErrorCampo, showLoading, hideLoading } from "./manageError.js"; // 📌 Manejo de errores
 import { formatearFecha } from "./formatearFecha.js";
-import { cargarIngredientes } from "./ingredientes.js";
 
 // 🏷️ VARIABLES GLOBALES DE ESTADO
 let selectedProductRow = null;
 let selectedProductId = null;
-
+// Inicializar al cargar la página
+let productModal;
 // Hacer accesibles globalmente las funciones necesarias
 window.editarProducto = editarProducto;
 window.eliminarProducto = eliminarProducto;
 window.updateIngredientsList = updateIngredientsList;
-//window.updateIngredientQuantity = updateIngredientQuantity;
-//window.removeIngredientFromProduct = removeIngredientFromProduct;
 
 // 🚀 INICIALIZACIÓN AL CARGAR LA PÁGINA
 document.addEventListener("DOMContentLoaded", function () {
     setupProductRowSelection();
     cargarProductos();
-
+    productModal = configurarModalProducto();
     // Evento para agregar producto
     document.getElementById("btn-agregar-producto").addEventListener("click", () => {
         clearProductSelection();
@@ -38,10 +36,10 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // 📌 Mostrar el formulario de producto dentro del modal
-export function showProductForm(/*product = null*/) {
-    const modal = new bootstrap.Modal(document.getElementById("productModal"));
-
-
+export function showProductForm() {
+    limpiarErrorCampo([
+        "product-category"
+    ]);
     document.getElementById("product-form").reset();
     document.getElementById("product-image-preview").src = ""; // Limpiar la vista previa de la imagen
     document.getElementById("selected-ingredients-list").innerHTML = ''; //limpiamos lista de ingredientes
@@ -55,194 +53,184 @@ export function showProductForm(/*product = null*/) {
     });
     // Cargar las categorías al abrir el formulario
     cargarCategorias();
-    modal.show(); // Mostrar el modal de producto
+    // Mostrar modal
+    productModal.show();
 }
 
 // 📌 Función para gestionar el producto (crear o actualizar)
 export async function gestionarProducto(event) {
     event.preventDefault();
 
-    const idProducto = document.getElementById("product-form").dataset.productId;
-    const nombre = document.getElementById("product-name").value.trim();
-    const precio = parseFloat(document.getElementById("product-price").value);
-    const stock = parseInt(document.getElementById("product-stock").value);
-    const categoria = document.getElementById("product-category").value; // Obtener el ID de la categoría seleccionada
-
-    // Obtener los ingredientes seleccionados y sus cantidades
-    const ingredientes = Array.from(document.querySelectorAll("#product-ingredients input[type='checkbox']:checked"));
-    const ingredientesSeleccionados = ingredientes.map(checkbox => checkbox.value);  // Ingredientes seleccionados
-
-    // Obtener las cantidades de los ingredientes seleccionados
-    const cantidades = ingredientes.map(checkbox => {
-        const ingredientId = checkbox.value;
-        const quantityInput = document.getElementById(`quantity-${ingredientId}`);
-        return quantityInput ? quantityInput.value : 0; // Obtener la cantidad de cada ingrediente
-    });
-
-    const imagenFile = document.getElementById("product-image").files[0]; // Imagen seleccionada
-    // Validar que no sea la opción por defecto
-    if (categoria === "" || categoria === "Seleccionar Categoría") {
-        mostrarToast("⚠️ Por favor selecciona una categoría", "error");
-        return;
-    }
-    // Validación básica
-    /*   if (!nombre || !precio || !stock || !categoria) {
-           alert("⚠️ Todos los campos son obligatorios.");
-           return;
-       }*/
+    const formData = obtenerDatosFormulario();
+    if (!validarFormulario(formData)) return;
 
     try {
-        let imagenURL = "";  // Inicializamos la URL de la imagen
+        showLoading();
 
-        // Si se selecciona una nueva imagen, subimos la imagen
-        if (imagenFile) {
-            const storageRef = ref(storage, `productos/${imagenFile.name}`);
-            const uploadTask = await uploadBytes(storageRef, imagenFile);  // Subimos la imagen
-            imagenURL = await getDownloadURL(storageRef);  // Obtenemos la URL de la imagen
-        } else {
-            // Si no se selecciona una nueva imagen, mantenemos la imagen actual
-            imagenURL = "";  // Mantener la imagen actual
+        if (formData.imagenFile) {
+            formData.imagen_url = await manejarImagen(formData.imagenFile, formData.nombre, formData.idProducto);
         }
 
-        const formData = {
-            nombre,
-            precio,
-            stock,
-            categoria,
-            ingredientes: ingredientesSeleccionados,  // Ingredientes seleccionados
-            cantidades,  // Cantidades de los ingredientes
-            imagen_url: imagenURL
-        };
+        const { costoTotal, costoUnitario } = await calcularCostoProducto(formData.ingredientes, formData.cantidades, formData.stock);
+        formData.precio_total = costoTotal;
+        formData.precio_unitario = costoUnitario;
 
-        // Calculando el precio unitario y total
-        const { costoTotal, costoUnitario } = await calcularCostoProducto(ingredientesSeleccionados, cantidades, stock);
+        if (formData.idProducto) {
+            await actualizarProducto(formData.idProducto, formData);
+            await deleteProductoIngredientes(formData.idProducto);
 
-        console.log(`Costo total: $${costoTotal}, Costo unitario: $${costoUnitario}`);
-
-        formData.precio_unitario = costoUnitario;  // Precio unitario
-        formData.precio_total = costoTotal;  // Precio total
-
-        // Validación de precio y total antes de proceder
-        //    if (isNaN(costoUnitario) || isNaN(costoTotal)) {
-        //      throw new Error("El precio unitario o el precio total no son válidos.");
-        //  }
-
-        // Guardar el producto con los nuevos valores de precio unitario y total
-        //   formData.precio_unitario = costoUnitario;
-        //  formData.precio_total = costoTotal;
-
-        // Si el producto tiene un ID (editando un producto)
-        if (idProducto) {
-            // Actualizar el producto en la base de datos
-            await actualizarProducto(idProducto, formData);
-
-            // 2. Eliminar las relaciones anteriores de productos_ingredientes (relación de producto con los ingredientes)
-            await supabase
-                .from("productos_ingredientes")
-                .delete()
-                .eq("producto_id", idProducto);
-
-            // Insertamos las relaciones de productos e ingredientes con los precios
-            await Promise.all(ingredientesSeleccionados.map(async (ingredienteId, index) => {
-                const cantidadUsada = cantidades[index];
-
-                // Obtener el precio del ingrediente
-                const { data: ingrediente, error: ingredienteError } = await supabase
-                    .from("ingredientes")
-                    .select("precio_total, cantidad")
-                    .eq("id", ingredienteId)
-                    .single();
-
-                if (ingredienteError || !ingrediente) {
-                    throw new Error('No se pudo obtener el ingrediente con ID ${ ingredienteId }');
-                }
-
-                // Verificar que precio_total y cantidad no sean nulos o NaN
-                const precioTotal = parseFloat(ingrediente.precio_total);
-                const cantidadIngrediente = parseFloat(ingrediente.cantidad);
-                if (isNaN(precioTotal) || isNaN(cantidadIngrediente)) {
-                    throw new Error('Los valores de precio_total o cantidad son inválidos para el ingrediente ${ ingredienteId }');
-                }
-
-                const precioUnitarioIngrediente = precioTotal / cantidadIngrediente;  // Precio unitario del ingrediente
-                const precioCantidadUsada = precioUnitarioIngrediente * cantidadUsada;  // Precio total de la cantidad usada
-
-                console.log("Datos a insertar:", {
-                    producto_id: idProducto,
-                    ingrediente_id: ingredienteId,
-                    cantidad_usada: cantidadUsada,
-                    precio_cantidad_usada: precioCantidadUsada
-                });
-
-                // Insertar en la tabla productos_ingredientes
-                await supabase.from("productos_ingredientes").insert([{
-                    producto_id: idProducto,
-                    ingrediente_id: ingredienteId,
-                    cantidad_usada: cantidadUsada,
-                    precio_cantidad_usada: precioCantidadUsada  // Guardamos el precio por cantidad usada
-                }]);
-            }));
+            await createProductoIngredientes(formData.idProducto, formData.ingredientes, formData.cantidades);
         } else {
-            // Registrar el nuevo producto en la base de datos
-            const newProduct = await agregarProducto(formData, ingredientesSeleccionados, cantidades);
+            const newId = await agregarProducto(formData);
 
-            // Insertamos las relaciones de productos e ingredientes con los precios
-            await Promise.all(ingredientesSeleccionados.map(async (ingredienteId, index) => {
-                const cantidadUsada = cantidades[index];
-
-                // Obtener el precio del ingrediente
-                const { data: ingrediente, error: ingredienteError } = await supabase
-                    .from("ingredientes")
-                    .select("precio_total, cantidad")
-                    .eq("id", ingredienteId)
-                    .single();
-
-                if (ingredienteError || !ingrediente) {
-                    throw new Error('No se pudo obtener el ingrediente con ID ${ ingredienteId }');
-                }
-
-                // Verificar que precio_total y cantidad no sean nulos o NaN
-                const precioTotal = parseFloat(ingrediente.precio_total);
-                const cantidadIngrediente = parseFloat(ingrediente.cantidad);
-                if (isNaN(precioTotal) || isNaN(cantidadIngrediente)) {
-                    throw new Error('Los valores de precio_total o cantidad son inválidos para el ingrediente ${ ingredienteId }');
-                }
-
-                const precioUnitarioIngrediente = precioTotal / cantidadIngrediente;  // Precio unitario del ingrediente
-                const precioCantidadUsada = precioUnitarioIngrediente * cantidadUsada;  // Precio total de la cantidad usada
-
-                console.log("Datos a insertar:", {
-                    producto_id: newProduct,
-                    ingrediente_id: ingredienteId,
-                    cantidad_usada: cantidadUsada,
-                    precio_cantidad_usada: precioCantidadUsada
-                });
-
-                // Insertar en la tabla productos_ingredientes
-                await supabase.from("productos_ingredientes").insert([{
-                    producto_id: newProduct,
-                    ingrediente_id: ingredienteId,
-                    cantidad_usada: cantidadUsada,
-                    precio_cantidad_usada: precioCantidadUsada  // Guardamos el precio por cantidad usada
-                }]);
-            }));
+            await createProductoIngredientes(newId, formData.ingredientes, formData.cantidades);
         }
 
-        cargarProductos(); // 🔄 Recargar la lista de productos
-        cargarIngredientes(); // 🔄 Recargar la lista de ingredientes
-
-        // Limpiar el formulario y ocultarlo
-        document.getElementById("product-form").reset();
-        const modal = bootstrap.Modal.getInstance(document.getElementById("productModal"));
-        modal.hide(); // Esto es suficiente para cerrar el modal correctamente
-
-        // Recargar y limpiar selección
-        clearProductSelection();
+        mostrarToast("✅ Producto guardado correctamente", "success");
+        limpiarYOcultarFormulario();
+        cargarProductos(true);
     } catch (error) {
         console.error("❌ Error al guardar el producto:", error);
         mostrarToast("❌ Error al guardar el producto", "error");
+    } finally {
+        hideLoading();
     }
 }
+
+function obtenerDatosFormulario() {
+    const form = document.getElementById("product-form");
+    const idProducto = form.dataset.productId || null;
+    const nombre = document.getElementById("product-name").value.trim();
+    const precio = parseFloat(document.getElementById("product-price").value);
+    const stock = parseInt(document.getElementById("product-stock").value);
+    const categoria = document.getElementById("product-category").value;
+    const imagenFile = document.getElementById("product-image").files[0];
+
+    const ingredientes = Array.from(document.querySelectorAll("#product-ingredients input[type='checkbox']:checked"))
+        .map(cb => cb.value);
+    const cantidades = ingredientes.map(id => {
+        const input = document.getElementById(`quantity-${id}`);
+        return input ? parseFloat(input.value) || 0 : 0;
+    });
+
+    return {
+        idProducto,
+        nombre,
+        precio,
+        stock,
+        categoria,
+        imagenFile,
+        imagen_url: document.getElementById("product-image-preview").src || "",
+        ingredientes,
+        cantidades
+    };
+}
+
+function validarFormulario({ nombre, precio, stock, categoria, ingredientes, imagenFile }) {
+    limpiarErrorCampo([
+        "product-category"
+    ]);
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const MAX_SIZE_BYTES = 2 * 1024 * 1024;
+
+    if (!nombre || isNaN(precio) || isNaN(stock)) {
+        mostrarToast("⚠️ Todos los campos son obligatorios", "error");
+        return false;
+    }
+
+    if (categoria === "" || categoria === "Seleccionar Categoría") {
+        mostrarToast("⚠️ Por favor selecciona una categoría", "error");
+        marcarErrorCampo("product-category", "⚠️ Por favor selecciona una categoría")
+        return false;
+    }
+
+    if (ingredientes.length === 0) {
+        mostrarToast("⚠️ Debes seleccionar al menos un ingrediente", "error");
+        return false;
+    }
+
+    if (imagenFile) {
+        if (!ALLOWED_TYPES.includes(imagenFile.type)) {
+            mostrarToast("⚠️ Tipo de imagen no permitido", "error");
+            return false;
+        }
+        if (imagenFile.size > MAX_SIZE_BYTES) {
+            mostrarToast("⚠️ La imagen excede los 2MB permitidos", "error");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+async function manejarImagen(file, nombreProducto, idProducto) {
+    try {
+        const nombreUnico = generarNombreUnico(file.name);
+        const storageRef = ref(storage, `productos/${nombreUnico}`);
+
+        const metadata = {
+            contentType: file.type,
+            customMetadata: {
+                uploadedBy: 'admin',
+                productName: nombreProducto
+            }
+        };
+
+        await uploadBytes(storageRef, file, metadata);
+        const url = await getDownloadURL(storageRef);
+
+        if (idProducto) await eliminarImagenAnterior(idProducto);
+
+        return url;
+    } catch (error) {
+        console.error("❌ Error al manejar la imagen:", error);
+        mostrarToast("❌ Error al subir la imagen", "error");
+        throw error;
+    }
+}
+
+async function eliminarImagenAnterior(idProducto) {
+    const imagenAnterior = document.getElementById("product-image-preview").dataset.originalUrl;
+    if (imagenAnterior && imagenAnterior.includes('firebasestorage.googleapis.com')) {
+        try {
+            const url = new URL(imagenAnterior);
+            const path = decodeURIComponent(url.pathname.split('/o/')[1].split('?')[0]);
+            const oldImageRef = ref(storage, path);
+            await deleteObject(oldImageRef);
+        } catch (error) {
+            console.warn("⚠️ No se pudo eliminar la imagen anterior:", error);
+        }
+    }
+}
+
+function limpiarYOcultarFormulario() {
+    document.getElementById("product-form").reset();
+    productModal.hide();
+    clearProductSelection();
+}
+
+async function calcularPrecioCantidadUsada(ingredienteId, cantidadUsada) {
+    const { data: ingrediente, error } = await supabase
+        .from("ingredientes")
+        .select("precio_total, cantidad")
+        .eq("id", ingredienteId)
+        .single();
+
+    if (error || !ingrediente) {
+        throw new Error(`No se pudo obtener el ingrediente con ID ${ingredienteId}`);
+    }
+
+    const precioTotal = parseFloat(ingrediente.precio_total);
+    const cantidad = parseFloat(ingrediente.cantidad);
+
+    if (isNaN(precioTotal) || isNaN(cantidad) || cantidad === 0) {
+        throw new Error(`Datos inválidos para el ingrediente ${ingredienteId}`);
+    }
+
+    const precioUnitario = precioTotal / cantidad;
+    return precioUnitario * cantidadUsada;
+}
+
 
 // Función para calcular el costo total y unitario del producto
 async function calcularCostoProducto(ingredientesSeleccionados, cantidades, cantidadProducto) {
@@ -255,7 +243,6 @@ async function calcularCostoProducto(ingredientesSeleccionados, cantidades, cant
             // Obtener el precio total y la cantidad inicial del ingrediente desde Supabase
             const { data: ingrediente, error } = await supabase
                 .from("ingredientes")
-                //.select("precio_total, cantidad_inicio") // Precio total y cantidad inicial en inventario
                 .select("precio_total, cantidad")
                 .eq("id", ingredienteId)
                 .single();
@@ -280,7 +267,10 @@ async function calcularCostoProducto(ingredientesSeleccionados, cantidades, cant
 
         const costoUnitario = costoTotalProducto / cantidadProducto;
 
-        return { costoTotal: costoTotalProducto, costoUnitario: costoUnitario };
+        return {
+            costoTotal: parseFloat(costoTotalProducto.toFixed(2)),
+            costoUnitario: parseFloat(costoUnitario.toFixed(2))
+        };
     } catch (error) {
         console.error("Error calculando el costo del producto:", error);
         return { costoTotal: 0, costoUnitario: 0 };  // Retorna 0 si ocurre un error
@@ -288,7 +278,7 @@ async function calcularCostoProducto(ingredientesSeleccionados, cantidades, cant
 }
 
 // Crear un nuevo producto en la base de datos
-async function agregarProducto(data, ingredientesSeleccionados, cantidades) {
+async function agregarProducto(data) {
     try {
         console.log(data)
         const { data: product, error } = await supabase
@@ -317,51 +307,7 @@ async function agregarProducto(data, ingredientesSeleccionados, cantidades) {
         // Ahora, obtenemos el ID del producto recién creado
         const newProduct = product[0].id;
 
-        // Luego creamos las nuevas relaciones
-        //   await createProductoIngredientes(productoId, ingredientesSeleccionados, cantidades);
-
-        /* await Promise.all(ingredientesSeleccionados.map(async (ingredienteId, index) => {
-             const cantidadUsada = cantidades[index];
- 
-             // Obtener el precio del ingrediente
-             const { data: ingrediente, error: ingredienteError } = await supabase
-                 .from("ingredientes")
-                 .select("precio_total, cantidad")
-                 .eq("id", ingredienteId)
-                 .single();
- 
-             if (ingredienteError || !ingrediente) {
-                 throw new Error(`No se pudo obtener el ingrediente con ID ${ingredienteId}`);
-             }
- 
-             // Verificar que precio_total y cantidad no sean nulos o NaN
-             const precioTotal = parseFloat(ingrediente.precio_total);
-             const cantidadIngrediente = parseFloat(ingrediente.cantidad);
-             if (isNaN(precioTotal) || isNaN(cantidadIngrediente)) {
-                 throw new Error(`Los valores de precio_total o cantidad son inválidos para el ingrediente ${ingredienteId}`);
-             }
- 
-             const precioUnitarioIngrediente = precioTotal / cantidadIngrediente;  // Precio unitario del ingrediente
-             const precioCantidadUsada = precioUnitarioIngrediente * cantidadUsada;  // Precio total de la cantidad usada
- 
-             console.log("Datos a insertar:", {
-                 producto_id: newProduct,
-                 ingrediente_id: ingredienteId,
-                 cantidad_usada: cantidadUsada,
-                 precio_cantidad_usada: precioCantidadUsada
-             });
- 
-             // Insertar en la tabla productos_ingredientes
-             await supabase.from("productos_ingredientes").insert([{
-                 producto_id: newProduct,
-                 ingrediente_id: ingredienteId,
-                 cantidad_usada: cantidadUsada,
-                 precio_cantidad_usada: precioCantidadUsada  // Guardamos el precio por cantidad usada
-             }]);
-         }));
- */
-
-        cargarIngredientes();
+        // cargarIngredientes();
         // ✅ Mostrar mensaje de éxito
         mostrarToast("✅ Producto agregado correctamente.", "success");
         return newProduct;
@@ -395,7 +341,7 @@ async function actualizarProducto(idProducto, data) {
 
         console.log("Producto actualizado:", idProducto);
 
-        cargarIngredientes();
+        //  cargarIngredientes();
         // ✅ Mostrar mensaje de éxito
         mostrarToast("✅ Producto actualizado correctamente.", "success");
 
@@ -414,7 +360,7 @@ async function editarProducto(idProducto) {
     // Obtener los detalles del producto desde Supabase
     const { data: producto, error } = await supabase
         .from("productos")
-        .select("*")
+        .select(`*, categoria:categoria_id (id, nombre)`)
         .eq("id", idProducto)
         .single();
 
@@ -424,7 +370,8 @@ async function editarProducto(idProducto) {
     document.getElementById("product-name").value = producto.nombre;
     document.getElementById("product-price").value = producto.precio;
     document.getElementById("product-stock").value = producto.stock;
-    document.getElementById("product-category").value = producto.categoria_id;
+    console.log(producto.categoria_id)
+    document.getElementById("product-category").value = producto.categoria.id;
 
     // Mostrar la imagen si existe
     const imagen = producto.imagen_url ? producto.imagen_url : ""; // Imagen por defecto si no tiene imagen
@@ -480,7 +427,7 @@ export async function createProductoIngredientes(productoId, ingredientesIds, ca
         const relaciones = await Promise.all(
             ingredientesIds.map(async (ingredienteId, index) => {
                 const cantidadUsada = cantidades[index];
-                const precioCantidadUsada = await calcularCostoProducto(ingredienteId, cantidadUsada);
+                const precioCantidadUsada = await calcularPrecioCantidadUsada(ingredienteId, cantidadUsada);
 
                 return {
                     producto_id: productoId,
@@ -501,6 +448,7 @@ export async function createProductoIngredientes(productoId, ingredientesIds, ca
         throw error;
     }
 }
+
 
 /**
  * Elimina todas las relaciones de un producto con ingredientes
@@ -539,10 +487,10 @@ async function eliminarProducto(idProducto) {
     }, { once: true }); // Usamos {once: true} para que el evento se ejecute solo una vez
 }
 
-// 🗑️ Función para eliminar completamente un producto
+// 🗑️ Función mejorada para eliminar completamente un producto
 async function eliminarProductoBackend(idProducto) {
     try {
-        // 1. Primero obtenemos los datos del producto para ver si tiene imagen
+        // 1. Primero obtenemos los datos del producto
         const { data: producto, error: productoError } = await supabase
             .from("productos")
             .select("imagen_url")
@@ -554,23 +502,36 @@ async function eliminarProductoBackend(idProducto) {
         // 2. Eliminar la imagen de Firebase Storage si existe
         if (producto.imagen_url) {
             try {
-                // Extraemos el path de la imagen de la URL
-                const url = new URL(producto.imagen_url);
-                // El path en Firebase Storage comienza después de '/o/'
-                const pathStart = url.pathname.indexOf('/o/') + 3;
-                const pathEnd = url.pathname.indexOf('?');
-                const imagePath = decodeURIComponent(url.pathname.substring(pathStart, pathEnd));
+                // Método más robusto para extraer el path de Firebase Storage
+                let imagePath = producto.imagen_url;
+
+                // Si es una URL completa (https://...)
+                if (producto.imagen_url.startsWith('http')) {
+                    const url = new URL(producto.imagen_url);
+                    // Extraer el path entre '/o/' y '?alt=media'
+                    const pathMatch = url.pathname.match(/\/o\/(.+?)(?:\?|$)/);
+                    if (pathMatch && pathMatch[1]) {
+                        imagePath = decodeURIComponent(pathMatch[1]);
+                    } else {
+                        throw new Error("Formato de URL no reconocido");
+                    }
+                }
+                // Si ya es un path directo (gs://...)
+                else if (producto.imagen_url.startsWith('gs://')) {
+                    imagePath = producto.imagen_url.replace('gs://', '');
+                }
 
                 const imageRef = ref(storage, imagePath);
                 await deleteObject(imageRef);
-                console.log("✅ Imagen eliminada de Firebase Storage");
+                console.log("✅ Imagen eliminada de Firebase Storage:", imagePath);
             } catch (storageError) {
                 console.warn("⚠️ No se pudo eliminar la imagen de Firebase Storage:", storageError);
                 // Continuamos aunque falle la eliminación de la imagen
+                return;
             }
         }
 
-        // 3. Eliminar las relaciones en productos_ingredientes
+        // 3. Eliminar las relaciones en productos_ingredientes (primero)
         const { error: eliminarRelacionesError } = await supabase
             .from("productos_ingredientes")
             .delete()
@@ -590,12 +551,11 @@ async function eliminarProductoBackend(idProducto) {
             throw new Error("No se pudo eliminar el producto.");
         }
 
-        // Recargar la lista de productos después de eliminar
-        cargarProductos();
-        cargarIngredientes();
+        // Recargar los datos
+        cargarProductos(true);
+        //  cargarIngredientes();
 
-        // Mostrar mensaje de éxito
-        mostrarToast("✅ Producto eliminado completamente (datos e imagen).", "success");
+        mostrarToast("✅ Producto eliminado completamente.", "success");
         return true;
     } catch (error) {
         console.error("❌ Error al eliminar el producto:", error);
@@ -603,7 +563,6 @@ async function eliminarProductoBackend(idProducto) {
         return false;
     }
 }
-
 // Función para agregar o editar el producto con los ingredientes
 export async function loadIngredients() {
     // showLoading();
@@ -614,9 +573,7 @@ export async function loadIngredients() {
     if (error) throw error;
 
     const ingredientsCheckboxContainer = document.getElementById("product-ingredients"); // Contenedor de checkboxes
-
-    // Limpiar el contenedor de ingredientes antes de agregar nuevos
-    ingredientsCheckboxContainer.innerHTML = '';
+    ingredientsCheckboxContainer.innerHTML = ''; // Limpiar el contenedor de ingredientes antes de agregar nuevos
 
     // Crear un checkbox por cada ingrediente disponible
     data.forEach(ingredient => {
@@ -632,8 +589,8 @@ export async function loadIngredients() {
         // Crear el label con el nombre del ingrediente, stock y medida
         const label = document.createElement("label");
         label.setAttribute("for", checkbox.id);
-        //  label.textContent = `${ingredient.nombre} - Stock: ${ingredient.cantidad} ${ingredient.medida}`;
         label.textContent = `${ingredient.nombre} - Medida en: ${ingredient.medida}`; //cambio la de arriba
+
         // Crear el campo de cantidad (inicialmente oculto)
         const quantityInput = document.createElement("input");
         quantityInput.type = "number";
@@ -641,26 +598,19 @@ export async function loadIngredients() {
         quantityInput.classList.add("form-control", "ingredient-quantity");
         quantityInput.placeholder = "Cantidad";
         quantityInput.min = 0;
+        quantityInput.step = "0.01";  // Permite decimales con 2 lugares
         quantityInput.style.display = "none"; // Inicialmente oculto
 
         // Agregar el checkbox y el input de cantidad al contenedor
         ingredientElement.appendChild(checkbox);
         ingredientElement.appendChild(label);
         ingredientElement.appendChild(quantityInput);
-
-        // Añadir el item al contenedor de ingredientes
-        ingredientsCheckboxContainer.appendChild(ingredientElement);
+        ingredientsCheckboxContainer.appendChild(ingredientElement);// Añadir el item al contenedor de ingredientes
 
         // Agregar el evento para mostrar/ocultar el input de cantidad al seleccionar/deseleccionar
         checkbox.addEventListener("change", function () {
-            const quantityField = document.getElementById(`quantity-${ingredient.id}`);
-            if (checkbox.checked) {
-                // Mostrar el campo de cantidad cuando el checkbox es seleccionado
-                quantityField.style.display = "block";
-            } else {
-                // Ocultar el campo de cantidad cuando el checkbox es deseleccionado
-                quantityField.style.display = "none";
-            }
+            quantityInput.style.display = this.checked ? "block" : "none";
+            if (!this.checked) quantityInput.value = '';
         });
     });
 }
@@ -675,9 +625,6 @@ export function updateIngredientsList() {
     // Recorrer los ingredientes seleccionados y mostrar su nombre, medida y cantidad editable
     selectedIngredients.forEach((ingredient) => {
         const ingredientId = ingredient.value; // Obtener el ID del ingrediente
-        //    const ingredientText = ingredient.textContent; // Obtener el nombre del ingrediente
-        //  const ingredientMeasure = ingredient.getAttribute("data-medida"); // Obtener la medida desde el atributo data
-
         const ingredientElement = document.createElement("div");
         ingredientElement.classList.add("ingredient-item");
 
@@ -689,37 +636,13 @@ export function updateIngredientsList() {
         ingredientInput.placeholder = "Cantidad";
         ingredientInput.min = "0";
         ingredientInput.value = "0"; // Valor inicial
-        /*    ingredientInput.addEventListener("change", function () {
-                updateIngredientQuantity(ingredientId); // Al cambiar la cantidad, actualizamos
-            });*/
 
-        // Añadir la cantidad al elemento
-        /*     ingredientElement.innerHTML = `
-                  <label for="ingredient-${ingredientId}">hola${ingredientText}</label>
-                  <small class="text-muted">Medida: ${ingredientMeasure}</small>
-              `;
-      */
         // Añadir el input de cantidad
         ingredientElement.appendChild(ingredientInput);
 
         ingredientsListContainer.appendChild(ingredientElement);
     });
 }
-
-// 📌 Función para actualizar la cantidad de un ingrediente
-/*export function updateIngredientQuantity(ingredientId) {
-    const quantityInput = document.getElementById(`ingredient-${ingredientId}`);
-    const quantity = quantityInput.value; // Obtener la cantidad ingresada
-
-    // Verifica si la cantidad es válida y actualiza el array de ingredientes (o cualquier estructura de datos que uses)
-    if (quantity >= 0) {
-        // Aquí puedes actualizar tu estructura de datos, por ejemplo:
-        // selectedIngredients[ingredientId].quantity = quantity;
-        console.log(`Actualizado el ingrediente con ID ${ingredientId} a ${quantity}`);
-    } else {
-        alert("⚠️ La cantidad no puede ser negativa.");
-    }
-}*/
 
 // Cargar las categorías desde la base de datos
 async function cargarCategorias() {
@@ -750,91 +673,81 @@ async function cargarCategorias() {
 }
 
 // 📋 Carga la lista de productos
-export async function cargarProductos() {
+// Cache simple
+let cacheProductos = null;
+
+export async function cargarProductos(forceRefresh = false) {
     try {
         showLoading();
-        // 🔹 Obtener los productos desde Supabase
-        const { data: productos, error: productosError } = await supabase
-            .from("productos")
-            //  .select("id, nombre, precio, precio_unitario, precio_total, stock, categoria:categoria_id(nombre), imagen_url");
-            .select(`*,
-            categoria:categoria_id (nombre)`);
 
-        if (productosError) throw productosError;
+        // Mostrar skeleton o placeholder
+        document.getElementById("products-list").innerHTML =
+            '<tr><td colspan="8"><div class="skeleton-loader"></div></td></tr>'.repeat(5);
 
-        // 📌 Recorrer cada producto y obtener sus ingredientes y cantidades
-        for (let i = 0; i < productos.length; i++) {
-            const { data: ingredientes, error: ingredientesError } = await supabase
-                .from("productos_ingredientes")
-                .select("ingrediente_id, cantidad_usada, precio_cantidad_usada")  // Incluir precio_cantidad_usada
-                .eq("producto_id", productos[i].id);
-
-            if (ingredientesError) throw ingredientesError;
-
-            // Obtener los nombres de los ingredientes y sus medidas
-            const ingredientesDetalles = await Promise.all(ingredientes.map(async (ingrediente) => {
-                const { data: ingredienteData, error: ingredienteError } = await supabase
-                    .from("ingredientes")
-                    .select("nombre, medida")
-                    .eq("id", ingrediente.ingrediente_id)
-                    .single(); // Obtener un solo ingrediente
-
-                if (ingredienteError) throw ingredienteError;
-
-                return {
-                    nombre: ingredienteData.nombre,
-                    cantidad: ingrediente.cantidad_usada,
-                    medida: ingredienteData.medida, // Obtener también la medida
-                    precioCantidadUsada: ingrediente.precio_cantidad_usada  // Incluir el precio por cantidad usada
-
-                };
-            }));
-
-            // Guardamos los ingredientes y sus cantidades en el producto
-            productos[i].ingredientes = ingredientesDetalles;
+        // Usar cache si está disponible y no se fuerza refresco
+        if (cacheProductos && !forceRefresh) {
+            renderizarProductos(cacheProductos);
+            return;
         }
 
-        // 📌 Llenar la tabla con los productos y sus ingredientes
-        const tablaProductos = document.getElementById("products-list");
-        tablaProductos.innerHTML = ""; // Limpiar tabla antes de agregar los nuevos productos
+        // Consulta optimizada
+        const { data, error } = await supabase
+            .from("productos")
+            .select(`
+                id, nombre, precio, precio_unitario, precio_total, stock, fecha_registro, imagen_url,
+                categoria:categoria_id(nombre),
+                productos_ingredientes:productos_ingredientes(
+                    cantidad_usada, precio_cantidad_usada,
+                    ingrediente:ingredientes(nombre, medida)
+                )
+            `)
+            .order('nombre');
 
-        // 📌 Recorrer los productos y agregarlos a la tabla
-        productos.forEach((producto) => {
-            // Si la imagen está disponible, la mostramos; si no, mostramos una imagen por defecto
-            const imagen = producto.imagen_url ? producto.imagen_url : "";
+        if (error) throw error;
 
-            // Crear una fila para el producto
-            const fila = document.createElement("tr");
-            fila.dataset.id = producto.id;  // Añadir data-id para selección
+        // Guardar en cache y renderizar
+        cacheProductos = data;
+        renderizarProductos(data);
 
-            // Crear las celdas de la fila con la información del producto
-            const ingredientesText = producto.ingredientes.map((ingredient) => {
-                return `${ingredient.nombre}: ${ingredient.cantidad} ${ingredient.medida} x $${ingredient.precioCantidadUsada}`;  // Mostrar el precio de cada ingrediente
-            }).join(", ");
-
-            // Mostrar el nombre de la categoría en lugar del ID
-            const categoriaNombre = producto.categoria ? producto.categoria.nombre : "Sin Categoría";
-
-            fila.innerHTML = `
-                <td><img src="${imagen}" alt="${producto.nombre}" class="img-thumbnail"></td>
-                <td>${producto.nombre}</td>
-                <td>${categoriaNombre}</td>
-                <td>$${producto.precio.toFixed(2)}</td>
-                <td>${producto.stock}</td>
-                <td>${ingredientesText}</td>
-                <td>$${producto.precio_unitario.toFixed(2)}</td>
-                <td>$${producto.precio_total.toFixed(2)}</td>
-            `;
-
-            // Agregar la fila a la tabla
-            tablaProductos.appendChild(fila);
-        });
     } catch (error) {
-        console.error("❌ Error al cargar productos:", error);
-        mostrarToast(`❌ Error al cargar productos`, "error");
+        console.error("Error al cargar productos:", error);
+        mostrarToast("Error al cargar productos", "error");
     } finally {
         hideLoading();
     }
+}
+
+function renderizarProductos(productos) {
+    const fragment = document.createDocumentFragment();
+
+    productos.forEach(producto => {
+        const fila = document.createElement("tr");
+        fila.dataset.id = producto.id;
+        const fechaRegistro = formatearFecha(producto.fecha_registro);
+        fila.innerHTML = `
+            <td><img src="${producto.imagen_url || ''}" alt="${producto.nombre}" 
+                 class="img-thumbnail" loading="lazy"></td>
+            <td>${producto.nombre}</td>
+            <td>${producto.categoria?.nombre || "Sin categoría"}</td>
+            <td>$${producto.precio.toFixed(2)}</td>
+            <td>${producto.stock}</td>
+            <td>${formatearIngredientes(producto.productos_ingredientes)}</td>
+            <td>$${producto.precio_unitario.toFixed(2)}</td>
+            <td>$${producto.precio_total.toFixed(2)}</td>
+            <rd>${fechaRegistro}</td>
+        `;
+        fragment.appendChild(fila);
+    });
+
+    const tabla = document.getElementById("products-list");
+    tabla.innerHTML = "";
+    tabla.appendChild(fragment);
+}
+
+function formatearIngredientes(ingredientes) {
+    return ingredientes?.map(i =>
+        `${i.ingrediente.nombre}: ${parseFloat(i.cantidad_usada).toFixed(2)} ${i.ingrediente.medida} x $${i.precio_cantidad_usada.toFixed(2)}`
+    ).join(", ") || "Sin ingredientes";
 }
 
 //🖱️ Configura la selección de filas
@@ -904,3 +817,56 @@ function clearProductSelection() {
     if (deleteBtn) deleteBtn.style.display = 'none';
     if (editBtn) editBtn.style.display = 'none';
 }
+
+// Vista previa de la imagen seleccionada
+document.getElementById('product-image').addEventListener('change', function (e) {
+    const preview = document.getElementById('product-image-preview');
+    const file = e.target.files[0];
+
+    if (file) {
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        }
+
+        reader.readAsDataURL(file);
+    } else {
+        preview.style.display = 'none';
+        preview.src = '#';
+    }
+});
+
+// 📌 Función para generar un nombre único para la imagen
+function generarNombreUnico(originalName) {
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 8);
+    const extension = originalName.split('.').pop().toLowerCase(); // Normalizar extensión a minúsculas
+    return `producto_${timestamp}_${randomString}.${extension}`;
+}
+
+function configurarModalProducto() {
+    const modalElement = document.getElementById('productModal');
+    const modalInstance = new bootstrap.Modal(modalElement, {
+        focus: true,
+        keyboard: true
+    });
+
+    // Manejar foco al abrir
+    modalElement.addEventListener('shown.bs.modal', () => {
+        setTimeout(() => {
+            const firstInput = modalElement.querySelector('input:not([type="hidden"]), select, textarea');
+            firstInput?.focus();
+        }, 100);
+    });
+
+    // Limpiar al cerrar
+    modalElement.addEventListener('hidden.bs.modal', () => {
+        document.getElementById("product-form").reset();
+        clearProductSelection();
+    });
+
+    return modalInstance;
+}
+
