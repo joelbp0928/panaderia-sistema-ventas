@@ -2,13 +2,12 @@ import { gestionarIngrediente, cargarIngredientes, showIngredientForm, handlePri
 import { showProductForm, gestionarProducto, loadIngredients, cargarProductos } from "./productos.js";
 import { mostrarFormularioEmpleado, gestionarEmpleado, cargarEmpleados } from "./empleados.js";
 import { verificarAccesoAdmin, verificarSesion, cerrarSesion } from "./auth-check.js";
-import { cargarConfiguracion} from "./admin/configAdmin.js";
+import { cargarConfiguracion } from "./admin/configAdmin.js";
 //import { cargarConfiguracion } from "./config.js"
 import { showLoading, hideLoading } from "./manageError.js";
 import { cargarPromociones } from './promociones.js';
 import { cargarCategorias } from './categorias.js';
-
-import {abrirModalEntrada, cerrarHistorial} from './inventario_ingredientes.js'
+import { abrirModalEntrada, cerrarHistorial, aplicarFiltrosInventario } from './inventario_ingredientes.js'
 
 window.onload = async function () {
   try {
@@ -27,8 +26,10 @@ window.onload = async function () {
     document.getElementById("product-form").addEventListener("submit", gestionarProducto);
     document.getElementById("btn-agregar-producto").addEventListener("click", showProductForm);
     //document.getElementById("btn-agregar-categoria").addEventListener("click", gestionarCategorias);
-    document.getElementById("btn-agregar-ingrediente-inventario").addEventListener("click",abrirModalEntrada);
-    document.getElementById("btn-cerrar-historial").addEventListener("click",cerrarHistorial);
+    document.getElementById("btn-agregar-ingrediente-inventario").addEventListener("click", abrirModalEntrada);
+    document.getElementById("btn-cerrar-historial").addEventListener("click", cerrarHistorial);
+    document.getElementById("buscarIngrediente").addEventListener("input", aplicarFiltrosInventario);
+    document.getElementById("filtroUnidad").addEventListener("change", aplicarFiltrosInventario);
 
     // 📌 Función para manejar el cambio entre precio unitario y precio total
     document.getElementById("price-unit").addEventListener("change", handlePriceChange);
@@ -64,9 +65,9 @@ document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
       case "categorias-tab":
         cargarCategorias();
         break;
-        case "promotion-recommendations":
-          cargarPromociones();
-          break;
+      case "promotion-recommendations":
+        cargarPromociones();
+        break;
       // otros casos...
     }
   });

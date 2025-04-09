@@ -3,13 +3,15 @@ import { mostrarToast } from "./manageError.js";
 
 let selectedIngredientRow = null;
 let selectedIngredientId = null;
+let salidaModal;
 
 // 🌐 Exponer funciones al scope global
 window.verHistorialMovimientos = verHistorialMovimientos;
 
 document.addEventListener("DOMContentLoaded", function () {
   // ✅ Ejecutar al cargar
-setupIngredientRowSelection();
+  cargarInventarioIngredientes()
+  setupIngredientRowSelection();
 });
 
 document.getElementById("ingrediente-select").addEventListener("change", async function () {
@@ -82,6 +84,18 @@ export function abrirModalEntrada() {
   modal.show();
 }
 
+
+
+// Mostrar modal de salida con datos del ingrediente seleccionado
+export function abrirModalSalida(id, nombre, stockActual, medida) {
+  document.getElementById("nombre-ingrediente-salida").textContent = nombre;
+  document.getElementById("stock-actual-salida").textContent = `${parseFloat(stockActual).toFixed(2)} ${medida}`;
+  document.getElementById("form-salida-ingrediente").dataset.inventarioId = id;
+  document.getElementById("medida-retirar").textContent = `${medida}`;
+  salidaModal = new bootstrap.Modal(document.getElementById("modalSalidaIngrediente"));
+  salidaModal.show();
+}
+
 // 💾 Guardar entrada manual
 async function guardarEntradaManual(event) {
   event.preventDefault();
@@ -147,6 +161,81 @@ async function guardarEntradaManual(event) {
 
 document.getElementById("form-entrada-ingrediente").addEventListener("submit", guardarEntradaManual);
 
+// Manejar envío del formulario de salida
+export async function registrarSalidaManual(event) {
+  event.preventDefault();
+  const btn = formSalida.querySelector("button[type='submit']");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
+
+  const cantidad = parseFloat(document.getElementById("cantidad-salida").value);
+  const comentario = document.getElementById("comentario-salida").value.trim();
+  const inventarioId = document.getElementById("form-salida-ingrediente").dataset.inventarioId;
+
+  if (!inventarioId || isNaN(cantidad) || cantidad <= 0) {
+    mostrarToast("⚠️ Datos inválidos para salida", "error");
+    return;
+  }
+
+  try {
+    // Obtener stock actual
+    const { data: inventario, error: errorInv } = await supabase
+      .from("inventario_ingredientes")
+      .select("stock_actual")
+      .eq("id", inventarioId)
+      .single();
+
+    if (errorInv || !inventario) {
+      mostrarToast("❌ Error al consultar inventario", "error");
+      return;
+    }
+
+    const stockActual = parseFloat(inventario.stock_actual);
+
+    if (cantidad > stockActual) {
+      mostrarToast("⚠️ No puedes retirar más de lo disponible", "warning");
+      return;
+    }
+
+    const nuevoStock = stockActual - cantidad;
+
+    // 1. Actualizar stock
+    await supabase
+      .from("inventario_ingredientes")
+      .update({ stock_actual: nuevoStock, updated_at: new Date() })
+      .eq("id", inventarioId);
+
+    // 2. Registrar movimiento
+    await supabase.from("movimientos_ingredientes").insert({
+      inventario_ingrediente_id: inventarioId,
+      tipo_movimiento: "salida",
+      cantidad,
+      stock_resultante: nuevoStock,
+      descripcion: comentario
+    });
+
+    mostrarToast("✅ Salida registrada con éxito", "success");
+    salidaModal.hide();
+    document.getElementById("btn-restar-ingrediente-inventario")?.focus();
+    document.getElementById("form-salida-ingrediente").reset();
+    cargarInventarioIngredientes();
+  } catch (err) {
+    console.error("❌ Error registrando salida:", err);
+    mostrarToast("❌ Error al registrar la salida", "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Registrar Salida';
+
+  }
+}
+
+// Asignar evento
+const formSalida = document.getElementById("form-salida-ingrediente");
+if (formSalida) {
+  formSalida.addEventListener("submit", registrarSalidaManual);
+}
+
+let inventarioIngredientes = [];
 // 📋 Mostrar tabla de inventario
 async function cargarInventarioIngredientes() {
   const { data, error } = await supabase.from("inventario_ingredientes")
@@ -175,15 +264,14 @@ async function cargarInventarioIngredientes() {
 
     tbody.appendChild(fila);
   });
+  inventarioIngredientes = data;
+  renderizarInventarioFiltrado();
 }
 
 // Inicializar tabla
-cargarInventarioIngredientes();
+//cargarInventarioIngredientes();
 
-////
 // 📦 GESTIÓN DE INVENTARIO - HISTORIAL DE MOVIMIENTOS ============================
-
-// 📜 Función para abrir el historial de movimientos
 // 👁️ Mostrar historial
 export function verHistorialMovimientos(inventarioId, nombreIngrediente) {
   supabase
@@ -221,9 +309,10 @@ export function verHistorialMovimientos(inventarioId, nombreIngrediente) {
         });
       }
 
-      // Mostrar panel y overlay
+      // ✅ Mostrar panel, overlay y bloquear scroll
       document.getElementById("historial-contenedor").classList.add("mostrar");
       document.getElementById("overlay-historial").classList.add("mostrar");
+      document.body.classList.add("bloquear-scroll");
     })
     .catch(err => {
       console.warn("❌ Error al cargar historial:", err);
@@ -232,68 +321,69 @@ export function verHistorialMovimientos(inventarioId, nombreIngrediente) {
 }
 document.getElementById("overlay-historial").addEventListener("click", cerrarHistorial);
 
-
-
-// 📋 Añadir botón en la tabla de ingredientes (esto se haría al renderizar cada fila)
-// ejemplo: <button onclick="verHistorialMovimientos('${id}', '${nombre}')" class="btn btn-outline-secondary btn-sm"><i class="fas fa-history"></i></button>
-
-// 📦 En tu HTML, crea un contenedor lateral para mostrar el historial (puede estar oculto inicialmente)
-// <div id="historial-contenedor" class="border p-3 bg-light rounded"></div>
-
-
-// 👁️ Mostrar historial lateral
 // ❌ Ocultar historial
 export function cerrarHistorial() {
   document.getElementById("historial-contenedor").classList.remove("mostrar");
   document.getElementById("overlay-historial").classList.remove("mostrar");
+  document.body.classList.remove("bloquear-scroll"); // ✅ Restaurar scroll
+
 }
 // 🖱️ Selección de filas en tabla de ingredientes
 function setupIngredientRowSelection() {
-  const table = document.getElementById("tabla-ingredientes");
-  if (!table) return;
+  const tbody = document.getElementById("tabla-ingredientes");
+  if (!tbody) return;
 
-  table.addEventListener("click", (e) => {
+  tbody.addEventListener("click", (e) => {
     const row = e.target.closest("tr[data-id]");
     if (!row) return;
 
     const id = row.dataset.id;
+
     if (selectedIngredientId === id) {
       clearIngredientSelection();
     } else {
-      selectIngredientRow(id);
+      selectIngredientRow(id, row);
     }
   });
 
-  // Acciones visibles solo al seleccionar
-  const historialBtn = document.getElementById("btn-historial-ingrediente");
-  const editarBtn = document.getElementById("btn-editar-ingrediente");
+    // Acciones visibles solo al seleccionar
+    const historialBtn = document.getElementById("btn-historial-ingrediente");
+    const restarBtn = document.getElementById("btn-restar-ingrediente-inventario");
+  
+    if (historialBtn) historialBtn.style.display = "none";
+    if (restarBtn) restarBtn.style.display = "none";
 
-  if (historialBtn) historialBtn.style.display = "none";
-  if (editarBtn) editarBtn.style.display = "none";
-
+  // Importante: los botones solo se les pone el listener UNA vez
   historialBtn?.addEventListener("click", () => {
     if (selectedIngredientId) {
-      const nombre = document.querySelector(`tr[data-id='${selectedIngredientId}'] td`).textContent;
+      const nombre = selectedIngredientRow?.querySelector("td")?.textContent;
       verHistorialMovimientos(selectedIngredientId, nombre);
+    }
+  });
+
+  restarBtn?.addEventListener("click", () => {
+    if (selectedIngredientId && selectedIngredientRow) {
+      const nombre = selectedIngredientRow.querySelector("td")?.textContent;
+      const stock = selectedIngredientRow.querySelector("td:nth-child(2)")?.textContent;
+      const medida = selectedIngredientRow.querySelector("td:nth-child(3)")?.textContent;
+      abrirModalSalida(selectedIngredientId, nombre, stock, medida);
     }
   });
 }
 
-// 🔘 Seleccionar fila
-function selectIngredientRow(id) {
-  clearIngredientSelection();
 
-  const row = document.querySelector(`#tabla-ingredientes tr[data-id='${id}']`);
-  if (!row) return;
+// 🔘 Seleccionar fila
+function selectIngredientRow(id, row) {
+  clearIngredientSelection();
 
   row.classList.add("selected-row");
   selectedIngredientRow = row;
   selectedIngredientId = id;
 
-  // Mostrar acciones
   document.getElementById("btn-historial-ingrediente").style.display = "inline-block";
-  document.getElementById("btn-editar-ingrediente").style.display = "inline-block";
+  document.getElementById("btn-restar-ingrediente-inventario").style.display = "inline-block";
 }
+
 
 // 🧹 Limpiar selección
 function clearIngredientSelection() {
@@ -304,5 +394,45 @@ function clearIngredientSelection() {
   }
 
   document.getElementById("btn-historial-ingrediente").style.display = "none";
-  document.getElementById("btn-editar-ingrediente").style.display = "none";
+  document.getElementById("btn-restar-ingrediente-inventario").style.display = "none";
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") cerrarHistorial();
+});
+
+
+export function aplicarFiltrosInventario() {
+  renderizarInventarioFiltrado();
+}
+
+function renderizarInventarioFiltrado() {
+  const buscar = document.getElementById("buscarIngrediente").value.toLowerCase();
+  const unidad = document.getElementById("filtroUnidad").value;
+
+  const filtrados = inventarioIngredientes.filter(item => {
+    const coincideNombre = item.ingrediente.nombre.toLowerCase().includes(buscar);
+    const coincideUnidad = unidad ? item.ingrediente.medida === unidad : true;
+    return coincideNombre && coincideUnidad;
+  });
+
+  const tbody = document.getElementById("tabla-ingredientes");
+  tbody.innerHTML = "";
+
+  filtrados.forEach(item => {
+    const fila = document.createElement("tr");
+    fila.dataset.id = item.id;
+
+    const precio_total = item.ingrediente.precio_unitario * item.stock_actual;
+
+    fila.innerHTML = `
+      <td>${item.ingrediente.nombre}</td>
+      <td>${item.stock_actual.toFixed(2)}</td>
+      <td>${item.ingrediente.medida || "-"}</td>
+      <td>$${precio_total?.toFixed(2) || "0.00"}</td>
+      <td>$${item.ingrediente.precio_unitario?.toFixed(2) || "0.00"}</td>
+    `;
+
+    tbody.appendChild(fila);
+  });
 }

@@ -466,3 +466,12 @@ color: var(--light-color);
   opacity: 1;
   pointer-events: all;
 }
+
+/* ❌ Bloquea el scroll del body cuando el historial está abierto */
+body.bloquear-scroll {
+  overflow: hidden;
+}
+
+#ingrediente-actions{
+  display: none;
+}

@@ -172,6 +172,9 @@
           <h2>Gestión de Clientes</h2>
           <h2>Estamos trabajando 🏗🚧👷‍♂️</h2>
           <button class="btn btn-primary mb-3">Agregar Cliente</button>
+          <span class="text-muted small"
+          >Selecciona un cliente para ver acciones</span
+        >
           <table class="table">
             <thead>
               <tr>
@@ -301,6 +304,9 @@
               <i class="fa-regular fa-pen-to-square"></i>
             </div>
           </div>
+          <span class="text-muted small"
+          >Selecciona un empelado para ver acciones</span
+        >
           <table class="table" id="tabla-empleados">
             <thead>
               <tr>
@@ -526,6 +532,9 @@
               <i class="fa-regular fa-pen-to-square"></i>
             </div>
           </div>
+          <span class="text-muted small"
+          >Selecciona un cliente para ver acciones</span
+        >
           <table id="ingredient-table" class="table">
             <thead>
               <tr>
@@ -763,6 +772,9 @@
               <i class="fa-regular fa-pen-to-square"></i>
             </div>
           </div>
+          <span class="text-muted small"
+          >Selecciona un producto para ver acciones</span
+        >
           <table class="table">
             <thead>
               <tr>
@@ -839,7 +851,7 @@
               </div>
             </div>
           </div>
-          <!-- Contenedor para los botones de eliminar y editar cantidad -->
+          <!-- Contenedor para los botones de eliminar y editar categoria -->
           <div class="button-container">
             <!-- Botón de eliminar (bote de basura) -->
             <div id="delete-category-btn" class="button-delete">
@@ -850,6 +862,9 @@
               <i class="fa-regular fa-pen-to-square"></i>
             </div>
           </div>
+          <span class="text-muted small"
+          >Selecciona una categoria para ver acciones</span
+        >
           <table class="table" id="tabla-categorias">
             <thead>
               <tr>
@@ -935,6 +950,9 @@
                 <h3 class="mb-0">Promociones Activas</h3>
               </div>
               <div class="card-body">
+                <span class="text-muted small"
+                >Selecciona una promoción para ver acciones</span
+              >
                 <ul id="promociones-activas" class="list-group">
                   <!-- Aqui aparecen de forma dinamica las promociones-->
                 </ul>
@@ -1295,7 +1313,7 @@
                     class="btn btn-primary"
                     id="btn-agregar-ingrediente-inventario"
                   >
-                    <i class="fas fa-plus-circle me-1"></i>Agregar Ingrediente
+                    <i class="fa-solid fa-plus fa-lg"></i> Ingrediente
                   </button>
                 </div>
 
@@ -1317,8 +1335,8 @@
                     <select id="filtroUnidad" class="form-select">
                       <option value="">Todas</option>
                       <option value="kg">Kilogramos</option>
-                      <option value="L">Litros</option>
-                      <option value="pza">Piezas</option>
+                      <option value="lt">Litros</option>
+                      <option value="pz">Piezas</option>
                     </select>
                   </div>
                 </div>
@@ -1329,7 +1347,6 @@
                   <div
                     id="ingrediente-actions"
                     class="d-flex justify-content-end mb-3"
-                    style="display: none"
                   >
                     <button
                       class="btn btn-primary me-2"
@@ -1337,11 +1354,16 @@
                     >
                       <i class="fas fa-history"></i> Historial
                     </button>
-                    <button class="btn btn-primary" id="btn-editar-ingrediente">
-                      <i class="fas fa-edit"></i> Editar
+                    <button
+                      class="btn btn-primary"
+                      id="btn-restar-ingrediente-inventario"
+                    >
+                      <i class="fa-solid fa-minus"></i> Ingrediente
                     </button>
                   </div>
-
+                  <span class="text-muted small"
+                    >Selecciona un ingrediente para ver acciones</span
+                  >
                   <table class="table table-bordered align-middle text-center">
                     <thead class="table-card-title">
                       <tr>
@@ -1486,6 +1508,87 @@
               </div>
             </div>
           </div>
+          <!-- Modal para registrar salida manualmente de ingrediente-->
+          <div
+            class="modal fade"
+            id="modalSalidaIngrediente"
+            tabindex="-1"
+            aria-labelledby="modalSalidaLabel"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <form id="form-salida-ingrediente">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="modalSalidaLabel">
+                      <i class="fas fa-minus-circle me-2"></i>Registrar Salida
+                      de Ingrediente
+                    </h5>
+                    <button
+                      type="button"
+                      class="btn-close"
+                      data-bs-dismiss="modal"
+                      aria-label="Cerrar"
+                    ></button>
+                  </div>
+
+                  <div class="modal-body">
+                    <!-- Nombre y medida (solo info) -->
+                    <p>
+                      <strong><i class="fa-solid fa-bread-slice"></i> Ingrediente:</strong>
+                      <span id="nombre-ingrediente-salida">-</span>
+                    </p>
+                    <p>
+                      <strong><i class="fas fa-boxes"></i> Stock:</strong>
+                      <span id="stock-actual-salida">-</span>
+                    </p>
+
+                    <!-- Cantidad a descontar -->
+                    <div class="mb-3">
+                      <label for="cantidad-salida" class="form-label"
+                        >Cantidad a retirar (<span id="medida-retirar"></span>):</label
+                      >
+                      <input
+                        type="number"
+                        class="form-control"
+                        id="cantidad-salida"
+                        min="0.01"
+                        step="0.01"
+                        required
+                      />
+                    </div>
+
+                    <!-- Motivo u observación -->
+                    <div class="mb-3">
+                      <label for="comentario-salida" class="form-label"
+                        >Motivo / Observación</label
+                      >
+                      <textarea
+                        class="form-control"
+                        id="comentario-salida"
+                        rows="2"
+                        placeholder="Ej. pérdida, merma, error..."
+                      ></textarea>
+                    </div>
+                  </div>
+
+                  <div class="modal-footer">
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      data-bs-dismiss="modal"
+                    >
+                      <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                      <i class="fas fa-check-circle"></i> Registrar Salida
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
           <!-- 🔳 Overlay difuminado detrás del panel -->
           <div id="overlay-historial" class="overlay-historial"></div>
           <!-- 📜 Historial lateral -->
