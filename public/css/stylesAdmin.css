@@ -236,10 +236,10 @@ input[type="color"] {
 /* Estilo del contenedor de los botones (flex para alinearlos horizontalmente) */
 .button-container {
   display: flex;
-  justify-content: flex-start; /* Alinea los botones a la izquierda */
+  justify-content: flex-end; /* Alinea los botones a la izquierda */
   align-items: center; /* Centra los botones verticalmente */
-  gap: 20px; /* Espacio entre los botones, puedes ajustar este valor */
-  margin-left: 32px; /* Empuja los botones más a la izquierda */
+  gap: 40px; /* Espacio entre los botones, puedes ajustar este valor */
+  margin-right: 32px; /* Empuja los botones más a la izquierda */
   margin-bottom: 10px; /* Espacio inferior */
 }
 
@@ -247,7 +247,7 @@ input[type="color"] {
 .button-delete {
   display: none; /* Inicialmente oculto */
   cursor: pointer;
-  font-size: 24px;
+  font-size: 26px;
   color: #d9534f; /* Color rojo para el icono de eliminar */
   text-align: center;
 }
@@ -260,7 +260,7 @@ input[type="color"] {
 .button-edit {
   display: none; /* Inicialmente oculto */
   cursor: pointer;
-  font-size: 24px;
+  font-size: 26px;
   color: #4f96d9; /* Color azul para el icono de editar */
   text-align: center;
 }
@@ -351,7 +351,7 @@ input[type="color"] {
 
 /* Estilo para fila seleccionada */
 .selected-row {
-  background-color: rgba(0, 123, 255, 0.1) !important;
+  background-color: rgba(19, 16, 16, 0.1) !important;
   box-shadow: inset 0 0 0 2px var(--primary-color);
 }
 
@@ -401,4 +401,68 @@ color: var(--light-color);
 .ingredient-quantity {
   width: 80px; /* Ancho fijo para consistencia */
   text-align: right; /* Alinear números a la derecha */
+}
+
+.historial-sidebar {
+  position: fixed;
+  top: 0;
+  right: -400px;
+  width: 400px;
+  height: 100%;
+  background: #fff;
+  border-left: 2px solid #dee2e6;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 1055;
+  transition: right 0.3s ease-in-out;
+  overflow-y: auto;
+}
+
+.historial-sidebar.mostrar {
+  right: 0;
+}
+
+/* 🧾 PANEL LATERAL DE HISTORIAL */
+.historial-panel {
+  position: fixed;
+  top: 0;
+  right: -400px; /* Oculto fuera de la vista */
+  width: 350px;
+  height: 100%;
+  background-color: #fff;
+  border-left: 2px solid #ccc;
+  padding: 20px;
+  transition: right 0.4s ease-in-out;
+  z-index: 1055;
+  overflow-y: auto;
+}
+
+.historial-panel.mostrar {
+  right: 0; /* Se desliza hacia la vista */
+}
+
+@media (max-width: 768px) {
+  .historial-panel {
+    width: 100%;
+  }
+}
+
+/* 🔳 Overlay para oscurecer el fondo */
+.overlay-historial {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4); /* Oscurece ligeramente */
+  backdrop-filter: blur(2px); /* Difumina ligeramente */
+  z-index: 1050;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Mostrar el overlay */
+.overlay-historial.mostrar {
+  opacity: 1;
+  pointer-events: all;
 }

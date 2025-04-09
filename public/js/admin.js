@@ -8,6 +8,8 @@ import { showLoading, hideLoading } from "./manageError.js";
 import { cargarPromociones } from './promociones.js';
 import { cargarCategorias } from './categorias.js';
 
+import {abrirModalEntrada, cerrarHistorial} from './inventario_ingredientes.js'
+
 window.onload = async function () {
   try {
     // 🔹 Cargar elementos principales de la página
@@ -25,6 +27,8 @@ window.onload = async function () {
     document.getElementById("product-form").addEventListener("submit", gestionarProducto);
     document.getElementById("btn-agregar-producto").addEventListener("click", showProductForm);
     //document.getElementById("btn-agregar-categoria").addEventListener("click", gestionarCategorias);
+    document.getElementById("btn-agregar-ingrediente-inventario").addEventListener("click",abrirModalEntrada);
+    document.getElementById("btn-cerrar-historial").addEventListener("click",cerrarHistorial);
 
     // 📌 Función para manejar el cambio entre precio unitario y precio total
     document.getElementById("price-unit").addEventListener("change", handlePriceChange);

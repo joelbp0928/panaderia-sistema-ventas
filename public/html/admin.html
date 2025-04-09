@@ -204,7 +204,7 @@
         >
           <h2>Gestión de Empleados</h2>
           <button class="btn btn-primary mb-3" id="btn-agregar-empleado">
-            Agregar Empleado
+            <i class="fas fa-plus-circle me-1"></i>Agregar Empleado
           </button>
           <!-- Modal para Agregar/Editar Empleado -->
           <div
@@ -372,7 +372,7 @@
         >
           <h2>Catálogo de Ingredientes</h2>
           <button class="btn btn-primary mb-3" id="btn-agregar-ingrediente">
-            Agregar Ingrediente
+            <i class="fas fa-plus-circle me-1"></i>Agregar Ingrediente
           </button>
           <!-- Modal para agregar o editar ingrediente -->
           <div
@@ -596,7 +596,7 @@
         >
           <h2>Catálogo de Productos</h2>
           <button class="btn btn-primary mb-3" id="btn-agregar-producto">
-            Agregar Producto
+            <i class="fas fa-plus-circle me-1"></i>Agregar Producto
           </button>
           <!-- Modal para agregar/editar producto -->
           <div
@@ -794,7 +794,7 @@
 
           <!-- Botón para agregar una categoría -->
           <button class="btn btn-primary mb-3" id="btn-agregar-categoria">
-            Agregar Categoría
+            <i class="fas fa-plus-circle me-1"></i>Agregar Categoría
           </button>
 
           <!-- Modal para agregar/editar categoría -->
@@ -1245,7 +1245,7 @@
           aria-labelledby="settings-tab"
         >
           <div class="container py-4">
-            <h2 class="mb-4">📦 Gestión de Inventario</h2>
+            <h2 class="mb-4">Gestión de Inventario</h2>
 
             <!-- Tabs internas -->
             <ul class="nav nav-tabs mb-4" id="inventoryTabs" role="tablist">
@@ -1258,7 +1258,7 @@
                   type="button"
                   role="tab"
                 >
-                  🧪 Ingredientes
+                  <i class="fa-solid fa-clipboard-list"></i> Ingredientes
                 </button>
               </li>
               <li class="nav-item" role="presentation">
@@ -1270,7 +1270,7 @@
                   type="button"
                   role="tab"
                 >
-                  🥤 Productos
+                  <i class="fa-solid fa-bread-slice"></i> Productos
                 </button>
               </li>
             </ul>
@@ -1288,11 +1288,12 @@
                   class="d-flex justify-content-between align-items-center mb-3"
                 >
                   <h4>
-                    <i class="fa-solid fa-rectangle-list"></i> Inventario de Ingredientes
+                    <i class="fa-solid fa-clipboard-list"></i> Inventario de
+                    Ingredientes
                   </h4>
                   <button
                     class="btn btn-primary"
-                    onclick="abrirModalAgregarIngrediente()"
+                    id="btn-agregar-ingrediente-inventario"
                   >
                     <i class="fas fa-plus-circle me-1"></i>Agregar Ingrediente
                   </button>
@@ -1324,18 +1325,36 @@
 
                 <!-- Tabla -->
                 <div class="table-responsive">
+                  <!-- Acciones al seleccionar ingrediente -->
+                  <div
+                    id="ingrediente-actions"
+                    class="d-flex justify-content-end mb-3"
+                    style="display: none"
+                  >
+                    <button
+                      class="btn btn-primary me-2"
+                      id="btn-historial-ingrediente"
+                    >
+                      <i class="fas fa-history"></i> Historial
+                    </button>
+                    <button class="btn btn-primary" id="btn-editar-ingrediente">
+                      <i class="fas fa-edit"></i> Editar
+                    </button>
+                  </div>
+
                   <table class="table table-bordered align-middle text-center">
-                    <thead class="table-dark">
+                    <thead class="table-card-title">
                       <tr>
                         <th><i class="fas fa-tag"></i> Nombre</th>
-                        <th><i class="fas fa-weight"></i> Medida</th>
                         <th><i class="fas fa-boxes"></i> Stock actual</th>
+                        <th><i class="fas fa-weight"></i> Medida</th>
+
                         <th><i class="fas fa-dollar-sign"></i> Precio total</th>
                         <th>
                           <i class="fas fa-ruler-combined"></i> Precio unitario
                         </th>
-                        <th><i class="fas fa-history"></i> Historial</th>
-                        <th><i class="fas fa-cogs"></i> Acciones</th>
+                        <!--      <th><i class="fas fa-history"></i> Historial</th>
+                        <th><i class="fas fa-cogs"></i> Acciones</th>-->
                       </tr>
                     </thead>
                     <tbody id="tabla-ingredientes">
@@ -1353,6 +1372,140 @@
                   terminados...
                 </p>
               </div>
+            </div>
+          </div>
+
+          <!-- Modal de entrada de ingrediente -->
+          <div
+            class="modal fade"
+            id="modalEntradaIngrediente"
+            tabindex="-1"
+            aria-labelledby="modalEntradaLabel"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="modalEntradaLabel">
+                    <i class="fas fa-plus-circle me-2"></i>Registrar Entrada de
+                    Ingrediente
+                  </h5>
+                  <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Cerrar"
+                  ></button>
+                </div>
+
+                <form id="form-entrada-ingrediente">
+                  <div class="modal-body">
+                    <!-- Ingrediente -->
+                    <div class="mb-3">
+                      <label for="ingrediente-select" class="form-label"
+                        >Ingrediente</label
+                      >
+                      <select
+                        id="ingrediente-select"
+                        class="form-select"
+                        required
+                      >
+                        <option value="" disabled selected>
+                          Selecciona un ingrediente...
+                        </option>
+                        <!-- opciones se llenan dinámicamente -->
+                      </select>
+                    </div>
+
+                    <!-- Cantidad -->
+                    <div class="mb-3">
+                      <label for="cantidad-entrada" class="form-label"
+                        >Cantidad a ingresar</label
+                      >
+                      <div class="input-group">
+                        <input
+                          type="number"
+                          class="form-control"
+                          id="cantidad-entrada"
+                          min="0.01"
+                          step="0.01"
+                          required
+                        />
+                        <span class="input-group-text" id="unidad-medida-text"
+                          >-</span
+                        >
+                        <!-- Aquí se mostrará la unidad -->
+                      </div>
+                    </div>
+                    <!-- Stock actual -->
+                    <div
+                      class="mb-3 text-muted"
+                      id="stock-actual-text"
+                      style="display: none"
+                    >
+                      <i class="fas fa-boxes-stacked me-1"></i>
+                      Stock actual: <span id="stock-actual-num">-</span>
+                    </div>
+                    <!-- Precio unitario -->
+                    <div
+                      class="mb-3 text-muted"
+                      id="precio-unitario-text"
+                      style="display: none"
+                    >
+                      <i class="fas fa-dollar-sign me-1"></i>
+                      Precio unitario: <span id="precio-unitario-num">-</span>
+                    </div>
+
+                    <!-- Observaciones -->
+                    <div class="mb-3">
+                      <label for="comentario-entrada" class="form-label"
+                        >Observaciones (opcional)</label
+                      >
+                      <textarea
+                        id="comentario-entrada"
+                        class="form-control"
+                        rows="2"
+                        placeholder="Ej. compra semanal, ajuste de stock..."
+                      ></textarea>
+                    </div>
+                  </div>
+
+                  <div class="modal-footer">
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      data-bs-dismiss="modal"
+                    >
+                      <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                      <i class="fas fa-check-circle"></i> Registrar Entrada
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          <!-- 🔳 Overlay difuminado detrás del panel -->
+          <div id="overlay-historial" class="overlay-historial"></div>
+          <!-- 📜 Historial lateral -->
+          <div id="historial-contenedor" class="historial-sidebar">
+            <div
+              class="historial-header d-flex justify-content-between align-items-center p-3 border-bottom"
+            >
+              <h5 class="mb-0"><i class="fas fa-history me-2"></i>Historial</h5>
+              <button
+                id="btn-cerrar-historial"
+                class="btn btn-sm btn-outline-danger"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="historial-body p-3">
+              <p id="titulo-historial" class="fw-bold"></p>
+              <ul id="lista-historial" class="list-group small">
+                <!-- Los movimientos se renderizan aquí -->
+              </ul>
             </div>
           </div>
         </div>
