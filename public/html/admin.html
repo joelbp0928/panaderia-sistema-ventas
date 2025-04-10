@@ -173,8 +173,8 @@
           <h2>Estamos trabajando 🏗🚧👷‍♂️</h2>
           <button class="btn btn-primary mb-3">Agregar Cliente</button>
           <span class="text-muted small"
-          >Selecciona un cliente para ver acciones</span
-        >
+            >Selecciona un cliente para ver acciones</span
+          >
           <table class="table">
             <thead>
               <tr>
@@ -305,8 +305,8 @@
             </div>
           </div>
           <span class="text-muted small"
-          >Selecciona un empelado para ver acciones</span
-        >
+            >Selecciona un empelado para ver acciones</span
+          >
           <table class="table" id="tabla-empleados">
             <thead>
               <tr>
@@ -533,8 +533,8 @@
             </div>
           </div>
           <span class="text-muted small"
-          >Selecciona un cliente para ver acciones</span
-        >
+            >Selecciona un cliente para ver acciones</span
+          >
           <table id="ingredient-table" class="table">
             <thead>
               <tr>
@@ -773,8 +773,8 @@
             </div>
           </div>
           <span class="text-muted small"
-          >Selecciona un producto para ver acciones</span
-        >
+            >Selecciona un producto para ver acciones</span
+          >
           <table class="table">
             <thead>
               <tr>
@@ -863,8 +863,8 @@
             </div>
           </div>
           <span class="text-muted small"
-          >Selecciona una categoria para ver acciones</span
-        >
+            >Selecciona una categoria para ver acciones</span
+          >
           <table class="table" id="tabla-categorias">
             <thead>
               <tr>
@@ -951,8 +951,8 @@
               </div>
               <div class="card-body">
                 <span class="text-muted small"
-                >Selecciona una promoción para ver acciones</span
-              >
+                  >Selecciona una promoción para ver acciones</span
+                >
                 <ul id="promociones-activas" class="list-group">
                   <!-- Aqui aparecen de forma dinamica las promociones-->
                 </ul>
@@ -1292,11 +1292,9 @@
                 </button>
               </li>
             </ul>
-
             <!-- Contenido de cada tab -->
             <div class="tab-content" id="inventoryTabsContent">
-              <!-- TAB INGREDIENTES -->
-              <!-- Contenido del tab de ingredientes -->
+              <!-- TAb Ingredientes-->
               <div
                 class="tab-pane fade show active"
                 id="ingredientes"
@@ -1313,10 +1311,9 @@
                     class="btn btn-primary"
                     id="btn-agregar-ingrediente-inventario"
                   >
-                    <i class="fa-solid fa-plus fa-lg"></i> Ingrediente
+                    <i class="fas fa-plus-circle me-2"></i>Ingrediente
                   </button>
                 </div>
-
                 <!-- Filtros -->
                 <div class="row g-3 mb-3">
                   <div class="col-md-4">
@@ -1340,8 +1337,7 @@
                     </select>
                   </div>
                 </div>
-
-                <!-- Tabla -->
+                <!-- Tabla Stock ingredientes-->
                 <div class="table-responsive">
                   <!-- Acciones al seleccionar ingrediente -->
                   <div
@@ -1358,7 +1354,7 @@
                       class="btn btn-primary"
                       id="btn-restar-ingrediente-inventario"
                     >
-                      <i class="fa-solid fa-minus"></i> Ingrediente
+                      <i class="fas fa-minus-circle me-2"></i>Ingrediente
                     </button>
                   </div>
                   <span class="text-muted small"
@@ -1384,231 +1380,528 @@
                     </tbody>
                   </table>
                 </div>
-              </div>
-
-              <!-- TAB PRODUCTOS -->
-              <div class="tab-pane fade" id="productos" role="tabpanel">
-                <!-- Aquí va el control de inventario de productos (stock disponible, consumidos, etc.) -->
-                <p>
-                  🥤 Aquí irá el control de inventario de los productos
-                  terminados...
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Modal de entrada de ingrediente -->
-          <div
-            class="modal fade"
-            id="modalEntradaIngrediente"
-            tabindex="-1"
-            aria-labelledby="modalEntradaLabel"
-            aria-hidden="true"
-          >
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="modalEntradaLabel">
-                    <i class="fas fa-plus-circle me-2"></i>Registrar Entrada de
-                    Ingrediente
-                  </h5>
-                  <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="modal"
-                    aria-label="Cerrar"
-                  ></button>
-                </div>
-
-                <form id="form-entrada-ingrediente">
-                  <div class="modal-body">
-                    <!-- Ingrediente -->
-                    <div class="mb-3">
-                      <label for="ingrediente-select" class="form-label"
-                        >Ingrediente</label
-                      >
-                      <select
-                        id="ingrediente-select"
-                        class="form-select"
-                        required
-                      >
-                        <option value="" disabled selected>
-                          Selecciona un ingrediente...
-                        </option>
-                        <!-- opciones se llenan dinámicamente -->
-                      </select>
-                    </div>
-
-                    <!-- Cantidad -->
-                    <div class="mb-3">
-                      <label for="cantidad-entrada" class="form-label"
-                        >Cantidad a ingresar</label
-                      >
-                      <div class="input-group">
-                        <input
-                          type="number"
-                          class="form-control"
-                          id="cantidad-entrada"
-                          min="0.01"
-                          step="0.01"
-                          required
-                        />
-                        <span class="input-group-text" id="unidad-medida-text"
-                          >-</span
-                        >
-                        <!-- Aquí se mostrará la unidad -->
+                <!-- Modal de entrada de ingrediente -->
+                <div
+                  class="modal fade"
+                  id="modalEntradaIngrediente"
+                  tabindex="-1"
+                  aria-labelledby="modalEntradaLabel"
+                  aria-hidden="true"
+                >
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="modalEntradaLabel">
+                          <i class="fas fa-plus-circle me-2"></i>Registrar
+                          Entrada de Ingrediente
+                        </h5>
+                        <button
+                          type="button"
+                          class="btn-close"
+                          data-bs-dismiss="modal"
+                          aria-label="Cerrar"
+                        ></button>
                       </div>
-                    </div>
-                    <!-- Stock actual -->
-                    <div
-                      class="mb-3 text-muted"
-                      id="stock-actual-text"
-                      style="display: none"
-                    >
-                      <i class="fas fa-boxes-stacked me-1"></i>
-                      Stock actual: <span id="stock-actual-num">-</span>
-                    </div>
-                    <!-- Precio unitario -->
-                    <div
-                      class="mb-3 text-muted"
-                      id="precio-unitario-text"
-                      style="display: none"
-                    >
-                      <i class="fas fa-dollar-sign me-1"></i>
-                      Precio unitario: <span id="precio-unitario-num">-</span>
-                    </div>
 
-                    <!-- Observaciones -->
-                    <div class="mb-3">
-                      <label for="comentario-entrada" class="form-label"
-                        >Observaciones (opcional)</label
-                      >
-                      <textarea
-                        id="comentario-entrada"
-                        class="form-control"
-                        rows="2"
-                        placeholder="Ej. compra semanal, ajuste de stock..."
-                      ></textarea>
+                      <form id="form-entrada-ingrediente">
+                        <div class="modal-body">
+                          <!-- Ingrediente -->
+                          <div class="mb-3">
+                            <label for="ingrediente-select" class="form-label"
+                              >Ingrediente</label
+                            >
+                            <select
+                              id="ingrediente-select"
+                              class="form-select"
+                              required
+                            >
+                              <option value="" disabled selected>
+                                Selecciona un ingrediente...
+                              </option>
+                              <!-- opciones se llenan dinámicamente -->
+                            </select>
+                          </div>
+
+                          <!-- Cantidad -->
+                          <div class="mb-3">
+                            <label for="cantidad-entrada" class="form-label"
+                              >Cantidad a ingresar</label
+                            >
+                            <div class="input-group">
+                              <input
+                                type="number"
+                                class="form-control"
+                                id="cantidad-entrada"
+                                min="0.01"
+                                step="0.01"
+                                required
+                              />
+                              <span
+                                class="input-group-text"
+                                id="unidad-medida-text"
+                                >-</span
+                              >
+                              <!-- Aquí se mostrará la unidad -->
+                            </div>
+                          </div>
+                          <!-- Stock actual -->
+                          <div
+                            class="mb-3 text-muted"
+                            id="stock-actual-text"
+                            style="display: none"
+                          >
+                            <i class="fas fa-boxes-stacked me-1"></i>
+                            Stock actual: <span id="stock-actual-num">-</span>
+                          </div>
+                          <!-- Precio unitario -->
+                          <div
+                            class="mb-3 text-muted"
+                            id="precio-unitario-text"
+                            style="display: none"
+                          >
+                            <i class="fas fa-dollar-sign me-1"></i>
+                            Precio unitario:
+                            <span id="precio-unitario-num">-</span>
+                          </div>
+
+                          <!-- Observaciones -->
+                          <div class="mb-3">
+                            <label for="comentario-entrada" class="form-label"
+                              >Observaciones (opcional)</label
+                            >
+                            <textarea
+                              id="comentario-entrada"
+                              class="form-control"
+                              rows="2"
+                              placeholder="Ej. compra semanal, ajuste de stock..."
+                            ></textarea>
+                          </div>
+                        </div>
+
+                        <div class="modal-footer">
+                          <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                          >
+                            <i class="fas fa-times"></i> Cancelar
+                          </button>
+                          <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check-circle"></i> Registrar
+                            Entrada
+                          </button>
+                        </div>
+                      </form>
                     </div>
                   </div>
+                </div>
+                <!-- Modal para registrar salida manualmente de ingrediente-->
+                <div
+                  class="modal fade"
+                  id="modalSalidaIngrediente"
+                  tabindex="-1"
+                  aria-labelledby="modalSalidaLabel"
+                  aria-hidden="true"
+                >
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                      <form id="form-salida-ingrediente">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="modalSalidaLabel">
+                            <i class="fas fa-minus-circle me-2"></i>Registrar
+                            Salida de Ingrediente
+                          </h5>
+                          <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Cerrar"
+                          ></button>
+                        </div>
 
-                  <div class="modal-footer">
-                    <button
-                      type="button"
-                      class="btn btn-secondary"
-                      data-bs-dismiss="modal"
-                    >
-                      <i class="fas fa-times"></i> Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-success">
-                      <i class="fas fa-check-circle"></i> Registrar Entrada
-                    </button>
+                        <div class="modal-body">
+                          <!-- Nombre y medida (solo info) -->
+                          <p>
+                            <strong
+                              ><i class="fa-solid fa-bread-slice"></i>
+                              Ingrediente:</strong
+                            >
+                            <span id="nombre-ingrediente-salida">-</span>
+                          </p>
+                          <p>
+                            <strong><i class="fas fa-boxes"></i> Stock:</strong>
+                            <span id="stock-actual-salida">-</span>
+                          </p>
+
+                          <!-- Cantidad a descontar -->
+                          <div class="mb-3">
+                            <label for="cantidad-salida" class="form-label"
+                              >Cantidad a retirar (<span
+                                id="medida-retirar"
+                              ></span
+                              >):</label
+                            >
+                            <input
+                              type="number"
+                              class="form-control"
+                              id="cantidad-salida"
+                              min="0.01"
+                              step="0.01"
+                              required
+                            />
+                          </div>
+
+                          <!-- Motivo u observación -->
+                          <div class="mb-3">
+                            <label for="comentario-salida" class="form-label"
+                              >Motivo / Observación</label
+                            >
+                            <textarea
+                              class="form-control"
+                              id="comentario-salida"
+                              rows="2"
+                              placeholder="Ej. pérdida, merma, error..."
+                            ></textarea>
+                          </div>
+                        </div>
+
+                        <div class="modal-footer">
+                          <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                          >
+                            <i class="fas fa-times"></i> Cancelar
+                          </button>
+                          <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-check-circle"></i> Registrar Salida
+                          </button>
+                        </div>
+                      </form>
+                    </div>
                   </div>
-                </form>
-              </div>
-            </div>
-          </div>
-          <!-- Modal para registrar salida manualmente de ingrediente-->
-          <div
-            class="modal fade"
-            id="modalSalidaIngrediente"
-            tabindex="-1"
-            aria-labelledby="modalSalidaLabel"
-            aria-hidden="true"
-          >
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <form id="form-salida-ingrediente">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="modalSalidaLabel">
-                      <i class="fas fa-minus-circle me-2"></i>Registrar Salida
-                      de Ingrediente
+                </div>
+                <!--Historial-->
+                <!-- 🔳 Overlay difuminado detrás del panel -->
+                <div id="overlay-historial" class="overlay-historial"></div>
+                <!-- 📜 Historial lateral -->
+                <div id="historial-contenedor" class="historial-sidebar">
+                  <div
+                    class="historial-header d-flex justify-content-between align-items-center p-3 border-bottom"
+                  >
+                    <h5 class="mb-0">
+                      <i class="fas fa-history me-2"></i>Historial
                     </h5>
                     <button
-                      type="button"
-                      class="btn-close"
-                      data-bs-dismiss="modal"
-                      aria-label="Cerrar"
-                    ></button>
-                  </div>
-
-                  <div class="modal-body">
-                    <!-- Nombre y medida (solo info) -->
-                    <p>
-                      <strong><i class="fa-solid fa-bread-slice"></i> Ingrediente:</strong>
-                      <span id="nombre-ingrediente-salida">-</span>
-                    </p>
-                    <p>
-                      <strong><i class="fas fa-boxes"></i> Stock:</strong>
-                      <span id="stock-actual-salida">-</span>
-                    </p>
-
-                    <!-- Cantidad a descontar -->
-                    <div class="mb-3">
-                      <label for="cantidad-salida" class="form-label"
-                        >Cantidad a retirar (<span id="medida-retirar"></span>):</label
-                      >
-                      <input
-                        type="number"
-                        class="form-control"
-                        id="cantidad-salida"
-                        min="0.01"
-                        step="0.01"
-                        required
-                      />
-                    </div>
-
-                    <!-- Motivo u observación -->
-                    <div class="mb-3">
-                      <label for="comentario-salida" class="form-label"
-                        >Motivo / Observación</label
-                      >
-                      <textarea
-                        class="form-control"
-                        id="comentario-salida"
-                        rows="2"
-                        placeholder="Ej. pérdida, merma, error..."
-                      ></textarea>
-                    </div>
-                  </div>
-
-                  <div class="modal-footer">
-                    <button
-                      type="button"
-                      class="btn btn-secondary"
-                      data-bs-dismiss="modal"
+                      id="btn-cerrar-historial"
+                      class="btn btn-sm btn-outline-danger"
                     >
-                      <i class="fas fa-times"></i> Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-danger">
-                      <i class="fas fa-check-circle"></i> Registrar Salida
+                      <i class="fas fa-times"></i>
                     </button>
                   </div>
-                </form>
+                  <div class="historial-body p-3">
+                    <p id="titulo-historial" class="fw-bold"></p>
+                    <ul id="lista-historial" class="list-group small">
+                      <!-- Los movimientos se renderizan aquí -->
+                    </ul>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+              <!-- TAB PRODUCTOS -->
+              <div class="tab-pane fade" id="productos" role="tabpanel">
+                <div
+                  class="d-flex justify-content-between align-items-center mb-3"
+                >
+                  <h4>
+                    <i class="fa-solid fa-bread-slice"></i> Inventario de
+                    Productos
+                  </h4>
+                  <button
+                    class="btn btn-primary"
+                    id="btn-agregar-producto-inventario"
+                  >
+                    <i class="fa-solid fa-plus-circle me-2"></i> Registrar
+                    producción
+                  </button>
+                </div>
+                <!-- Filtros -->
+                <div class="row g-3 mb-3">
+                  <div class="col-md-4">
+                    <label for="buscarProducto" class="form-label"
+                      >Buscar</label
+                    >
+                    <input
+                      type="text"
+                      id="buscarProducto"
+                      class="form-control"
+                      placeholder="Ej. Donas, Pan..."
+                    />
+                  </div>
+                  <!-- Si lo deseas más adelante puedes añadir filtro por categoría u otros -->
+                </div>
+                <!-- Tabla -->
+                <div class="table-responsive">
+                  <!-- Acciones al seleccionar producto -->
+                  <div
+                    id="producto-actions"
+                    class="d-flex justify-content-end mb-3"
+                  >
+                    <button
+                      class="btn btn-primary me-2"
+                      id="btn-historial-producto"
+                    >
+                      <i class="fas fa-history"></i> Historial
+                    </button>
+                    <button
+                      class="btn btn-primary"
+                      id="btn-restar-producto-inventario"
+                    >
+                      <i class="fa-solid fa-minus"></i> Ajuste/Salida
+                    </button>
+                  </div>
+                  <span class="text-muted small"
+                    >Selecciona un producto para ver acciones</span
+                  >
 
-          <!-- 🔳 Overlay difuminado detrás del panel -->
-          <div id="overlay-historial" class="overlay-historial"></div>
-          <!-- 📜 Historial lateral -->
-          <div id="historial-contenedor" class="historial-sidebar">
-            <div
-              class="historial-header d-flex justify-content-between align-items-center p-3 border-bottom"
-            >
-              <h5 class="mb-0"><i class="fas fa-history me-2"></i>Historial</h5>
-              <button
-                id="btn-cerrar-historial"
-                class="btn btn-sm btn-outline-danger"
-              >
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-            <div class="historial-body p-3">
-              <p id="titulo-historial" class="fw-bold"></p>
-              <ul id="lista-historial" class="list-group small">
-                <!-- Los movimientos se renderizan aquí -->
-              </ul>
+                  <table class="table table-bordered align-middle text-center">
+                    <thead class="table-card-title">
+                      <tr>
+                        <th><i class="fas fa-tag"></i> Nombre</th>
+                        <th><i class="fas fa-boxes"></i> Stock actual</th>
+                        <!--   <th><i class="fas fa-box-open"></i> Unidades</th>-->
+                        <th>
+                          <i class="fas fa-dollar-sign"></i> Costo unitario
+                        </th>
+                        <th><i class="fas fa-dollar-sign"></i> Costo total</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tabla-productos">
+                      <!-- JS renderiza aquí -->
+                    </tbody>
+                  </table>
+                </div>
+                <!-- Modal Registrar producto -->
+                <div
+                  class="modal fade"
+                  id="modalEntradaProducto"
+                  tabindex="-1"
+                  aria-labelledby="modalEntradaProductoLabel"
+                  aria-hidden="true"
+                >
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                      <form id="form-entrada-producto">
+                        <div class="modal-header">
+                          <h5 class="modal-title">
+                            <i class="fa-solid fa-plus-circle me-2"></i
+                            >Registrar producción
+                          </h5>
+                          <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Cerrar"
+                          ></button>
+                        </div>
+
+                        <div class="modal-body">
+                          <!-- Producto -->
+                          <div class="mb-3">
+                            <label for="producto-select" class="form-label"
+                              >Producto</label
+                            >
+                            <select
+                              id="producto-select"
+                              class="form-select"
+                              required
+                            >
+                              <option value="" disabled selected>
+                                Selecciona un producto...
+                              </option>
+                              <!-- Opciones dinámicas -->
+                            </select>
+                          </div>
+
+                          <!-- Cantidad a producir -->
+                          <div class="mb-3">
+                            <label for="cantidad-producto" class="form-label"
+                              >Cantidad producida</label
+                            >
+                            <input
+                              type="number"
+                              class="form-control"
+                              id="cantidad-producto"
+                              min="1"
+                              step="1"
+                              required
+                            />
+                          </div>
+
+                          <!-- Resumen de ingredientes requeridos -->
+                          <div
+                            class="alert alert-info small"
+                            id="ingredientes-requeridos"
+                            style="display: none"
+                          >
+                            <strong>Ingredientes necesarios:</strong>
+                            <ul id="lista-ingredientes-requeridos" class="mb-0">
+                              <!-- Render desde JS -->
+                            </ul>
+                          </div>
+
+                          <!-- Observaciones -->
+                          <div class="mb-3">
+                            <label
+                              for="comentario-produccion"
+                              class="form-label"
+                              >Observaciones</label
+                            >
+                            <textarea
+                              class="form-control"
+                              id="comentario-produccion"
+                              rows="2"
+                              placeholder="Ej. Producción semanal, lote especial..."
+                            ></textarea>
+                          </div>
+                        </div>
+
+                        <div class="modal-footer">
+                          <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                          >
+                            <i class="fas fa-times"></i> Cancelar
+                          </button>
+                          <button
+                            type="submit"
+                            class="btn btn-success"
+                            id="btn-registrar-produccion"
+                          >
+                            <i class="fas fa-check-circle"></i> Registrar
+                            Producción
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Modal de salida de producto -->
+                <div
+                  class="modal fade"
+                  id="modalSalidaProducto"
+                  tabindex="-1"
+                  aria-labelledby="modalSalidaProductoLabel"
+                  aria-hidden="true"
+                >
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                      <form id="form-salida-producto">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="modalSalidaProductoLabel">
+                            <i class="fa-solid fa-minus-circle me-2"></i
+                            >Registrar Salida de Producto
+                          </h5>
+                          <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Cerrar"
+                          ></button>
+                        </div>
+                        <div class="modal-body">
+                          <!-- Info del producto -->
+                          <p>
+                            <strong
+                              ><i class="fa-solid fa-bread-slice"></i>
+                              Producto:</strong
+                            >
+                            <span id="nombre-producto-salida">-</span>
+                          </p>
+                          <p>
+                            <strong><i class="fas fa-boxes"></i> Stock:</strong>
+                            <span id="stock-actual-producto">-</span>
+                          </p>
+
+                          <!-- Cantidad a retirar -->
+                          <div class="mb-3">
+                            <label
+                              for="cantidad-salida-producto"
+                              class="form-label"
+                              >Cantidad a retirar</label
+                            >
+                            <input
+                              type="number"
+                              class="form-control"
+                              id="cantidad-salida-producto"
+                              min="1"
+                              step="1"
+                              required
+                            />
+                          </div>
+
+                          <!-- Observación -->
+                          <div class="mb-3">
+                            <label
+                              for="comentario-salida-producto"
+                              class="form-label"
+                              >Motivo / Observación</label
+                            >
+                            <textarea
+                              class="form-control"
+                              id="comentario-salida-producto"
+                              rows="2"
+                              placeholder="Ej. vendido, mermas..."
+                            ></textarea>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                          >
+                            <i class="fas fa-times"></i> Cancelar
+                          </button>
+                          <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-check-circle"></i> Registrar Salida
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 🔳 Overlay difuminado detrás del panel -->
+                <div id="overlay-historial-producto" class="overlay-historial"></div>
+
+                <!-- 📜 Historial lateral para productos -->
+                <div
+                  id="historial-contenedor-producto"
+                  class="historial-sidebar"
+                >
+                  <div
+                    class="historial-header d-flex justify-content-between align-items-center p-3 border-bottom"
+                  >
+                    <h5 class="mb-0">
+                      <i class="fas fa-history me-2"></i>Historial
+                    </h5>
+                    <button
+                      id="btn-cerrar-historial-producto"
+                      class="btn btn-sm btn-outline-danger"
+                    >
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                  <div class="historial-body p-3">
+                    <p id="titulo-historial-producto" class="fw-bold"></p>
+                    <ul id="lista-historial-producto" class="list-group small">
+                      <!-- Los movimientos se renderizan aquí -->
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

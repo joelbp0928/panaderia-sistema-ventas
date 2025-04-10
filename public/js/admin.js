@@ -7,7 +7,8 @@ import { cargarConfiguracion } from "./admin/configAdmin.js";
 import { showLoading, hideLoading } from "./manageError.js";
 import { cargarPromociones } from './promociones.js';
 import { cargarCategorias } from './categorias.js';
-import { abrirModalEntrada, cerrarHistorial, aplicarFiltrosInventario } from './inventario_ingredientes.js'
+import { abrirModalEntrada, cerrarHistorial, aplicarFiltrosInventario, cargarInventarioIngredientes, setupIngredientRowSelection } from './inventario_ingredientes.js';
+import { abrirModalEntradaProducto } from "./inventario_productos.js";
 
 window.onload = async function () {
   try {
@@ -30,6 +31,8 @@ window.onload = async function () {
     document.getElementById("btn-cerrar-historial").addEventListener("click", cerrarHistorial);
     document.getElementById("buscarIngrediente").addEventListener("input", aplicarFiltrosInventario);
     document.getElementById("filtroUnidad").addEventListener("change", aplicarFiltrosInventario);
+    document.getElementById("btn-agregar-producto-inventario").addEventListener("click", abrirModalEntradaProducto);
+
 
     // 📌 Función para manejar el cambio entre precio unitario y precio total
     document.getElementById("price-unit").addEventListener("change", handlePriceChange);
@@ -67,6 +70,10 @@ document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
         break;
       case "promotion-recommendations":
         cargarPromociones();
+        break;
+      case "inventario-tab":
+        cargarInventarioIngredientes()
+        setupIngredientRowSelection();
         break;
       // otros casos...
     }

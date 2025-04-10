@@ -10,8 +10,8 @@ window.verHistorialMovimientos = verHistorialMovimientos;
 
 document.addEventListener("DOMContentLoaded", function () {
   // ✅ Ejecutar al cargar
-  cargarInventarioIngredientes()
-  setupIngredientRowSelection();
+ // cargarInventarioIngredientes()
+ // setupIngredientRowSelection();
 });
 
 document.getElementById("ingrediente-select").addEventListener("change", async function () {
@@ -237,7 +237,8 @@ if (formSalida) {
 
 let inventarioIngredientes = [];
 // 📋 Mostrar tabla de inventario
-async function cargarInventarioIngredientes() {
+export async function cargarInventarioIngredientes() {
+  console.log("cargando stock ingredientes");
   const { data, error } = await supabase.from("inventario_ingredientes")
     .select("*, ingrediente:ingrediente_id(nombre, medida, precio_total, precio_unitario)")
 
@@ -329,7 +330,7 @@ export function cerrarHistorial() {
 
 }
 // 🖱️ Selección de filas en tabla de ingredientes
-function setupIngredientRowSelection() {
+export function setupIngredientRowSelection() {
   const tbody = document.getElementById("tabla-ingredientes");
   if (!tbody) return;
 
@@ -381,7 +382,7 @@ function selectIngredientRow(id, row) {
   selectedIngredientId = id;
 
   document.getElementById("btn-historial-ingrediente").style.display = "inline-block";
-  document.getElementById("btn-restar-ingrediente-inventario").style.display = "inline-block";
+  document.getElementById("btn-restar-ingrediente-inventario").style.display = "inline-block"
 }
 
 
