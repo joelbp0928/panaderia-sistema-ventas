@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
 export async function cargarInventarioProductos() {
     const { data, error } = await supabase
         .from("inventario_productos")
-        .select("*, productos:producto_id(nombre, stock, precio_unitario)")
+        .select("*, productos:producto_id(nombre,categoria:categoria_id(nombre), stock, precio_unitario)")
         .order("updated_at", { ascending: false });
 
     const tbody = document.getElementById("tabla-productos");
@@ -51,6 +51,7 @@ export async function cargarInventarioProductos() {
         const costoTotal = stock * item.productos.precio_unitario;
 
         fila.innerHTML = `
+        <td>${item.productos.categoria.nombre}</td>
       <td>${item.productos.nombre}</td>
       <td>${stock}</td>
      <!-- <td>${item.productos.stock}</td> -->
@@ -295,7 +296,7 @@ document.getElementById("form-entrada-producto")?.addEventListener("submit", reg
 export function abrirModalSalidaProducto() {
     if (!selectedProductId) return;
     document.getElementById("nombre-producto-salida").textContent = selectedProductName;
-    document.getElementById("stock-actual-salida-producto").textContent = selectedProductStock;
+    document.getElementById("stock-actual-producto").textContent = selectedProductStock;
     document.getElementById("form-salida-producto").dataset.productoId = selectedProductId;
 
     new bootstrap.Modal(document.getElementById("modalSalidaProducto")).show();
@@ -303,6 +304,10 @@ export function abrirModalSalidaProducto() {
 
 export async function registrarSalidaProducto(e) {
     e.preventDefault();
+    const btn = formSalida.querySelector("button[type='submit']");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
+
     const productoId = e.target.dataset.productoId;
     const cantidad = parseFloat(document.getElementById("cantidad-salida-producto").value);
     const comentario = document.getElementById("comentario-salida-producto").value;
@@ -326,7 +331,7 @@ export async function registrarSalidaProducto(e) {
         .eq("id", productoId);
 
     await supabase.from("movimientos_productos").insert({
-        producto_id: productoId,
+        inventario_producto_id: productoId,
         tipo_movimiento: "salida",
         cantidad,
         stock_resultante: nuevoStock,
@@ -339,30 +344,37 @@ export async function registrarSalidaProducto(e) {
     cargarInventarioProductos();
 }
 
+// Asignar evento
+const formSalida = document.getElementById("form-salida-producto");
+if (formSalida) {
+    formSalida.addEventListener("submit", registrarSalidaProducto);
+}
+
+
 async function verHistorialProducto() {
     if (!selectedProductId) return;
-  
+
     const { data, error } = await supabase
-      .from("movimientos_productos")
-      .select("*")
-      .eq("inventario_producto_id", selectedProductId)
-      .order("created_at", { ascending: false });
-  
+        .from("movimientos_productos")
+        .select("*")
+        .eq("inventario_producto_id", selectedProductId)
+        .order("created_at", { ascending: false });
+
     const lista = document.getElementById("lista-historial-producto");
     const titulo = document.getElementById("titulo-historial-producto");
     const sidebar = document.getElementById("historial-contenedor-producto");
     const overlay = document.getElementById("overlay-historial-producto");
-  
+
     lista.innerHTML = "";
     titulo.textContent = `Historial de ${selectedProductName}`;
-  
+
     if (!data || data.length === 0) {
-      lista.innerHTML = `<li class='list-group-item text-muted'>Sin movimientos</li>`;
+        lista.innerHTML = `<li class='list-group-item text-muted'>Sin movimientos</li>`;
     } else {
-      data.forEach((mov) => {
-        const li = document.createElement("li");
-        li.className = "list-group-item d-flex justify-content-between align-items-start";
-        li.innerHTML = `
+        data.forEach((mov) => {
+            const li = document.createElement("li");
+            li.className = "list-group-item d-flex justify-content-between align-items-start";
+            li.innerHTML = `
           <div>
             <strong class="text-${mov.tipo_movimiento === "entrada" ? "success" : "danger"}">
               ${mov.tipo_movimiento.toUpperCase()}
@@ -374,21 +386,57 @@ async function verHistorialProducto() {
             <small class="text-muted">${new Date(mov.created_at).toLocaleString()}</small>
           </div>
         `;
-        lista.appendChild(li);
-      });
+            lista.appendChild(li);
+        });
     }
-  
+
     // Mostrar sidebar y overlay
     sidebar.classList.add("mostrar");
     overlay.classList.add("mostrar");
-  }
-  
-  export function cerrarHistorialProducto() {
+}
+
+export function cerrarHistorialProducto() {
     document.getElementById("historial-contenedor-producto").classList.remove("mostrar");
     document.getElementById("overlay-historial-producto").classList.remove("mostrar");
     document.body.classList.remove("bloquear-scroll"); // ✅ Restaurar scroll
-  }
-  document.addEventListener("keydown", (e) => {
+}
+document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") cerrarHistorialProducto();
-  });
-  document.getElementById("btn-cerrar-historial-producto").addEventListener("click", cerrarHistorialProducto);
+});
+document.getElementById("btn-cerrar-historial-producto").addEventListener("click", cerrarHistorialProducto);
+
+
+//busqueda
+document.getElementById("buscarProducto").addEventListener("input", function () {
+    const texto = this.value.toLowerCase();
+    const filas = document.querySelectorAll("#tabla-productos tr");
+    filas.forEach(fila => {
+        const nombre = fila.children[0].textContent.toLowerCase();
+        fila.style.display = nombre.includes(texto) ? "" : "none";
+    });
+});
+
+
+document.getElementById("filtroCategoria").addEventListener("change", function () {
+    const categoriaSeleccionada = this.value.toLowerCase();
+    const filas = document.querySelectorAll("#tabla-productos tr");
+    filas.forEach(fila => {
+        const categoria = fila.dataset.categoria?.toLowerCase();
+        fila.style.display = !categoriaSeleccionada || categoria === categoriaSeleccionada ? "" : "none";
+    });
+});
+
+
+document.getElementById("ordenarStock").addEventListener("change", function () {
+    const orden = this.value;
+    const tbody = document.getElementById("tabla-productos");
+    const filas = Array.from(tbody.querySelectorAll("tr"));
+
+    filas.sort((a, b) => {
+        const stockA = parseFloat(a.children[1].textContent);
+        const stockB = parseFloat(b.children[1].textContent);
+        return orden === "asc" ? stockA - stockB : stockB - stockA;
+    });
+
+    filas.forEach(fila => tbody.appendChild(fila));
+});

@@ -1637,7 +1637,25 @@
                       placeholder="Ej. Donas, Pan..."
                     />
                   </div>
-                  <!-- Si lo deseas más adelante puedes añadir filtro por categoría u otros -->
+                  <div class="col-md-4">
+                    <label for="filtroCategoria" class="form-label"
+                      >Categoría</label
+                    >
+                    <select id="filtroCategoria" class="form-select">
+                      <option value="">Todas</option>
+                      <option value="Pan dulce">Pan dulce</option>
+                      <option value="Pan de sal">Pan de sal</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <label for="ordenarStock" class="form-label"
+                      >Ordenar por Stock</label
+                    >
+                    <select id="ordenarStock" class="form-select">
+                      <option value="desc">Mayor a menor</option>
+                      <option value="asc">Menor a mayor</option>
+                    </select>
+                  </div>
                 </div>
                 <!-- Tabla -->
                 <div class="table-responsive">
@@ -1666,6 +1684,7 @@
                   <table class="table table-bordered align-middle text-center">
                     <thead class="table-card-title">
                       <tr>
+                        <th>CAtegoria</th>
                         <th><i class="fas fa-tag"></i> Nombre</th>
                         <th><i class="fas fa-boxes"></i> Stock actual</th>
                         <!--   <th><i class="fas fa-box-open"></i> Unidades</th>-->
@@ -1874,7 +1893,10 @@
                 </div>
 
                 <!-- 🔳 Overlay difuminado detrás del panel -->
-                <div id="overlay-historial-producto" class="overlay-historial"></div>
+                <div
+                  id="overlay-historial-producto"
+                  class="overlay-historial"
+                ></div>
 
                 <!-- 📜 Historial lateral para productos -->
                 <div
