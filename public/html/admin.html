@@ -1308,18 +1308,19 @@
                     Ingredientes
                   </h4>
                   <button
-                    class="btn btn-primary"
+                    class="btn btn-success rounded-pill fw-semibold shadow-sm gap-2"
                     id="btn-agregar-ingrediente-inventario"
                   >
                     <i class="fas fa-plus-circle me-2"></i>Ingrediente
                   </button>
                 </div>
-                <!-- Filtros -->
-                <div class="row g-3 mb-3">
-                  <div class="col-md-4">
-                    <label for="buscarIngrediente" class="form-label"
-                      >Buscar</label
-                    >
+                <!-- Filtros Ingredientes -->
+                <div class="d-flex flex-wrap align-items-end gap-3 mb-3">
+                  <!-- Buscar -->
+                  <div class="flex-fill">
+                    <label for="buscarIngrediente" class="form-label">
+                      <i class="fas fa-search me-1"></i>Buscar
+                    </label>
                     <input
                       type="text"
                       id="buscarIngrediente"
@@ -1327,8 +1328,12 @@
                       placeholder="Ej. Azúcar, Leche..."
                     />
                   </div>
-                  <div class="col-md-4">
-                    <label for="filtroUnidad" class="form-label">Medida</label>
+
+                  <!-- Unidad -->
+                  <div class="flex-fill">
+                    <label for="filtroUnidad" class="form-label">
+                      <i class="fas fa-weight-hanging me-1"></i>Medida
+                    </label>
                     <select id="filtroUnidad" class="form-select">
                       <option value="">Todas</option>
                       <option value="kg">Kilogramos</option>
@@ -1336,6 +1341,44 @@
                       <option value="pz">Piezas</option>
                     </select>
                   </div>
+
+                  <!-- Orden por Nombre -->
+                  <div class="flex-fill">
+                    <label for="ordenarNombreIngrediente" class="form-label">
+                      <i class="fas fa-sort-alpha-down me-1"></i>Nombre
+                    </label>
+                    <select id="ordenarNombreIngrediente" class="form-select">
+                      <option value="az">A - Z</option>
+                      <option value="za">Z - A</option>
+                    </select>
+                  </div>
+
+                  <!-- Botón limpiar filtros -->
+                  <div>
+                    <button
+                      id="btn-limpiar-filtros-ing"
+                      class="btn btn-outline-secondary disabled"
+                      disabled
+                    >
+                      <i class="fas fa-eraser me-1"></i> Limpiar Filtros
+                    </button>
+                  </div>
+                </div>
+                <!-- Badges -->
+                <div id="filtros-activos-ing" class="mb-3 d-none">
+                  <span class="me-2">Filtros activos:</span>
+                  <span
+                    id="badge-medida"
+                    class="badge rounded-pill bg-secondary d-none"
+                  >
+                    Medida: <span class="fw-bold"></span>
+                  </span>
+                  <span
+                    id="badge-nombre-orden"
+                    class="badge rounded-pill bg-secondary d-none"
+                  >
+                    Nombre: <span class="fw-bold"></span>
+                  </span>
                 </div>
                 <!-- Tabla Stock ingredientes-->
                 <div class="table-responsive">
@@ -1360,25 +1403,60 @@
                   <span class="text-muted small"
                     >Selecciona un ingrediente para ver acciones</span
                   >
-                  <table class="table table-bordered align-middle text-center">
-                    <thead class="table-card-title">
-                      <tr>
-                        <th><i class="fas fa-tag"></i> Nombre</th>
-                        <th><i class="fas fa-boxes"></i> Stock actual</th>
-                        <th><i class="fas fa-weight"></i> Medida</th>
+                  <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body p-0">
+                      <table
+                        class="table table-hover table-borderless align-middle text-center mb-0"
+                      >
+                        <thead class="table-card-title">
+                          <tr>
+                            <th>
+                              <div
+                                class="d-flex align-items-center justify-content-center gap-2"
+                              >
+                                <i class="fas fa-tag"></i> Nombre
+                              </div>
+                            </th>
+                            <th>
+                              <div
+                                class="d-flex align-items-center justify-content-center gap-2"
+                              >
+                                <i class="fas fa-boxes"></i> Stock actual
+                              </div>
+                            </th>
+                            <th>
+                              <div
+                                class="d-flex align-items-center justify-content-center gap-2"
+                              >
+                                <i class="fas fa-weight"></i> Medida
+                              </div>
+                            </th>
 
-                        <th><i class="fas fa-dollar-sign"></i> Precio total</th>
-                        <th>
-                          <i class="fas fa-ruler-combined"></i> Precio unitario
-                        </th>
-                        <!--      <th><i class="fas fa-history"></i> Historial</th>
+                            <th>
+                              <div
+                                class="d-flex align-items-center justify-content-center gap-2"
+                              >
+                                <i class="fas fa-dollar-sign"></i> Precio total
+                              </div>
+                            </th>
+                            <th>
+                              <div
+                                class="d-flex align-items-center justify-content-center gap-2"
+                              >
+                                <i class="fas fa-ruler-combined"></i> Precio
+                                unitario
+                              </div>
+                            </th>
+                            <!--      <th><i class="fas fa-history"></i> Historial</th>
                         <th><i class="fas fa-cogs"></i> Acciones</th>-->
-                      </tr>
-                    </thead>
-                    <tbody id="tabla-ingredientes">
-                      <!-- JS renderiza aquí -->
-                    </tbody>
-                  </table>
+                          </tr>
+                        </thead>
+                        <tbody id="tabla-ingredientes">
+                          <!-- JS renderiza aquí -->
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
                 <!-- Modal de entrada de ingrediente -->
                 <div
@@ -1601,6 +1679,10 @@
                   </div>
                   <div class="historial-body p-3">
                     <p id="titulo-historial" class="fw-bold"></p>
+                    <p
+                      id="resumen-historial-ingrediente"
+                      class="small text-muted mb-2"
+                    ></p>
                     <ul id="lista-historial" class="list-group small">
                       <!-- Los movimientos se renderizan aquí -->
                     </ul>
@@ -1617,19 +1699,20 @@
                     Productos
                   </h4>
                   <button
-                    class="btn btn-primary"
+                    class="btn btn-success rounded-pill fw-semibold shadow-sm gap-2"
                     id="btn-agregar-producto-inventario"
                   >
-                    <i class="fa-solid fa-plus-circle me-2"></i> Registrar
-                    producción
+                    <i class="fas fa-circle-plus fa-lg"></i>
+                    Registrar producción
                   </button>
                 </div>
                 <!-- Filtros -->
-                <div class="row g-3 mb-3">
-                  <div class="col-md-4">
-                    <label for="buscarProducto" class="form-label"
-                      >Buscar</label
-                    >
+                <div class="d-flex flex-wrap align-items-end gap-3 mb-3">
+                  <!-- Buscar -->
+                  <div class="flex-fill">
+                    <label for="buscarProducto" class="form-label">
+                      <i class="fas fa-search me-1"></i>Buscar
+                    </label>
                     <input
                       type="text"
                       id="buscarProducto"
@@ -1637,26 +1720,74 @@
                       placeholder="Ej. Donas, Pan..."
                     />
                   </div>
-                  <div class="col-md-4">
-                    <label for="filtroCategoria" class="form-label"
-                      >Categoría</label
-                    >
+
+                  <!-- Categoría -->
+                  <div class="flex-fill">
+                    <label for="filtroCategoria" class="form-label">
+                      <i class="fas fa-tags me-1"></i>Categoría
+                    </label>
                     <select id="filtroCategoria" class="form-select">
                       <option value="">Todas</option>
                       <option value="Pan dulce">Pan dulce</option>
                       <option value="Pan de sal">Pan de sal</option>
                     </select>
                   </div>
-                  <div class="col-md-4">
-                    <label for="ordenarStock" class="form-label"
-                      >Ordenar por Stock</label
-                    >
+
+                  <!-- Ordenar por Stock -->
+                  <div class="flex-fill">
+                    <label for="ordenarStock" class="form-label">
+                      <i class="fas fa-sort-numeric-down-alt me-1"></i>Stock
+                    </label>
                     <select id="ordenarStock" class="form-select">
                       <option value="desc">Mayor a menor</option>
                       <option value="asc">Menor a mayor</option>
                     </select>
                   </div>
+
+                  <!-- Ordenar por Nombre -->
+                  <div class="flex-fill">
+                    <label for="ordenarNombre" class="form-label">
+                      <i class="fas fa-sort-alpha-down me-1"></i>Nombre
+                    </label>
+                    <select id="ordenarNombre" class="form-select">
+                      <option value="az">A - Z</option>
+                      <option value="za">Z - A</option>
+                    </select>
+                  </div>
+                  <!-- Limpiar Filtros -->
+                  <div>
+                    <button
+                      id="btn-limpiar-filtros"
+                      class="btn btn-outline-secondary disabled"
+                      disabled
+                    >
+                      <i class="fas fa-eraser me-1"></i> Limpiar Filtros
+                    </button>
+                  </div>
                 </div>
+                <!-- Badges de filtros activos -->
+                <div id="filtros-activos" class="mb-3">
+                  <span class="me-2">Filtros activos:</span>
+                  <span
+                    id="badge-categoria"
+                    class="badge rounded-pill bg-secondary d-none"
+                  >
+                    Categoría: <span class="fw-bold"></span>
+                  </span>
+                  <span
+                    id="badge-stock"
+                    class="badge rounded-pill bg-secondary d-none"
+                  >
+                    Stock: <span class="fw-bold"></span>
+                  </span>
+                  <span
+                    id="badge-nombre"
+                    class="badge rounded-pill bg-secondary d-none"
+                  >
+                    Nombre: <span class="fw-bold"></span>
+                  </span>
+                </div>
+
                 <!-- Tabla -->
                 <div class="table-responsive">
                   <!-- Acciones al seleccionar producto -->
@@ -1681,23 +1812,59 @@
                     >Selecciona un producto para ver acciones</span
                   >
 
-                  <table class="table table-bordered align-middle text-center">
-                    <thead class="table-card-title">
-                      <tr>
-                        <th>CAtegoria</th>
-                        <th><i class="fas fa-tag"></i> Nombre</th>
-                        <th><i class="fas fa-boxes"></i> Stock actual</th>
-                        <!--   <th><i class="fas fa-box-open"></i> Unidades</th>-->
-                        <th>
-                          <i class="fas fa-dollar-sign"></i> Costo unitario
-                        </th>
-                        <th><i class="fas fa-dollar-sign"></i> Costo total</th>
-                      </tr>
-                    </thead>
-                    <tbody id="tabla-productos">
-                      <!-- JS renderiza aquí -->
-                    </tbody>
-                  </table>
+                  <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body p-0">
+                      <table
+                        class="table table-hover table-borderless align-middle text-center mb-0"
+                      >
+                        <thead class="table-card-title">
+                          <tr>
+                            <th>
+                              <div
+                                class="d-flex align-items-center justify-content-center gap-2"
+                              >
+                                <i class="fa-solid fa-layer-group"></i>
+                                Categoria
+                              </div>
+                            </th>
+                            <th>
+                              <div
+                                class="d-flex align-items-center justify-content-center gap-2"
+                              >
+                                <i class="fas fa-tag"></i> Nombre
+                              </div>
+                            </th>
+                            <th>
+                              <div
+                                class="d-flex align-items-center justify-content-center gap-2"
+                              >
+                                <i class="fas fa-boxes"></i> Stock actual
+                              </div>
+                            </th>
+                            <!--   <th><i class="fas fa-box-open"></i> Unidades</th>-->
+                            <th>
+                              <div
+                                class="d-flex align-items-center justify-content-center gap-2"
+                              >
+                                <i class="fas fa-ruler-combined"></i> Costo
+                                unitario
+                              </div>
+                            </th>
+                            <th>
+                              <div
+                                class="d-flex align-items-center justify-content-center gap-2"
+                              >
+                                <i class="fas fa-dollar-sign"></i> Costo total
+                              </div>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody id="tabla-productos">
+                          <!-- JS renderiza aquí -->
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
                 <!-- Modal Registrar producto -->
                 <div
@@ -1918,6 +2085,10 @@
                   </div>
                   <div class="historial-body p-3">
                     <p id="titulo-historial-producto" class="fw-bold"></p>
+                    <p
+                      id="resumen-historial-producto"
+                      class="small text-muted mb-2"
+                    ></p>
                     <ul id="lista-historial-producto" class="list-group small">
                       <!-- Los movimientos se renderizan aquí -->
                     </ul>

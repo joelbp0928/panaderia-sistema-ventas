@@ -26,7 +26,8 @@ header img {
   height: auto; /* Mantiene la proporción de la imagen */
 }
 
-header h1, header #employee-name {
+header h1,
+header #employee-name {
   margin: 0; /* Elimina márgenes predeterminados */
   padding: 0 10px; /* Espaciado interno opcional */
 }
@@ -331,7 +332,6 @@ input[type="color"] {
   background-color: #f8f9fa;
 }
 
-
 /* Estilos para los botones de acción */
 .btn-sm {
   padding: 0.25rem 0.5rem;
@@ -384,17 +384,17 @@ select[multiple] {
   font-size: 0.8em;
   padding: 5px 10px;
 }
-.table-card-title{
-background-color: var(--primary-color);
-color: var(--light-color);
+.table-card-title {
+  background-color: var(--primary-color);
+  color: var(--light-color);
 }
 
-#products-list-promotion{
+#products-list-promotion {
   display: none;
 }
 
-.preview-image{
-  max-height: 150px; 
+.preview-image {
+  max-height: 150px;
   display: none;
 }
 
@@ -472,7 +472,26 @@ body.bloquear-scroll {
   overflow: hidden;
 }
 
-#ingrediente-actions{
+#ingrediente-actions {
   display: none;
 }
 
+#btn-limpiar-filtros:not(.disabled):hover {
+  background-color: #656768;
+  border-color: #4b5157;
+  transition: background-color 0.3s ease;
+}
+
+@keyframes resaltarTabla {
+  0% { background-color: #fffbe6; }
+  50% { background-color: #fff3cd; }
+  100% { background-color: transparent; }
+}
+
+.resaltar-tabla tr {
+  animation: resaltarTabla 1s ease-in-out;
+}
+
+#filtros-activos{
+  display: none;
+}

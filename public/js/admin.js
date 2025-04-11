@@ -1,5 +1,7 @@
 import { gestionarIngrediente, cargarIngredientes, showIngredientForm, handlePriceChange, setupRealTimePriceUpdate } from "./ingredientes.js";
+import { abrirModalEntrada, cerrarHistorial, cargarInventarioIngredientes } from './inventario_ingredientes.js';
 import { showProductForm, gestionarProducto, loadIngredients, cargarProductos } from "./productos.js";
+import { abrirModalEntradaProducto, cargarInventarioProductos } from "./inventario_productos.js";
 import { mostrarFormularioEmpleado, gestionarEmpleado, cargarEmpleados } from "./empleados.js";
 import { verificarAccesoAdmin, verificarSesion, cerrarSesion } from "./auth-check.js";
 import { cargarConfiguracion } from "./admin/configAdmin.js";
@@ -7,8 +9,6 @@ import { cargarConfiguracion } from "./admin/configAdmin.js";
 import { showLoading, hideLoading } from "./manageError.js";
 import { cargarPromociones } from './promociones.js';
 import { cargarCategorias } from './categorias.js';
-import { abrirModalEntrada, cerrarHistorial, aplicarFiltrosInventario, cargarInventarioIngredientes, setupIngredientRowSelection } from './inventario_ingredientes.js';
-import { abrirModalEntradaProducto } from "./inventario_productos.js";
 
 window.onload = async function () {
   try {
@@ -26,11 +26,8 @@ window.onload = async function () {
     document.getElementById("btn-agregar-ingrediente").addEventListener("click", showIngredientForm);
     document.getElementById("product-form").addEventListener("submit", gestionarProducto);
     document.getElementById("btn-agregar-producto").addEventListener("click", showProductForm);
-    //document.getElementById("btn-agregar-categoria").addEventListener("click", gestionarCategorias);
     document.getElementById("btn-agregar-ingrediente-inventario").addEventListener("click", abrirModalEntrada);
     document.getElementById("btn-cerrar-historial").addEventListener("click", cerrarHistorial);
-    document.getElementById("buscarIngrediente").addEventListener("input", aplicarFiltrosInventario);
-    document.getElementById("filtroUnidad").addEventListener("change", aplicarFiltrosInventario);
     document.getElementById("btn-agregar-producto-inventario").addEventListener("click", abrirModalEntradaProducto);
 
 
@@ -72,8 +69,8 @@ document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
         cargarPromociones();
         break;
       case "inventario-tab":
-        cargarInventarioIngredientes()
-        setupIngredientRowSelection();
+        cargarInventarioIngredientes();
+        cargarInventarioProductos();
         break;
       // otros casos...
     }

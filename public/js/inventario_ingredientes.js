@@ -1,5 +1,5 @@
 import { supabase } from "./supabase-config.js";
-import { mostrarToast } from "./manageError.js";
+import { mostrarToast, showLoading, hideLoading } from "./manageError.js";
 
 let selectedIngredientRow = null;
 let selectedIngredientId = null;
@@ -10,8 +10,7 @@ window.verHistorialMovimientos = verHistorialMovimientos;
 
 document.addEventListener("DOMContentLoaded", function () {
   // ✅ Ejecutar al cargar
- // cargarInventarioIngredientes()
- // setupIngredientRowSelection();
+  setupIngredientRowSelection();
 });
 
 document.getElementById("ingrediente-select").addEventListener("change", async function () {
@@ -60,7 +59,6 @@ document.getElementById("ingrediente-select").addEventListener("change", async f
   }
 });
 
-
 // 🧠 Cargar ingredientes en el select del modal
 async function cargarSelectIngredientes() {
   const { data, error } = await supabase.from("ingredientes").select("id, nombre, medida").order("nombre");
@@ -83,8 +81,6 @@ export function abrirModalEntrada() {
   const modal = new bootstrap.Modal(document.getElementById("modalEntradaIngrediente"));
   modal.show();
 }
-
-
 
 // Mostrar modal de salida con datos del ingrediente seleccionado
 export function abrirModalSalida(id, nombre, stockActual, medida) {
@@ -235,10 +231,10 @@ if (formSalida) {
   formSalida.addEventListener("submit", registrarSalidaManual);
 }
 
-let inventarioIngredientes = [];
 // 📋 Mostrar tabla de inventario
 export async function cargarInventarioIngredientes() {
   console.log("cargando stock ingredientes");
+  showLoading();
   const { data, error } = await supabase.from("inventario_ingredientes")
     .select("*, ingrediente:ingrediente_id(nombre, medida, precio_total, precio_unitario)")
 
@@ -265,12 +261,10 @@ export async function cargarInventarioIngredientes() {
 
     tbody.appendChild(fila);
   });
-  inventarioIngredientes = data;
-  renderizarInventarioFiltrado();
-}
 
-// Inicializar tabla
-//cargarInventarioIngredientes();
+  //renderizarInventarioFiltrado();
+  hideLoading();
+}
 
 // 📦 GESTIÓN DE INVENTARIO - HISTORIAL DE MOVIMIENTOS ============================
 // 👁️ Mostrar historial
@@ -283,9 +277,22 @@ export function verHistorialMovimientos(inventarioId, nombreIngrediente) {
     .limit(10)
     .then(({ data, error }) => {
       if (error) throw error;
+      // 🧮 Contar entradas y salidas
+      let totalEntradas = 0;
+      let totalSalidas = 0;
 
+      data.forEach(mov => {
+        if (mov.tipo_movimiento === "entrada") totalEntradas += mov.cantidad;
+        if (mov.tipo_movimiento === "salida") totalSalidas += mov.cantidad;
+      });
+
+      const resumen = document.getElementById("resumen-historial-ingrediente");
+      resumen.innerHTML = `
+    <span class="text-success me-3">+${totalEntradas.toFixed(2)} Entradas</span>
+    <span class="text-danger">-${totalSalidas.toFixed(2)} Salidas</span>
+    `;
       document.getElementById("titulo-historial").textContent =
-        `Últimos movimientos de "${nombreIngrediente}"`;
+        `Historial de ${nombreIngrediente}`;
       const lista = document.getElementById("lista-historial");
       lista.innerHTML = "";
 
@@ -347,12 +354,12 @@ export function setupIngredientRowSelection() {
     }
   });
 
-    // Acciones visibles solo al seleccionar
-    const historialBtn = document.getElementById("btn-historial-ingrediente");
-    const restarBtn = document.getElementById("btn-restar-ingrediente-inventario");
-  
-    if (historialBtn) historialBtn.style.display = "none";
-    if (restarBtn) restarBtn.style.display = "none";
+  // Acciones visibles solo al seleccionar
+  const historialBtn = document.getElementById("btn-historial-ingrediente");
+  const restarBtn = document.getElementById("btn-restar-ingrediente-inventario");
+
+  if (historialBtn) historialBtn.style.display = "none";
+  if (restarBtn) restarBtn.style.display = "none";
 
   // Importante: los botones solo se les pone el listener UNA vez
   historialBtn?.addEventListener("click", () => {
@@ -402,38 +409,126 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") cerrarHistorial();
 });
 
+const filtrosIng = {
+  buscar: document.getElementById("buscarIngrediente"),
+  unidad: document.getElementById("filtroUnidad"),
+  ordenarNombre: document.getElementById("ordenarNombreIngrediente"), // asegúrate de tener este select
+  limpiarBtn: document.getElementById("btn-limpiar-filtros-ing"),
+};
 
-export function aplicarFiltrosInventario() {
-  renderizarInventarioFiltrado();
+// Activar botón limpiar si hay filtros activos
+function actualizarEstadoBotonLimpiarIng() {
+  const hayFiltros =
+    filtrosIng.buscar.value.trim() !== "" ||
+    filtrosIng.unidad.value !== "" ||
+    filtrosIng.ordenarNombre.value !== "az";
+
+  filtrosIng.limpiarBtn.classList.toggle("disabled", !hayFiltros);
+  filtrosIng.limpiarBtn.disabled = !hayFiltros;
+
+  actualizarBadgesFiltroIng();
 }
 
-function renderizarInventarioFiltrado() {
-  const buscar = document.getElementById("buscarIngrediente").value.toLowerCase();
-  const unidad = document.getElementById("filtroUnidad").value;
-
-  const filtrados = inventarioIngredientes.filter(item => {
-    const coincideNombre = item.ingrediente.nombre.toLowerCase().includes(buscar);
-    const coincideUnidad = unidad ? item.ingrediente.medida === unidad : true;
-    return coincideNombre && coincideUnidad;
+// Aplicar búsqueda por nombre
+filtrosIng.buscar.addEventListener("input", () => {
+  const texto = filtrosIng.buscar.value.toLowerCase();
+  document.querySelectorAll("#tabla-ingredientes tr").forEach((fila) => {
+    const nombre = fila.children[0].textContent.toLowerCase();
+    fila.style.display = nombre.includes(texto) ? "" : "none";
   });
+  actualizarEstadoBotonLimpiarIng();
+});
 
+// Filtrar por medida
+filtrosIng.unidad.addEventListener("change", () => {
+  const medida = filtrosIng.unidad.value.toLowerCase();
+  document.querySelectorAll("#tabla-ingredientes tr").forEach((fila) => {
+    const unidad = fila.children[2].textContent.toLowerCase();
+    fila.style.display = !medida || unidad === medida ? "" : "none";
+  });
+  actualizarEstadoBotonLimpiarIng();
+});
+
+// Ordenar por nombre
+filtrosIng.ordenarNombre.addEventListener("change", () => {
+  const orden = filtrosIng.ordenarNombre.value;
   const tbody = document.getElementById("tabla-ingredientes");
-  tbody.innerHTML = "";
+  const filas = Array.from(tbody.querySelectorAll("tr"));
 
-  filtrados.forEach(item => {
-    const fila = document.createElement("tr");
-    fila.dataset.id = item.id;
-
-    const precio_total = item.ingrediente.precio_unitario * item.stock_actual;
-
-    fila.innerHTML = `
-      <td>${item.ingrediente.nombre}</td>
-      <td>${item.stock_actual.toFixed(2)}</td>
-      <td>${item.ingrediente.medida || "-"}</td>
-      <td>$${precio_total?.toFixed(2) || "0.00"}</td>
-      <td>$${item.ingrediente.precio_unitario?.toFixed(2) || "0.00"}</td>
-    `;
-
-    tbody.appendChild(fila);
+  filas.sort((a, b) => {
+    const nombreA = a.children[0].textContent.toLowerCase();
+    const nombreB = b.children[0].textContent.toLowerCase();
+    return orden === "az" ? nombreA.localeCompare(nombreB) : nombreB.localeCompare(nombreA);
   });
+
+  filas.forEach((fila) => tbody.appendChild(fila));
+  actualizarEstadoBotonLimpiarIng();
+});
+
+// Limpiar filtros
+filtrosIng.limpiarBtn.addEventListener("click", () => {
+  if (filtrosIng.limpiarBtn.classList.contains("disabled")) return;
+
+  const original = filtrosIng.limpiarBtn.innerHTML;
+  filtrosIng.limpiarBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span> Limpiando...`;
+  filtrosIng.limpiarBtn.disabled = true;
+
+  setTimeout(() => {
+    filtrosIng.buscar.value = "";
+    filtrosIng.unidad.value = "";
+    filtrosIng.ordenarNombre.value = "az";
+
+    filtrosIng.buscar.dispatchEvent(new Event("input"));
+    filtrosIng.unidad.dispatchEvent(new Event("change"));
+    filtrosIng.ordenarNombre.dispatchEvent(new Event("change"));
+
+    filtrosIng.limpiarBtn.innerHTML = original;
+    filtrosIng.limpiarBtn.classList.add("disabled");
+    filtrosIng.limpiarBtn.disabled = true;
+  }, 600);
+});
+
+// Mostrar badges de filtros activos
+function actualizarBadgesFiltroIng() {
+  const contenedor = document.getElementById("filtros-activos-ing");
+  const badgeMedida = document.getElementById("badge-medida");
+  const badgeNombre = document.getElementById("badge-nombre-orden");
+
+  let hay = false;
+
+  animarTablaIngredientes();
+
+  // Medida
+  if (filtrosIng.unidad.value) {
+    badgeMedida.querySelector("span").textContent = filtrosIng.unidad.value;
+    badgeMedida.classList.remove("d-none");
+    hay = true;
+  } else {
+    badgeMedida.classList.add("d-none");
+  }
+
+  // Orden nombre
+  if (filtrosIng.ordenarNombre.value) {
+    badgeNombre.querySelector("span").textContent =
+      filtrosIng.ordenarNombre.value === "az" ? "A - Z" : "Z - A";
+    badgeNombre.classList.remove("d-none");
+    hay = true;
+  } else {
+    badgeNombre.classList.add("d-none");
+  }
+
+  contenedor.classList.toggle("d-none", !hay);
 }
+
+// Detectar cambios para actualizar estado
+["input", "change"].forEach((ev) => {
+  filtrosIng.buscar.addEventListener(ev, actualizarEstadoBotonLimpiarIng);
+  filtrosIng.unidad.addEventListener(ev, actualizarEstadoBotonLimpiarIng);
+  filtrosIng.ordenarNombre.addEventListener(ev, actualizarEstadoBotonLimpiarIng);
+});
+function animarTablaIngredientes() {
+  const tabla = document.getElementById("tabla-ingredientes");
+  tabla.classList.add("resaltar-tabla");
+  setTimeout(() => tabla.classList.remove("resaltar-tabla"), 1000);
+}
+

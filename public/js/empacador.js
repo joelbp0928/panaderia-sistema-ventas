@@ -370,17 +370,63 @@ function mostrarTicket() {
 }
 
 // Función para imprimir el ticket
-document.getElementById("print-ticket-btn").addEventListener("click", function () {
+document.getElementById("print-ticket-btn").addEventListener("click", async function () {
     const ticketContent = document.getElementById("ticket-content").innerHTML;
+ // 👤 Obtener ID del empleado logueado (puedes guardar esto al hacer login)
+ const empleadoId = localStorage.getItem("empleado_id"); // asegúrate de guardar esto previamente
 
+ // 💵 Calcular total
+ const totalGeneral = productosSeleccionados.reduce((sum, prod) => sum + prod.total, 0);
+
+ // 1️⃣ Insertar pedido
+ const { data: pedido, error } = await supabase
+     .from("pedidos")
+     .insert([{
+         empleado_id: empleadoId,
+         estado: "pendiente",
+         total: totalGeneral
+     }])
+     .select()
+     .single();
+
+ if (error) {
+     mostrarToast("❌ No se pudo guardar el pedido", "error");
+     console.error(error);
+     return;
+ }
+
+ // 2️⃣ Insertar detalle
+ const detalles = productosSeleccionados.map(producto => ({
+     pedido_id: pedido.id,
+     producto_id: producto.id,
+     cantidad: producto.cantidad,
+     precio_unitario: producto.precio
+ }));
+
+ const { error: detalleError } = await supabase.from("detalle_pedido").insert(detalles);
+
+ if (detalleError) {
+     mostrarToast("❌ Error al guardar detalles del pedido", "error");
+     console.error(detalleError);
+     return;
+ }
     const printWindow = window.open('', '', 'height=500, width=500');
     printWindow.document.write('<html><head><title>Ticket de Compra</title>');
     printWindow.document.write('<style>body { font-family: Arial, sans-serif; font-size: 14px; padding: 20px;} table { width: 100%; border-collapse: collapse;} table, th, td { border: 1px solid black;} th, td { padding: 8px; text-align: left;} </style>');
     printWindow.document.write('</head><body>');
     printWindow.document.write(ticketContent);
+    printWindow.document.write(`<p><strong>Código de pedido:</strong> ${pedido.id}</p>`);
     printWindow.document.write('</body></html>');
-    printWindow.document.close();
+    
     printWindow.print(); // Inicia la impresión
+    mostrarToast("✅ Pedido registrado y ticket enviado a impresión", "success");
+     // 4️⃣ Resetear interfaz
+     productosSeleccionados = [];
+     actualizarTabla();
+     selectedProductId = null;
+ 
+     // Cierra modal
+     bootstrap.Modal.getInstance(document.getElementById("ticketModal")).hide();
 });
 
 
