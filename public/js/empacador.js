@@ -1,12 +1,14 @@
-import { cargarPromociones, cargarProductos, cargarConfiguracion } from "./config.js";
-import { verificarSesion, cerrarSesion } from './auth-check.js'; // Importa la función para verificar la sesión
-import { supabase } from "./supabase-config.js";
+import { cargarPromociones, cargarProductos, cargarConfiguracion, configuracionGlobal } from "./config.js";
 import { marcarErrorCampo, mostrarToast } from "./manageError.js";
+import { verificarSesion, cerrarSesion } from './auth-check.js'; // Importa la función para verificar la sesión
+import { guardarPedido } from "./guardarPedido.js";
+import { supabase } from "./supabase-config.js";
+import { getLocalDateString } from "./dateLocalDate.js";
+const beepError = new Audio("../sounds/error-beep.mp3");
 
 let productosSeleccionados = []; // Array para almacenar los productos seleccionados
 let selectedProductId = null; // ID del producto seleccionado para editar la cantidad
 let editQuantityModal = null; // Variable global para guardar la instancia
-
 
 window.onload = async function () {
     await verificarSesion(); // Verificar si la sesión está activa
@@ -14,10 +16,12 @@ window.onload = async function () {
     cargarCategorias(); // Llamamos a la función que carga las categorías
     actualizarTabla();
     //  agregarProducto();
+    await actualizarContadorPedidosHoy();
+
     // 🔹 Asociar el evento de Cerrar Sesión al botón logout-btn
     document.getElementById("logout-btn").addEventListener("click", cerrarSesion);
-    document.getElementById("orders-btn").addEventListener("click", showOrders);
-  //  document.getElementById("edit-cuantity-modal-btn").addEventListener("click", showEditQuantityModal);
+    //   document.getElementById("orders-btn").addEventListener("click", showOrders);
+    //  document.getElementById("edit-cuantity-modal-btn").addEventListener("click", showEditQuantityModal);
 }
 
 // Mostrar modal para editar cantidad
@@ -40,7 +44,6 @@ function showEditQuantityModal(productId, currentQuantity) {
 
 }
 
-
 // Función para cargar las categorías desde la base de datos y agregarlas al HTML
 async function cargarCategorias() {
     try {
@@ -58,7 +61,9 @@ async function cargarCategorias() {
         // Iterar sobre las categorías y crear un botón por cada una
         categorias.forEach(categoria => {
             const categoryButton = document.createElement('button');
+           
             categoryButton.classList.add('category-btn');
+            
             categoryButton.textContent = categoria.nombre; // Usamos el nombre de la categoría de la base de datos
             categoryButton.dataset.category = categoria.id;
             categoryButton.onclick = () => cargarProductosPorCategoria(categoria.id); // Aquí usamos el ID para hacer la acción
@@ -81,7 +86,6 @@ async function cargarProductosPorCategoria(categoriaId) {
             .eq("categoria_id", categoriaId); // Filtrar por la categoría seleccionada
 
         if (error) throw error;
-        console.log(data);
 
         // Obtener los contenedores donde se mostrarán los productos y las categorías
         const productList = document.getElementById("products-buttons");
@@ -119,6 +123,7 @@ async function cargarProductosPorCategoria(categoriaId) {
             // Mostrar productos en la interfaz
             data.forEach((producto) => {
                 const productCard = document.createElement("div");
+                productCard.classList.add('fade-slide-in');
                 productCard.classList.add("product-card");
 
                 productCard.innerHTML = `
@@ -207,8 +212,9 @@ function actualizarTabla() {
 
         // Actualizar el total en la sección de totales
         document.getElementById("total").textContent = `$${totalGeneral.toFixed(2)}`;
-
+        actualizarEstadoBotonFinalizar(); // 🟩 actualiza el botón dinámicamente
     }
+
 }
 
 // Función para seleccionar una fila y marcarla para eliminar
@@ -277,7 +283,7 @@ document.querySelectorAll(".num-btn").forEach(button => {
                 // Cerrar el modal después de actualizar
                 const modal = bootstrap.Modal.getInstance(document.getElementById("editQuantityModal"));
                 modal.hide();
-              //  document.querySelector('.modal-backdrop').remove(); // Elimina el backdrop manualmente
+                //  document.querySelector('.modal-backdrop').remove(); // Elimina el backdrop manualmente
 
             } else {
                 mostrarToast("La cantidad debe ser mayor que 0.", "warning");
@@ -318,119 +324,370 @@ document.getElementById("delete-btn").addEventListener('click', () => {
 });
 
 // Función para mostrar el ticket y llenarlo con los detalles de la compra
-document.getElementById("finalize-btn").addEventListener("click", function () {
-    mostrarTicket();
+document.getElementById("finalize-btn").addEventListener("click", async function () {
+    if (productosSeleccionados.length === 0) {
+        mostrarToast("⚠️ No hay productos seleccionados para generar el ticket", "warning");
+        const btn = this;
+        btn.classList.add("shake");
+        setTimeout(() => btn.classList.remove("shake"), 500);
+        beepError.play();
+        return;
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session.user.id;
+
+    const pedidoGuardado = await guardarPedido(productosSeleccionados, userId);
+    if (!pedidoGuardado) return;
+
+    const codigoTicket = pedidoGuardado.codigo_ticket;
+
+    actualizarContadorPedidosHoy();
+    mostrarTicket(codigoTicket); // ✅ se muestra bien con el ticket real
 });
 
-function mostrarTicket() {
+
+
+// En mostrarTicket()
+function mostrarTicket(codigoTicket) {
     const ticketContent = document.getElementById("ticket-content");
-    const productosTable = document.getElementById("product-table").getElementsByTagName('tbody')[0];
-
-    let totalGeneral = 0; // Para calcular el total general
+    let totalGeneral = 0;
+    let totalItems = 0;
     let ticketHTML = `
-        <h4>Ticket de Compra</h4>
-        <p><strong>Fecha:</strong> ${new Date().toLocaleString()}</p>
-        <p><strong>Empacador:</strong> Panchos </p> <!-- Puedes cambiar esto según cómo manejas al empacador -->
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr>
-                    <th>Producto</th>
-                    <th>Cantidad</th>
-                    <th>Precio</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
+<div style="max-width: 300px; font-family: monospace; font-size: 16px; text-align: center; color: #000;">
+    <img src="${configuracionGlobal.logo_url || ''}" alt="Logo" style="max-width: 80px; margin-bottom: 5px;" />
+    <h2 style="margin: 4px 0;">${configuracionGlobal.nombre_empresa || 'Tu Tienda'}</h2>
+    <hr style="border-top: 1px dashed #aaa;" />
+    
+    <p style="margin: 2px 0;"><i class="fa-solid fa-calendar-days"></i> ${new Date().toLocaleString()}</p>
+    <p style="margin: 2px 0;"><i class="fa-solid fa-user"></i> ${document.getElementById("employee-name").textContent.replace("Sesión: ", "")}</p>
+    <p style="margin: 2px 0;"><i class="fa-solid fa-ticket"></i> ${codigoTicket}</p>
 
-    // Agregar productos a la tabla del ticket
-    productosSeleccionados.forEach(producto => {
-        ticketHTML += `
+    <hr style="border-top: 1px dashed #aaa;" />
+
+    <table style="width: 100%; font-size: 16px; margin-top: 5px; text-align: left;">
+        <thead>
             <tr>
-                <td>${producto.nombre}</td>
-                <td>${producto.cantidad}</td>
-                <td>$${producto.precio.toFixed(2)}</td>
-                <td>$${producto.total.toFixed(2)}</td>
+                <th style="padding-bottom: 3px;">Producto</th>
+                <th style="text-align: center;">Cant</th>
+                <th style="text-align: right;">Total</th>
             </tr>
-        `;
-        totalGeneral += producto.total;
+        </thead>
+        <tbody>
+`;
+
+
+    productosSeleccionados.forEach(producto => {
+        const total = (producto.precio * producto.cantidad).toFixed(2);
+        totalGeneral += parseFloat(total);
+        totalItems += producto.cantidad;
+
+        ticketHTML += `
+        <tr>
+            <td>${producto.nombre}</td>
+            <td style="text-align: center;">${producto.cantidad}</td>
+            <td style="text-align: right;">$${total}</td>
+        </tr>
+    `;
     });
 
     ticketHTML += `
         </tbody>
     </table>
-    <p><strong>Total: </strong>$${totalGeneral.toFixed(2)}</p>
-    `;
 
-    ticketContent.innerHTML = ticketHTML; // Inyectamos el contenido del ticket en el modal
+    <hr style="border-top: 2px dashed #aaa;" />
 
-    // Mostrar el modal de previsualización
-    const modal = new bootstrap.Modal(document.getElementById('ticketModal'));
-    modal.show();
+    <p style="margin: 4px 0; font-size: 16px;"><strong><i class="fa-solid fa-boxes-stacked"></i> Productos:</strong> ${totalItems}</p>
+    <p style="margin: 4px 0; font-size: 16px;"><strong><i class="fa-solid fa-cash-register"></i> Total:</strong> $${totalGeneral.toFixed(2)}</p>
+
+    <div style="margin-top: 10px;">
+        <svg id="barcode"></svg>
+    </div>
+
+    <p style="margin-top: 8px;"><i class="fa-solid fa-circle-info"></i> Pendiente de pago</p>
+    <p style="margin: 6px 0;">Conserva este ticket para cualquier aclaración.</p>
+
+    <hr style="border-top: 1px dashed #aaa;" />
+    <p style="font-style: italic;">Gracias por tu compra <i class="fa-solid fa-heart"></i></p>
+</div>
+`;
+
+    ticketContent.innerHTML = ticketHTML;
+
+    // Renderizar código de barras
+    setTimeout(() => {
+        JsBarcode("#barcode", `T-${Date.now()}`, {
+            format: "CODE128",
+            width: 2,
+            height: 60,
+            displayValue: false,
+        });
+    }, 100);
+
+    new bootstrap.Modal(document.getElementById('ticketModal')).show();
+}
+
+
+
+function actualizarEstadoBotonFinalizar() {
+    const botonFinalizar = document.getElementById("finalize-btn");
+
+    if (productosSeleccionados.length === 0) {
+        botonFinalizar.disabled = true;
+        botonFinalizar.classList.add("btn-outline-danger", "shake");
+        botonFinalizar.classList.remove("btn-primary");
+    } else {
+        botonFinalizar.disabled = false;
+        botonFinalizar.classList.remove("btn-outline-danger", "shake");
+        botonFinalizar.classList.add("btn-primary");
+    }
 }
 
 // Función para imprimir el ticket
-document.getElementById("print-ticket-btn").addEventListener("click", async function () {
+document.getElementById("print-ticket-btn").addEventListener("click", function () {
     const ticketContent = document.getElementById("ticket-content").innerHTML;
- // 👤 Obtener ID del empleado logueado (puedes guardar esto al hacer login)
- const empleadoId = localStorage.getItem("empleado_id"); // asegúrate de guardar esto previamente
-
- // 💵 Calcular total
- const totalGeneral = productosSeleccionados.reduce((sum, prod) => sum + prod.total, 0);
-
- // 1️⃣ Insertar pedido
- const { data: pedido, error } = await supabase
-     .from("pedidos")
-     .insert([{
-         empleado_id: empleadoId,
-         estado: "pendiente",
-         total: totalGeneral
-     }])
-     .select()
-     .single();
-
- if (error) {
-     mostrarToast("❌ No se pudo guardar el pedido", "error");
-     console.error(error);
-     return;
- }
-
- // 2️⃣ Insertar detalle
- const detalles = productosSeleccionados.map(producto => ({
-     pedido_id: pedido.id,
-     producto_id: producto.id,
-     cantidad: producto.cantidad,
-     precio_unitario: producto.precio
- }));
-
- const { error: detalleError } = await supabase.from("detalle_pedido").insert(detalles);
-
- if (detalleError) {
-     mostrarToast("❌ Error al guardar detalles del pedido", "error");
-     console.error(detalleError);
-     return;
- }
     const printWindow = window.open('', '', 'height=500, width=500');
-    printWindow.document.write('<html><head><title>Ticket de Compra</title>');
-    printWindow.document.write('<style>body { font-family: Arial, sans-serif; font-size: 14px; padding: 20px;} table { width: 100%; border-collapse: collapse;} table, th, td { border: 1px solid black;} th, td { padding: 8px; text-align: left;} </style>');
-    printWindow.document.write('</head><body>');
+    printWindow.document.write(`
+        <html>
+          <head>
+            <title>Ticket</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <style>
+               body {
+    font-family: monospace;
+    font-size: 16px; /* AUMENTADO */
+    color: #000;
+    text-align: center;
+    margin: 0;
+    padding: 10px;
+  }
+
+  table {
+    width: 100%;
+    font-size: 15px; /* AUMENTADO */
+    text-align: left;
+    border-collapse: collapse;
+  }
+
+  td, th {
+    padding: 6px; /* MÁS ESPACIO */
+  }
+
+  svg {
+    margin-top: 15px;
+  }
+
+  h2 {
+    font-size: 18px; /* MÁS GRANDE EL TÍTULO */
+    margin: 6px 0;
+  }
+
+  p {
+    margin: 6px 0;
+    font-size: 15px;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px dashed #aaa;
+    margin: 10px 0;
+  }
+
+  @media print {
+    body {
+      width: 80mm;
+    }
+  }
+            </style>
+          </head>
+          <body>
+        `);
     printWindow.document.write(ticketContent);
-    printWindow.document.write(`<p><strong>Código de pedido:</strong> ${pedido.id}</p>`);
     printWindow.document.write('</body></html>');
-    
-    printWindow.print(); // Inicia la impresión
-    mostrarToast("✅ Pedido registrado y ticket enviado a impresión", "success");
-     // 4️⃣ Resetear interfaz
-     productosSeleccionados = [];
-     actualizarTabla();
-     selectedProductId = null;
- 
-     // Cierra modal
-     bootstrap.Modal.getInstance(document.getElementById("ticketModal")).hide();
+    printWindow.document.close();
+    printWindow.print();
+
+    // Resetear todo al terminar
+    productosSeleccionados = [];
+    actualizarTabla();
+    selectedProductId = null;
+    bootstrap.Modal.getInstance(document.getElementById("ticketModal")).hide();
 });
 
+
+
+async function actualizarContadorPedidosHoy() {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !sessionData.session) return;
+
+    const userId = sessionData.session.user.id;
+    const hoy = getLocalDateString(); // → "2025-04-13"
+    const { count, error: countError } = await supabase
+        .from("pedidos")
+        .select("*", { count: "exact", head: true })
+        .eq("empleado_id", userId)
+        .eq("origen", "empacador")
+        .gte("fecha", `${hoy}T00:00:00`)
+        .lte("fecha", `${hoy}T23:59:59`);
+
+    if (countError) {
+        console.warn("❌ No se pudo contar pedidos:", countError.message);
+        return;
+    }
+
+    const badge = document.getElementById("contador-pedidos-hoy");
+    badge.innerHTML = `<i class="fa-solid fa-truck me-1"></i> Hoy: ${count} pedido${count === 1 ? "" : "s"}`;
+    
+
+}
 
 // Función para manejar el clic en "Pedidos"
 function showOrders() {
     mostrarToast("Mostrando los pedidos pendientes.");
+}
+
+document.getElementById("open-history-btn").addEventListener("click", async () => {
+    new bootstrap.Offcanvas(document.getElementById("history-sidebar")).show();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session.user.id;
+    // Obtener fecha actual en formato YYYY-MM-DD
+    const hoy = getLocalDateString();
+    // Establecer valores por defecto en los inputs de fecha
+    // document.getElementById("filtro-fecha-desde").value = `${hoy}T00:00:00`;
+    // document.getElementById("filtro-fecha-hasta").value = `${hoy}T00:00:00`;
+
+    const { data: pedidos, error } = await supabase
+        .from("pedidos")
+        .select("id, fecha, total, codigo_ticket, estado")
+        .eq("empleado_id", userId)
+        .gte("fecha", `${hoy}T00:00:00`)
+        .lte("fecha", `${hoy}T23:59:59`)
+        .order("fecha", { ascending: false });
+
+    const badgeResultados = document.getElementById("badge-resultados");
+    const cantidadPedidos = document.getElementById("cantidad-pedidos");
+
+    if (!pedidos.length) {
+        badgeResultados.style.display = "none";
+        lista.innerHTML = `<li class="list-group-item text-muted">No se encontraron pedidos con los filtros.</li>`;
+        return;
+    }
+    // Si hay pedidos, actualiza el badge
+    cantidadPedidos.textContent = pedidos.length;
+    badgeResultados.style.display = "block";
+    setTimeout(() => badgeResultados.classList.add("show"), 50);
+    const lista = document.getElementById("lista-historial");
+    lista.innerHTML = ""; // Limpiar primero
+
+    if (error) {
+        lista.innerHTML = `<li class="list-group-item text-danger">Error al cargar pedidos</li>`;
+        return;
+    }
+
+    if (!pedidos.length) {
+        lista.innerHTML = `<li class="list-group-item text-muted">No hay pedidos registrados.</li>`;
+        return;
+    }
+
+    pedidos.forEach(pedido => {
+        const item = document.createElement("li");
+        item.classList.add("list-group-item", "list-group-item-action");
+        item.innerHTML = `
+        <div>
+          <strong><i class="fa-solid fa-ticket"></i> ${pedido.codigo_ticket}</strong><br>
+          <small><i class="fa-solid fa-calendar-day"></i> ${new Date(pedido.fecha).toLocaleString()}</small><br>
+          <small><i class="fa-solid fa-dollar-sign"></i> $${pedido.total}</small> · 
+          <span class="badge bg-${pedido.estado === 'pendiente' ? 'warning' : 'success'}">${pedido.estado}</span>
+        </div>
+      `;
+        item.onclick = () => verDetallePedido(pedido.id);
+        lista.appendChild(item);
+    });
+
+});
+
+async function verDetallePedido(pedidoId) {
+    const { data, error } = await supabase
+        .from("pedido_productos")
+        .select("cantidad, precio_unitario, productos(nombre)")
+        .eq("pedido_id", pedidoId);
+
+    if (error) return mostrarToast("Error al cargar detalles", "error");
+
+    const detalleHTML = data.map(item => `
+      <tr>
+        <td>${item.productos.nombre}</td>
+        <td>${item.cantidad}</td>
+        <td>$${item.precio_unitario.toFixed(2)}</td>
+        <td>$${(item.cantidad * item.precio_unitario).toFixed(2)}</td>
+      </tr>
+    `).join("");
+
+    // Mostrar en modal
+    document.getElementById("detalle-pedido-body").innerHTML = detalleHTML;
+    new bootstrap.Modal(document.getElementById("detallePedidoModal")).show();
+}
+
+document.getElementById("btn-aplicar-filtros").addEventListener("click", cargarHistorialPedidos);
+
+async function cargarHistorialPedidos() {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session.user.id;
+
+    const desde = document.getElementById("filtro-fecha-desde").value;
+    const hasta = document.getElementById("filtro-fecha-hasta").value;
+    const estado = document.getElementById("filtro-estado").value;
+
+    let query = supabase
+        .from("pedidos")
+        .select("id, fecha, total, codigo_ticket, estado")
+        .eq("empleado_id", userId)
+        .order("fecha", { ascending: false });
+
+    if (desde) query = query.gte("fecha", `${desde}T00:00:00`);
+    if (hasta) query = query.lte("fecha", `${hasta}T23:59:59`);
+    if (estado) query = query.eq("estado", estado);
+
+    const { data: pedidos, error } = await query;
+    const badgeResultados = document.getElementById("badge-resultados");
+    const cantidadPedidos = document.getElementById("cantidad-pedidos");
+
+    if (!pedidos.length) {
+        badgeResultados.style.display = "none";
+        lista.innerHTML = `<li class="list-group-item text-muted">No se encontraron pedidos con los filtros.</li>`;
+        return;
+    }
+
+    // Si hay pedidos, actualiza el badge
+    cantidadPedidos.textContent = pedidos.length;
+    badgeResultados.style.display = "block";
+    setTimeout(() => badgeResultados.classList.add("show"), 50);
+
+    const lista = document.getElementById("lista-historial");
+    lista.innerHTML = "";
+
+    if (error) {
+        lista.innerHTML = `<li class="list-group-item text-danger">Error al cargar pedidos</li>`;
+        return;
+    }
+
+    if (!pedidos.length) {
+        lista.innerHTML = `<li class="list-group-item text-muted">No se encontraron pedidos con los filtros.</li>`;
+        return;
+    }
+
+    pedidos.forEach(pedido => {
+        const item = document.createElement("li");
+        item.classList.add("list-group-item", "list-group-item-action", "fade-in");
+        item.innerHTML = `
+      <div>
+        <strong><i class="fa-solid fa-ticket"></i> ${pedido.codigo_ticket}</strong><br>
+        <small><i class="fa-solid fa-calendar-day"></i> ${new Date(pedido.fecha).toLocaleString()}</small><br>
+        <small><i class="fa-solid fa-dollar-sign"></i> $${pedido.total}</small> · 
+        <span class="badge bg-${pedido.estado === 'pendiente' ? 'warning' : 'success'}">${pedido.estado}</span>
+      </div>
+    `;
+        item.onclick = () => verDetallePedido(pedido.id);
+        lista.appendChild(item);
+    });
 }

@@ -58,7 +58,7 @@ export async function cargarProductos() {
         console.error('Error al cargar los productos:', error);
     }
 }
-
+export let configuracionGlobal = {};
 export async function cargarConfiguracion() {
     try {
         // Obtenemos la configuración de la base de datos
@@ -68,6 +68,8 @@ export async function cargarConfiguracion() {
             .single();
 
         if (error) throw error;
+
+        configuracionGlobal = data; // Guarda los datos en una variable global accesible
 
         // Actualizar logo
         document.getElementById('logo-image').src = data.logo_url || ''; // Default logo if not found
@@ -87,6 +89,7 @@ export async function cargarConfiguracion() {
         aplicarColorPrimario(data.color_primario); // Aplicar el color al sitio
 
         console.log('Configuración cargada correctamente.');
+        return data;
     } catch (error) {
         console.error('Error al cargar la configuración:', error);
     }
