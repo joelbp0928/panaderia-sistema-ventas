@@ -389,10 +389,6 @@ select[multiple] {
   color: var(--light-color);
 }
 
-#products-list-promotion {
-  display: none;
-}
-
 .preview-image {
   max-height: 150px;
   display: none;

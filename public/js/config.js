@@ -11,7 +11,7 @@ export function cargarPromociones() {
                 const promoElement = document.createElement("div");
                 promoElement.classList.add("promo-slider");
                 promoElement.innerHTML = `<img src="${promo.imagen_url}" alt="${promo.nombre}" class="promo-img"/>
-                <h5>Estamos trabajando 🏗🚧👷‍♂️</h5>`;
+               `;
                 promoContainer.appendChild(promoElement);
             });
         })

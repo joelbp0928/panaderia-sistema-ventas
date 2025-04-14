@@ -17,6 +17,8 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
     />
+    <link rel="stylesheet" href="../css/promotions-list-redesign.css" />
+
     <link rel="stylesheet" href="../css/stylesAdmin.css" />
   </head>
   <body>
@@ -959,6 +961,133 @@
               </div>
             </div>
           </div>
+          <!-- 🔍 Modal Detalles de Promoción -->
+          <div
+            class="modal fade"
+            id="detallePromocionModal"
+            tabindex="-1"
+            aria-labelledby="detallePromocionLabel"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+              <div class="modal-content rounded-4 shadow-lg">
+                <div class="modal-header rounded-top-4">
+                  <h5 class="modal-title" id="detallePromocionLabel">
+                    <i class="fas fa-tag me-2"></i>Detalles de la Promoción
+                  </h5>
+                  <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div class="modal-body p-4">
+                  <div class="row g-4">
+                    <!-- Imagen -->
+                    <div class="col-md-4 text-center">
+                      <img
+                        id="detalle-promo-imagen"
+                        src="#"
+                        alt="Imagen de promoción"
+                        class="img-fluid rounded shadow-sm border border-light-subtle"
+                      />
+                    </div>
+
+                    <!-- Info principal -->
+                    <div class="col-md-8">
+                      <h4 id="detalle-promo-nombre" class="fw-bold mb-2"></h4>
+                      <span
+                        id="detalle-promo-tipo"
+                        class="badge rounded-pill px-3 py-2 mb-3"
+                      ></span>
+
+                      <p class="mb-1">
+                        <i class="fas fa-calendar-day me-2 text-muted"></i>
+                        <strong>Vigencia:</strong>
+                        <span id="detalle-promo-fechas"></span>
+                      </p>
+                      <p class="mb-1">
+                        <i class="fas fa-cogs me-2 text-muted"></i>
+                        <strong>Condiciones:</strong>
+                        <span id="detalle-promo-condiciones"></span>
+                      </p>
+                      <p class="mb-0">
+                        <i class="fas fa-boxes me-2 text-muted"></i>
+                        <strong>Productos:</strong>
+                        <span id="detalle-promo-productos"></span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-footer justify-content-between px-4 py-3">
+                  <button
+                    class="btn btn-outline-danger"
+                    id="btn-eliminar-promocion"
+                  >
+                    <i class="fas fa-trash me-2"></i>Eliminar
+                  </button>
+                  <button
+                    class="btn btn-outline-primary"
+                    id="btn-editar-promocion"
+                  >
+                    <i class="fas fa-pen-to-square me-2"></i>Editar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Modal de Confirmación de Eliminación de Promoción -->
+          <div
+            class="modal fade"
+            id="confirmarEliminarModal"
+            tabindex="-1"
+            aria-labelledby="confirmarEliminarLabel"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content rounded-4 shadow">
+                <div class="modal-header bg-danger text-white rounded-top-4">
+                  <h5 class="modal-title" id="confirmarEliminarLabel">
+                    <i class="fas fa-trash-alt me-2"></i>Eliminar Promoción
+                  </h5>
+                  <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"
+                    aria-label="Cerrar"
+                  ></button>
+                </div>
+                <div class="modal-body">
+                  <p class="text-center mb-0">
+                    <i
+                      class="fa-solid fa-circle-exclamation fa-2x text-danger mb-3"
+                    ></i
+                    ><br />
+                    ¿Estás seguro de que deseas eliminar esta promoción?<br />
+                    <strong id="nombre-promo-a-eliminar"></strong>
+                  </p>
+                </div>
+                <div class="modal-footer justify-content-between px-4 py-3">
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                  >
+                    <i class="fas fa-times me-2"></i>Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-danger"
+                    id="confirmar-eliminar-btn"
+                  >
+                    <i class="fas fa-check-circle me-2"></i>Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Modal para Crear Sugerencia -->
           <div
             class="modal fade"
@@ -1086,7 +1215,6 @@
                         class="form-control"
                         id="promotion-image"
                         accept="image/*"
-                        required
                       />
                       <small class="text-muted"
                         >Formatos aceptados: JPG, PNG, GIF (Máx. 2MB)</small
@@ -1147,27 +1275,6 @@
                         />
                       </div>
                     </div>
-                    <div id="products-list-promotion" class="mb-3">
-                      <label for="promotion-products" class="form-label"
-                        >Productos</label
-                      >
-                      <select
-                        multiple
-                        class="form-select"
-                        id="promotion-products"
-                        required
-                      >
-                        <option value="1">Dona de Chocolate</option>
-                        <option value="2">Concha de Vainilla</option>
-                        <option value="3">Bolillo</option>
-                        <option value="4">Pastel de Tres Leches</option>
-                      </select>
-                      <small class="text-muted"
-                        >Mantén presionado Ctrl (o Cmd en Mac) para seleccionar
-                        múltiples</small
-                      >
-                    </div>
-
                     <!-- Configuraciones específicas (igual que antes) -->
                     <div id="discount-configurations">
                       <div
@@ -1207,6 +1314,26 @@
                       </div>
 
                       <div id="bogo-config" class="discount-option d-none">
+                        <div id="products-list-promotion" class="mb-3">
+                          <label for="promotion-products" class="form-label"
+                            >Productos</label
+                          >
+                          <select
+                            multiple
+                            class="form-select"
+                            id="promotion-products"
+                            required
+                          >
+                            <option value="1">Dona de Chocolate</option>
+                            <option value="2">Concha de Vainilla</option>
+                            <option value="3">Bolillo</option>
+                            <option value="4">Pastel de Tres Leches</option>
+                          </select>
+                          <small class="text-muted"
+                            >Mantén presionado Ctrl (o Cmd en Mac) para
+                            seleccionar múltiples</small
+                          >
+                        </div>
                         <p class="form-text">
                           La promoción se aplicará automáticamente al añadir
                           productos idénticos al carrito.
@@ -1244,7 +1371,11 @@
                       >
                         Cancelar
                       </button>
-                      <button type="submit" class="btn btn-success">
+                      <button
+                        type="submit"
+                        class="btn btn-success"
+                        id="btn-save-promotion"
+                      >
                         Crear Promoción
                       </button>
                     </div>

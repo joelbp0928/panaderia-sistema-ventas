@@ -1,0 +1,92 @@
+/* 🎨 Rediseño visual del listado de promociones activas */
+
+#promociones-activas {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    padding: 10px 0;
+  }
+  
+  .promo-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 1rem;
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 120px;
+    border-left: 6px solid var(--primary-color);
+  }
+  
+  .promo-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+  
+  .promo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #333;
+  }
+  
+  .promo-card .emoji {
+    font-size: 1.3rem;
+    margin-right: 5px;
+  }
+  
+  .promo-body {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 8px;
+  }
+  
+  .promo-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+  }
+  
+  .promo-footer .badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 8px;
+  }
+    
+  .badge-percentage {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  .badge-bogo {
+    background-color: #2196f3;
+    color: white;
+  }
+  
+  .badge-threshold {
+    background-color: #ff9800;
+    color: white;
+  }
+  
+  .badge-buy-get {
+    background-color: #9c27b0;
+    color: white;
+  }
+  
+  .badge-expired {
+    background-color: #e53935 !important;
+    color: white;
+  }
+  
+  @media (max-width: 768px) {
+    #promociones-activas {
+      grid-template-columns: 1fr;
+    }
+  }
+  
