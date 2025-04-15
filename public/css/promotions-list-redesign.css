@@ -63,6 +63,11 @@
     background-color: #4caf50;
     color: white;
   }
+
+  .badge-products {
+    background-color: #4c98af;
+    color: white;
+  }
   
   .badge-bogo {
     background-color: #2196f3;
@@ -84,6 +89,9 @@
     color: white;
   }
   
+  .bg-product {
+    background-color: #4c98af; /* Violeta medio */
+}
   @media (max-width: 768px) {
     #promociones-activas {
       grid-template-columns: 1fr;

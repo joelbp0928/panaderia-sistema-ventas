@@ -1001,11 +1001,15 @@
                         id="detalle-promo-tipo"
                         class="badge rounded-pill px-3 py-2 mb-3"
                       ></span>
-
                       <p class="mb-1">
                         <i class="fas fa-calendar-day me-2 text-muted"></i>
-                        <strong>Vigencia:</strong>
-                        <span id="detalle-promo-fechas"></span>
+                        <strong>Inicio:</strong>
+                        <span id="detalle-promo-fechas-inicio"></span>
+                      </p>
+                      <p class="mb-1">
+                        <i class="fas fa-calendar-day me-2 text-muted"></i>
+                        <strong>Fin:</strong>
+                        <span id="detalle-promo-fechas-fin"></span>
                       </p>
                       <p class="mb-1">
                         <i class="fas fa-cogs me-2 text-muted"></i>
@@ -1033,6 +1037,283 @@
                   >
                     <i class="fas fa-pen-to-square me-2"></i>Editar
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Modal para Crear Promoción -->
+          <div
+            class="modal fade"
+            id="promocionModal"
+            tabindex="-1"
+            aria-labelledby="promocionModalLabel"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="promocionModalLabel">
+                    Crear Nueva Promoción
+                  </h5>
+                  <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div class="modal-body">
+                  <form id="create-promotion-form">
+                    <div class="mb-3">
+                      <label for="promotion-name" class="form-label"
+                        >Nombre de la Promoción</label
+                      >
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="promotion-name"
+                        placeholder="Ejemplo: Descuento de Verano"
+                        required
+                      />
+                    </div>
+                    <div class="mb-3">
+                      <label for="promotion-image" class="form-label"
+                        >Imagen de la Promoción</label
+                      >
+                      <input
+                        type="file"
+                        class="form-control"
+                        id="promotion-image"
+                        accept="image/*"
+                      />
+                      <small class="text-muted"
+                        >Formatos aceptados: JPG, PNG, GIF (Máx. 2MB)</small
+                      >
+                      <div class="mt-2">
+                        <img
+                          id="promotion-image-preview"
+                          src="#"
+                          alt="Vista previa de imagen"
+                          class="preview-image"
+                        />
+                      </div>
+                    </div>
+                    <div class="mb-3">
+                      <label for="promotion-discount-type" class="form-label"
+                        >Tipo de Descuento</label
+                      >
+                      <select
+                        class="form-select"
+                        id="promotion-discount-type"
+                        onchange="updateDiscountOptions()"
+                        required
+                      >
+                        <option value="" disabled selected>
+                          Selecciona el tipo de descuento
+                        </option>
+                        <option value="percentage">
+                          Porcentaje global a toda la tienda
+                        </option>
+                        <option value="products">
+                          Porcentaje a productos seleccionados
+                        </option>
+                        <option value="buy-get">
+                          Compra tal y llévate tal
+                        </option>
+                        <option value="bogo">2x1</option>
+                        <option value="threshold">
+                          Porcentaje de descuento en compras mayores
+                        </option>
+                      </select>
+                    </div>
+                    <div class="mb-3 row">
+                      <div class="col-sm-6 mb-2 mb-sm-0">
+                        <label for="promotion-inicio" class="form-label"
+                          >Fecha de Inicio</label
+                        >
+                        <input
+                          type="date"
+                          class="form-control"
+                          id="promotion-inicio"
+                        />
+                      </div>
+                      <div class="col-sm-6">
+                        <label for="promotion-fin" class="form-label"
+                          >Fecha de Fin</label
+                        >
+                        <input
+                          type="date"
+                          class="form-control"
+                          id="promotion-fin"
+                        />
+                      </div>
+                    </div>
+                    <!-- Configuracionesde descuentos  -->
+                    <div id="discount-configurations">
+                      <!-- Sección de porcentaje de descuento -->
+                      <div
+                        id="percentage-config"
+                        class="discount-option d-none"
+                      >
+                        <label for="percentage-value" class="form-label"
+                          >Porcentaje de Descuento (%)</label
+                        >
+                        <input
+                          type="number"
+                          class="form-control"
+                          id="percentage-value"
+                          placeholder="Ejemplo: 20"
+                        />
+                      </div>
+                      <!-- Productos a seleccionar si el tipo es "percentage-products" -->
+                      <div id="products-config" class="discount-option d-none">
+                        <label for="products-value" class="form-label"
+                          >Porcentaje de Descuento (%)</label
+                        >
+                        <input
+                          type="number"
+                          class="form-control"
+                          id="products-value"
+                          placeholder="Ejemplo: 20"
+                        />
+                        <label
+                          for="promotion-percentage-products"
+                          class="form-label"
+                          >Productos Seleccionados</label
+                        >
+                        <select
+                          multiple
+                          class="form-select"
+                          id="promotion-percentage-products"
+                        >
+                          <!-- Productos se cargarán dinámicamente aquí -->
+                        </select>
+                        <small class="text-muted"
+                          >Mantén presionado Ctrl (o Cmd en Mac) para
+                          seleccionar múltiples productos</small
+                        >
+                      </div>
+                      <div id="buy-get-config" class="discount-option d-none">
+                        <label for="buy-quantity" class="form-label"
+                          >Cantidad a Comprar</label
+                        >
+                        <input
+                          type="number"
+                          class="form-control"
+                          id="buy-quantity"
+                          placeholder="Ejemplo: 3"
+                        />
+                        <label for="get-quantity" class="form-label mt-2"
+                          >Cantidad a Llevar Gratis</label
+                        >
+                        <input
+                          type="number"
+                          class="form-control"
+                          id="get-quantity"
+                          placeholder="Ejemplo: 1"
+                        />
+                        <label
+                          for="promotion-products-buy"
+                          class="form-label"
+                          >Productos a comprar</label
+                        >
+                        <select
+                          multiple
+                          class="form-select"
+                          id="promotion-products-buy"
+                        >
+                          <!-- Productos se cargarán dinámicamente aquí -->
+                        </select>
+                        <small class="text-muted"
+                          >Mantén presionado Ctrl (o Cmd en Mac) para
+                          seleccionar múltiples productos</small
+                        >
+                        <div>
+                        <label
+                          for="promotion-products-free"
+                          class="form-label"
+                          >Productos de regalo</label
+                        >
+                        <select
+                          multiple
+                          class="form-select"
+                          id="promotion-products-free"
+                        >
+                          <!-- Productos se cargarán dinámicamente aquí -->
+                        </select>
+                        <small class="text-muted"
+                          >Mantén presionado Ctrl (o Cmd en Mac) para
+                          seleccionar múltiples productos</small
+                        >
+                      </div>
+                      </div>
+
+                      <div id="bogo-config" class="discount-option d-none">
+                        <div id="products-list-promotion" class="mb-3">
+                          <label for="promotion-products" class="form-label"
+                            >Productos</label
+                          >
+                          <select
+                            multiple
+                            class="form-select"
+                            id="promotion-products"
+                          >
+                            <option value="1">Dona de Chocolate</option>
+                            <option value="2">Concha de Vainilla</option>
+                            <option value="3">Bolillo</option>
+                            <option value="4">Pastel de Tres Leches</option>
+                          </select>
+                          <small class="text-muted"
+                            >Mantén presionado Ctrl (o Cmd en Mac) para
+                            seleccionar múltiples</small
+                          >
+                        </div>
+                        <p class="form-text">
+                          La promoción se aplicará automáticamente al añadir
+                          productos idénticos al carrito.
+                        </p>
+                      </div>
+
+                      <div id="threshold-config" class="discount-option d-none">
+                        <label for="threshold-value" class="form-label"
+                          >Monto Mínimo de Compra</label
+                        >
+                        <input
+                          type="number"
+                          class="form-control"
+                          id="threshold-value"
+                          placeholder="Ejemplo: 100"
+                        />
+                        <label
+                          for="threshold-percentage"
+                          class="form-label mt-2"
+                          >Porcentaje de Descuento (%)</label
+                        >
+                        <input
+                          type="number"
+                          class="form-control"
+                          id="threshold-percentage"
+                          placeholder="Ejemplo: 15"
+                        />
+                      </div>
+                    </div>
+                    <div class="text-end">
+                      <button
+                        type="button"
+                        class="btn btn-secondary me-2"
+                        data-bs-dismiss="modal"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        class="btn btn-success"
+                        id="btn-save-promotion"
+                      >
+                        Crear Promoción
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             </div>
@@ -1164,219 +1445,6 @@
                       </button>
                       <button type="submit" class="btn btn-primary">
                         Guardar Sugerencia
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- Modal para Crear Promoción -->
-          <div
-            class="modal fade"
-            id="promocionModal"
-            tabindex="-1"
-            aria-labelledby="promocionModalLabel"
-            aria-hidden="true"
-          >
-            <div class="modal-dialog modal-lg">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="promocionModalLabel">
-                    Crear Nueva Promoción
-                  </h5>
-                  <button
-                    type="button"
-                    class="btn-close btn-close-white"
-                    data-bs-dismiss="modal"
-                    aria-label="Close"
-                  ></button>
-                </div>
-                <div class="modal-body">
-                  <form id="create-promotion-form">
-                    <div class="mb-3">
-                      <label for="promotion-name" class="form-label"
-                        >Nombre de la Promoción</label
-                      >
-                      <input
-                        type="text"
-                        class="form-control"
-                        id="promotion-name"
-                        placeholder="Ejemplo: Descuento de Verano"
-                        required
-                      />
-                    </div>
-                    <div class="mb-3">
-                      <label for="promotion-image" class="form-label"
-                        >Imagen de la Promoción</label
-                      >
-                      <input
-                        type="file"
-                        class="form-control"
-                        id="promotion-image"
-                        accept="image/*"
-                      />
-                      <small class="text-muted"
-                        >Formatos aceptados: JPG, PNG, GIF (Máx. 2MB)</small
-                      >
-                      <div class="mt-2">
-                        <img
-                          id="promotion-image-preview"
-                          src="#"
-                          alt="Vista previa de imagen"
-                          class="preview-image"
-                        />
-                      </div>
-                    </div>
-                    <div class="mb-3">
-                      <label for="promotion-discount-type" class="form-label"
-                        >Tipo de Descuento</label
-                      >
-                      <select
-                        class="form-select"
-                        id="promotion-discount-type"
-                        onchange="updateDiscountOptions()"
-                        required
-                      >
-                        <option value="" disabled selected>
-                          Selecciona el tipo de descuento
-                        </option>
-                        <option value="percentage">
-                          Porcentaje de descuento
-                        </option>
-                        <option value="buy-get">
-                          Compra tal y llévate tal
-                        </option>
-                        <option value="bogo">2x1</option>
-                        <option value="threshold">
-                          Porcentaje de descuento en compras mayores
-                        </option>
-                      </select>
-                    </div>
-                    <div class="mb-3 row">
-                      <div class="col-sm-6 mb-2 mb-sm-0">
-                        <label for="promotion-inicio" class="form-label"
-                          >Fecha de Inicio</label
-                        >
-                        <input
-                          type="date"
-                          class="form-control"
-                          id="promotion-inicio"
-                        />
-                      </div>
-                      <div class="col-sm-6">
-                        <label for="promotion-fin" class="form-label"
-                          >Fecha de Fin</label
-                        >
-                        <input
-                          type="date"
-                          class="form-control"
-                          id="promotion-fin"
-                        />
-                      </div>
-                    </div>
-                    <!-- Configuraciones específicas (igual que antes) -->
-                    <div id="discount-configurations">
-                      <div
-                        id="percentage-config"
-                        class="discount-option d-none"
-                      >
-                        <label for="percentage-value" class="form-label"
-                          >Porcentaje de Descuento (%)</label
-                        >
-                        <input
-                          type="number"
-                          class="form-control"
-                          id="percentage-value"
-                          placeholder="Ejemplo: 20"
-                        />
-                      </div>
-
-                      <div id="buy-get-config" class="discount-option d-none">
-                        <label for="buy-quantity" class="form-label"
-                          >Cantidad a Comprar</label
-                        >
-                        <input
-                          type="number"
-                          class="form-control"
-                          id="buy-quantity"
-                          placeholder="Ejemplo: 3"
-                        />
-                        <label for="get-quantity" class="form-label mt-2"
-                          >Cantidad a Llevar Gratis</label
-                        >
-                        <input
-                          type="number"
-                          class="form-control"
-                          id="get-quantity"
-                          placeholder="Ejemplo: 1"
-                        />
-                      </div>
-
-                      <div id="bogo-config" class="discount-option d-none">
-                        <div id="products-list-promotion" class="mb-3">
-                          <label for="promotion-products" class="form-label"
-                            >Productos</label
-                          >
-                          <select
-                            multiple
-                            class="form-select"
-                            id="promotion-products"
-                            required
-                          >
-                            <option value="1">Dona de Chocolate</option>
-                            <option value="2">Concha de Vainilla</option>
-                            <option value="3">Bolillo</option>
-                            <option value="4">Pastel de Tres Leches</option>
-                          </select>
-                          <small class="text-muted"
-                            >Mantén presionado Ctrl (o Cmd en Mac) para
-                            seleccionar múltiples</small
-                          >
-                        </div>
-                        <p class="form-text">
-                          La promoción se aplicará automáticamente al añadir
-                          productos idénticos al carrito.
-                        </p>
-                      </div>
-
-                      <div id="threshold-config" class="discount-option d-none">
-                        <label for="threshold-value" class="form-label"
-                          >Monto Mínimo de Compra</label
-                        >
-                        <input
-                          type="number"
-                          class="form-control"
-                          id="threshold-value"
-                          placeholder="Ejemplo: 100"
-                        />
-                        <label
-                          for="threshold-percentage"
-                          class="form-label mt-2"
-                          >Porcentaje de Descuento (%)</label
-                        >
-                        <input
-                          type="number"
-                          class="form-control"
-                          id="threshold-percentage"
-                          placeholder="Ejemplo: 15"
-                        />
-                      </div>
-                    </div>
-                    <div class="text-end">
-                      <button
-                        type="button"
-                        class="btn btn-secondary me-2"
-                        data-bs-dismiss="modal"
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        type="submit"
-                        class="btn btn-success"
-                        id="btn-save-promotion"
-                      >
-                        Crear Promoción
                       </button>
                     </div>
                   </form>

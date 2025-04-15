@@ -7,7 +7,7 @@ import { verificarAccesoAdmin, verificarSesion, cerrarSesion } from "./auth-chec
 import { cargarConfiguracion } from "./admin/configAdmin.js";
 //import { cargarConfiguracion } from "./config.js"
 import { showLoading, hideLoading } from "./manageError.js";
-import { cargarPromociones } from './promociones.js';
+import { cargarPromociones, cargarProductosPromocion } from './promociones.js';
 import { cargarCategorias } from './categorias.js';
 
 window.onload = async function () {
@@ -67,6 +67,7 @@ document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
         break;
       case "promotion-recommendations":
         cargarPromociones();
+        cargarProductosPromocion();
         break;
       case "inventario-tab":
         cargarInventarioIngredientes();
