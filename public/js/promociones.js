@@ -253,22 +253,22 @@ export async function gestionarPromocion() {
                 "percentage": "promotion-percentage-products",
                 "products": "promotion-percentage-products"
             };
-        
+
             if (selectMap[tipo]) {
                 const select = document.getElementById(selectMap[tipo]);
                 return select ? Array.from(select.selectedOptions).map(opt => opt.value) : [];
             }
-        
+
             if (tipo === "buy-get") {
                 const selectBuy = document.getElementById("promotion-products-buy");
                 const selectFree = document.getElementById("promotion-products-free");
-                
+
                 return {
                     buyProducts: selectBuy ? Array.from(selectBuy.selectedOptions).map(opt => opt.value) : [],
                     freeProducts: selectFree ? Array.from(selectFree.selectedOptions).map(opt => opt.value) : []
                 };
             }
-        
+
             console.error(`Tipo de promoción no reconocido: ${tipo}`);
             return [];
         }
@@ -283,17 +283,17 @@ export async function gestionarPromocion() {
                 dataPromo.porcentaje = parseFloat(document.getElementById("products-value").value);
                 productosSeleccionados = obtenerProductosSeleccionados(tipo);
                 break;
-                case "buy-get":
-                    dataPromo.buy_quantity = parseInt(document.getElementById("buy-quantity").value);
-                    dataPromo.get_quantity = parseInt(document.getElementById("get-quantity").value);
-                    productosSeleccionados = obtenerProductosSeleccionados(tipo);
-                    
-                    // Validación adicional
-                    if (productosSeleccionados.buyProducts.length === 0 || productosSeleccionados.freeProducts.length === 0) {
-                        mostrarToast("Debe seleccionar productos para comprar y productos gratis", "warning");
-                        return;
-                    }
-                    break;
+            case "buy-get":
+                dataPromo.buy_quantity = parseInt(document.getElementById("buy-quantity").value);
+                dataPromo.get_quantity = parseInt(document.getElementById("get-quantity").value);
+                productosSeleccionados = obtenerProductosSeleccionados(tipo);
+
+                // Validación adicional
+                if (productosSeleccionados.buyProducts.length === 0 || productosSeleccionados.freeProducts.length === 0) {
+                    mostrarToast("Debe seleccionar productos para comprar y productos gratis", "warning");
+                    return;
+                }
+                break;
             case "threshold":
                 dataPromo.threshold = parseFloat(document.getElementById("threshold-value").value);
                 dataPromo.porcentaje = parseFloat(document.getElementById("threshold-percentage").value);
@@ -337,7 +337,7 @@ async function actualizarPromocionEnSupabase(id, dataPromo, productosSeleccionad
             .from("promociones")
             .update(dataPromo)
             .eq("id", id);
-        
+
         if (updateError) throw updateError;
 
         // 2. Eliminar relaciones existentes
@@ -345,7 +345,7 @@ async function actualizarPromocionEnSupabase(id, dataPromo, productosSeleccionad
             .from("productos_promocion")
             .delete()
             .eq("promocion_id", id);
-        
+
         if (deleteError) throw deleteError;
 
         // 3. Crear nuevas relaciones según el tipo
@@ -367,9 +367,9 @@ async function crearPromocionEnSupabase(dataPromo, productosSeleccionados) {
             .from("promociones")
             .insert([dataPromo])
             .select();
-        
+
         if (error) throw error;
-        
+
         const promocionId = data[0].id;
 
         // 2. Manejar relaciones con productos según el tipo
@@ -410,9 +410,6 @@ async function manejarRelacionesBuyGet(promocionId, { buyProducts, freeProducts 
     }
 }
 
-
-
-
 // Función auxiliar para relaciones normales
 async function manejarRelacionesNormales(promocionId, productosIds) {
     if (productosIds.length > 0) {
@@ -420,17 +417,14 @@ async function manejarRelacionesNormales(promocionId, productosIds) {
             promocion_id: promocionId,
             producto_id: producto_id
         }));
-        
+
         const { error } = await supabase
             .from("productos_promocion")
             .insert(relaciones);
-        
+
         if (error) throw error;
     }
 }
-
-
-
 
 // 🗑️ Eliminar imagen anterior de Firebase Storage
 async function eliminarImagenAnterior(imagenUrl) {
@@ -603,6 +597,7 @@ async function generarSugerencia() {
 
 // 🎯 Mostrar detalle de promoción
 async function mostrarDetallePromocion(promocion) {
+    console.log("que hay en codigo", promocion)
     // 🧠 Render contenido dinámico
     document.getElementById("detalle-promo-nombre").textContent = promocion.nombre;
     document.getElementById("detalle-promo-fechas-inicio").textContent = new Date(promocion.fecha_inicio).toLocaleDateString();
@@ -632,7 +627,7 @@ async function mostrarDetallePromocion(promocion) {
             condiciones = `Descuento del ${promocion.porcentaje}% en productos seleccionados`;
             break;
         case "buy-get":
-            condiciones = `Compra ${promocion.buy_quantity} de algun producto, lleva ${promocion.get_quantity} de otro gratis`;
+            condiciones = `Compra ${promocion.buy_quantity} de un producto y llevate ${promocion.get_quantity} de otro gratis`;
             break;
         case "threshold":
             condiciones = `Descuento del ${promocion.porcentaje}% en compras desde $${promocion.threshold}`;
@@ -643,28 +638,63 @@ async function mostrarDetallePromocion(promocion) {
     }
     document.getElementById("detalle-promo-condiciones").textContent = condiciones;
 
-    // 📦 Productos asociados
-    const { data: productos, error } = await supabase
+    // 📦 Obtener productos comprados
+    const { data: productosComprados, error: errorComprados } = await supabase
         .from("productos_promocion")
-        .select(`
-            producto_id,
-            producto_gratis_id,
-            productos:producto_id(nombre),
-            productos_gratis:producto_gratis_id(nombre)
-        `)
+        .select("producto_id, producto_gratis_id")
         .eq("promocion_id", promocion.id);
 
-        const lista = productos?.map(p => {
-            // Recuperar los nombres de los productos comprados y gratuitos
-            const nombreProducto = p.productos?.nombre;
-            const nombreProductoGratis = p.productos_gratis?.nombre;
-        
-            // Concatenar los nombres con la lógica que desees
-            return `${nombreProducto || ""} ${nombreProductoGratis ? `(Gratis: ${nombreProductoGratis})` : ""}`;
-        }).join(", ") || "-";
-        
-        // Mostrar la lista en el elemento correspondiente
-        document.getElementById("detalle-promo-productos").textContent = lista;
+    if (errorComprados) {
+        console.error("Error al obtener productos:", errorComprados);
+    }
+
+    // Obtener los ids de los productos
+    const productosCompradosIds = productosComprados.map(p => p.producto_id);
+    const productosGratisIds = productosComprados
+        .filter(p => p.producto_gratis_id)  // Filtra solo aquellos con producto_gratis_id no nulo
+        .map(p => p.producto_gratis_id);
+
+    // Consultar los nombres de los productos comprados
+    const { data: nombresComprados, error: errorNombresComprados } = await supabase
+        .from("productos")
+        .select("nombre")
+        .in("id", productosCompradosIds);
+
+    if (errorNombresComprados) {
+        console.error("Error al obtener nombres de productos comprados:", errorNombresComprados);
+    }
+
+    // Consultar los nombres de los productos gratuitos (solo si hay productos gratuitos)
+    let nombresGratis = [];
+    if (productosGratisIds.length > 0) {
+        const { data: dataGratis, error: errorGratis } = await supabase
+            .from("productos")
+            .select("nombre")
+            .in("id", productosGratisIds);
+
+        if (errorGratis) {
+            console.error("Error al obtener nombres de productos gratuitos:", errorGratis);
+        }
+        nombresGratis = dataGratis.map(producto => `Gratis: ${producto.nombre}`);
+    }
+
+    // Concatenar los productos con sus nombres
+    const nombres = [
+        ...nombresComprados.map(producto => producto.nombre),
+        ...nombresGratis
+    ];
+
+    // Si no hay productos, mostrar "-"
+    const displayText = nombres.length > 0 ? nombres.join(", ") : "-";
+
+    // Mostrar en el HTML
+    document.getElementById("detalle-promo-productos").textContent = displayText;
+
+
+    console.log("Nombres obtenidos:", nombres);
+
+
+
 
     // Mostrar modal
     const modal = new bootstrap.Modal(document.getElementById("detallePromocionModal"));
@@ -701,38 +731,38 @@ function prepararEdicionPromocion(promocion) {
     } else if (promocion.tipo === "buy-get") {
         document.getElementById("buy-quantity").value = promocion.buy_quantity;
         document.getElementById("get-quantity").value = promocion.get_quantity;
-      // Productos asociados
-      cargarProductos().then(() => {
-        const select = document.getElementById("promotion-products-buy");
-        Array.from(select.options).forEach(opt => {
-            opt.selected = false;
-        });
-        supabase.from("productos_promocion")
-            .select("producto_id")
-            .eq("promocion_id", promocion.id)
-            .then(({ data }) => {
-                data?.forEach(p => {
-                    const option = select.querySelector(`option[value='${p.producto_id}']`);
-                    if (option) option.selected = true;
-                });
+        // Productos asociados
+        cargarProductos().then(() => {
+            const select = document.getElementById("promotion-products-buy");
+            Array.from(select.options).forEach(opt => {
+                opt.selected = false;
             });
-    });
-    // Productos asociados
-    cargarProductos().then(() => {
-        const select = document.getElementById("promotion-products-free");
-        Array.from(select.options).forEach(opt => {
-            opt.selected = false;
-        });
-        supabase.from("productos_promocion")
-            .select("producto_id")
-            .eq("promocion_id", promocion.id)
-            .then(({ data }) => {
-                data?.forEach(p => {
-                    const option = select.querySelector(`option[value='${p.producto_id}']`);
-                    if (option) option.selected = true;
+            supabase.from("productos_promocion")
+                .select("producto_id")
+                .eq("promocion_id", promocion.id)
+                .then(({ data }) => {
+                    data?.forEach(p => {
+                        const option = select.querySelector(`option[value='${p.producto_id}']`);
+                        if (option) option.selected = true;
+                    });
                 });
+        });
+        // Productos asociados
+        cargarProductos().then(() => {
+            const select = document.getElementById("promotion-products-free");
+            Array.from(select.options).forEach(opt => {
+                opt.selected = false;
             });
-    });
+            supabase.from("productos_promocion")
+                .select("producto_id")
+                .eq("promocion_id", promocion.id)
+                .then(({ data }) => {
+                    data?.forEach(p => {
+                        const option = select.querySelector(`option[value='${p.producto_id}']`);
+                        if (option) option.selected = true;
+                    });
+                });
+        });
     } else if (promocion.tipo === "threshold") {
         document.getElementById("threshold-value").value = promocion.threshold;
         document.getElementById("threshold-percentage").value = promocion.porcentaje;
