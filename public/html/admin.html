@@ -295,6 +295,106 @@
               </div>
             </div>
           </div>
+          <!-- Filtros Empleados -->
+          <div class="d-flex flex-wrap align-items-end gap-3 mb-3">
+            <!-- Buscar por Nombre -->
+            <div class="flex-fill">
+              <label for="buscarEmpleado" class="form-label">
+                <i class="fas fa-search me-1"></i> Buscar
+              </label>
+              <input
+                type="text"
+                id="buscarEmpleado"
+                class="form-control"
+                placeholder="Ej. Juan Pérez..."
+              />
+            </div>
+
+            <!-- Filtro por Puesto -->
+            <div class="flex-fill">
+              <label for="filtroPuesto" class="form-label">
+                <i class="fas fa-briefcase me-1"></i> Puesto
+              </label>
+              <select id="filtroPuesto" class="form-select">
+                <option value="">Todos</option>
+                <option value="cajero">Cajero</option>
+                <option value="empacador">Empacador</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </div>
+
+            <!-- Filtro por Email -->
+            <div class="flex-fill">
+              <label for="filtroEmail" class="form-label">
+                <i class="fas fa-envelope me-1"></i> Email
+              </label>
+              <input
+                type="text"
+                id="filtroEmail"
+                class="form-control"
+                placeholder="Buscar por Email"
+              />
+            </div>
+
+            <!-- Filtro por Teléfono -->
+            <div class="flex-fill">
+              <label for="filtroTelefono" class="form-label">
+                <i class="fas fa-phone-alt me-1"></i> Teléfono
+              </label>
+              <input
+                type="text"
+                id="filtroTelefono"
+                class="form-control"
+                placeholder="Buscar por Teléfono"
+              />
+            </div>
+
+            <!-- Ordenar por Nombre -->
+            <div class="flex-fill">
+              <label for="ordenarNombreEmpleado" class="form-label">
+                <i class="fas fa-sort-alpha-down me-1"></i> Nombre
+              </label>
+              <select id="ordenarNombreEmpleado" class="form-select">
+                <option value="az">A - Z</option>
+                <option value="za">Z - A</option>
+              </select>
+            </div>
+
+            <!-- Botón limpiar filtros -->
+            <div>
+              <button
+                id="btn-limpiar-filtros-em"
+                class="btn btn-outline-secondary disabled"
+                disabled
+              >
+                <i class="fas fa-eraser me-1"></i> Limpiar Filtros
+              </button>
+            </div>
+          </div>
+
+          <!-- Badges de Filtros Activos -->
+          <div id="filtros-activos-em" class="mb-3 d-none">
+            <span class="me-2">Filtros activos:</span>
+            <span
+              id="badge-nombre-empleados"
+              class="badge rounded-pill bg-secondary d-none"
+            >
+              Nombre: <span class="fw-bold"></span>
+            </span>
+            <span
+              id="badge-puesto-empleados"
+              class="badge rounded-pill bg-secondary d-none"
+            >
+              Puesto: <span class="fw-bold"></span>
+            </span>
+            <span id="badge-email-empleados" class="badge rounded-pill bg-secondary d-none">
+              Email: <span class="fw-bold"></span>
+            </span>
+            <span id="badge-telefono-empleados" class="badge rounded-pill bg-secondary d-none">
+              Teléfono: <span class="fw-bold"></span>
+            </span>
+          </div>
+
           <!-- Contenedor para los botones de eliminar y editar cantidad -->
           <div class="button-container">
             <!-- Botón de eliminar (bote de basura) -->
@@ -309,22 +409,28 @@
           <span class="text-muted small"
             >Selecciona un empelado para ver acciones</span
           >
-          <table class="table" id="tabla-empleados">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Fecha Nacimiento</th>
-                <th>Puesto</th>
-                <th>Email</th>
-                <th>Teléfono</th>
-                <th>Registrado por</th>
-                <th>Fecha Registro</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- 📌 Aquí se insertarán dinámicamente los empleados -->
-            </tbody>
-          </table>
+          <!-- Tabla de Empleados -->
+          <div class="table-responsive">
+            <table
+              id="tabla-empleados"
+              class="table table-hover table-borderless align-middle text-center mb-0"
+            >
+              <thead class="table-card-title">
+                <tr>
+                  <th>Nombre</th>
+                  <th>Fecha Nacimiento</th>
+                  <th>Puesto</th>
+                  <th>Email</th>
+                  <th>Teléfono</th>
+                  <th>Registrado por</th>
+                  <th>Fecha Registro</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-empleados-content">
+                <!-- JS renderiza aquí -->
+              </tbody>
+            </table>
+          </div>
           <!-- Modal de Confirmación de Eliminación -->
           <div
             class="modal fade"

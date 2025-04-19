@@ -438,3 +438,176 @@ export async function registrarNuevoEmpleado(datos) {
     }
 }
 
+const filtrosEmpleados = {
+    buscar: document.getElementById("buscarEmpleado"),
+    puesto: document.getElementById("filtroPuesto"),
+    email: document.getElementById("filtroEmail"),
+    telefono: document.getElementById("filtroTelefono"),
+    ordenarNombre: document.getElementById("ordenarNombreEmpleado"),
+    limpiarBtn: document.getElementById("btn-limpiar-filtros-em"),
+};
+
+function actualizarEstadoBotonLimpiarEm() {
+    const hayFiltros =
+        filtrosEmpleados.buscar.value.trim() !== "" ||
+        filtrosEmpleados.puesto.value !== "" ||
+        filtrosEmpleados.email.value.trim() !== "" ||
+        filtrosEmpleados.telefono.value.trim() !== "" ||
+        filtrosEmpleados.ordenarNombre.value !== "az";
+
+    filtrosEmpleados.limpiarBtn.classList.toggle("disabled", !hayFiltros);
+    filtrosEmpleados.limpiarBtn.disabled = !hayFiltros;
+
+    actualizarBadgesFiltroEm();
+}
+
+// Búsqueda por Nombre
+filtrosEmpleados.buscar.addEventListener("input", () => {
+    const texto = filtrosEmpleados.buscar.value.toLowerCase();
+    document.querySelectorAll("#tabla-empleados tbody tr").forEach((fila) => {
+        const nombre = fila.children[0].textContent.toLowerCase();
+        fila.style.display = nombre.includes(texto) ? "" : "none";
+    });
+    actualizarEstadoBotonLimpiarEm();
+});
+
+// Filtro por Puesto
+filtrosEmpleados.puesto.addEventListener("change", () => {
+    const puesto = filtrosEmpleados.puesto.value.toLowerCase();
+    document.querySelectorAll("#tabla-empleados tbody tr").forEach((fila) => {
+        const puestoEmpleado = fila.children[2].textContent.toLowerCase();
+        fila.style.display = !puesto || puestoEmpleado === puesto ? "" : "none";
+    });
+    actualizarEstadoBotonLimpiarEm();
+});
+
+
+// Filtro por Email
+filtrosEmpleados.email.addEventListener("input", () => {
+    const email = filtrosEmpleados.email.value.toLowerCase();
+    document.querySelectorAll("#tabla-empleados tbody tr").forEach((fila) => {
+        const emailEmpleado = fila.children[3].textContent.toLowerCase();
+        fila.style.display = emailEmpleado.includes(email) ? "" : "none";
+    });
+    actualizarEstadoBotonLimpiarEm();
+});
+
+// Filtro por Teléfono
+filtrosEmpleados.telefono.addEventListener("input", () => {
+    const telefono = filtrosEmpleados.telefono.value.toLowerCase();
+    document.querySelectorAll("#tabla-empleados tbody tr").forEach((fila) => {
+        const telefonoEmpleado = fila.children[4].textContent.toLowerCase();
+        fila.style.display = telefonoEmpleado.includes(telefono) ? "" : "none";
+    });
+    actualizarEstadoBotonLimpiarEm();
+});
+
+// Ordenar por Nombre
+filtrosEmpleados.ordenarNombre.addEventListener("change", () => {
+    const orden = filtrosEmpleados.ordenarNombre.value;
+    const tbody = document.getElementById("tabla-empleados-content");
+    const filas = Array.from(tbody.querySelectorAll("tr"));
+
+    filas.sort((a, b) => {
+        const nombreA = a.children[0].textContent.toLowerCase();
+        const nombreB = b.children[0].textContent.toLowerCase();
+        return orden === "az" ? nombreA.localeCompare(nombreB) : nombreB.localeCompare(nombreA);
+    });
+
+    filas.forEach((fila) => tbody.appendChild(fila));
+    actualizarEstadoBotonLimpiarEm();
+});
+
+// Limpiar filtros
+filtrosEmpleados.limpiarBtn.addEventListener("click", () => {
+    if (filtrosEmpleados.limpiarBtn.classList.contains("disabled")) return;
+
+    const original = filtrosEmpleados.limpiarBtn.innerHTML;
+    filtrosEmpleados.limpiarBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span> Limpiando...`;
+    filtrosEmpleados.limpiarBtn.disabled = true;
+
+    setTimeout(() => {
+        filtrosEmpleados.buscar.value = "";
+        filtrosEmpleados.puesto.value = "";
+        filtrosEmpleados.email.value = "";
+        filtrosEmpleados.telefono.value = "";
+        filtrosEmpleados.ordenarNombre.value = "az";
+
+        filtrosEmpleados.buscar.dispatchEvent(new Event("input"));
+        filtrosEmpleados.puesto.dispatchEvent(new Event("change"));
+        filtrosEmpleados.email.dispatchEvent(new Event("input"));
+        filtrosEmpleados.telefono.dispatchEvent(new Event("input"));
+        filtrosEmpleados.ordenarNombre.dispatchEvent(new Event("change"));
+
+        filtrosEmpleados.limpiarBtn.innerHTML = original;
+        filtrosEmpleados.limpiarBtn.classList.add("disabled");
+        filtrosEmpleados.limpiarBtn.disabled = true;
+    }, 600);
+});
+
+// Mostrar badges de filtros activos
+function actualizarBadgesFiltroEm() {
+    const contenedor = document.getElementById("filtros-activos-em");
+    const badgeNombre = document.getElementById("badge-nombre-empleados");
+    const badgePuesto = document.getElementById("badge-puesto-empleados");
+    const badgeEmail = document.getElementById("badge-email-empleados");
+    const badgeTelefono = document.getElementById("badge-telefono-empleados");
+
+    let hay = false;
+
+    animarTablaEmpleados()
+
+    // Nombre
+    if (filtrosEmpleados.buscar.value) {
+        badgeNombre.querySelector("span").textContent = filtrosEmpleados.buscar.value;
+        badgeNombre.classList.remove("d-none");
+        hay = true;
+    } else {
+        badgeNombre.classList.add("d-none");
+    }
+
+    // Puesto
+    if (filtrosEmpleados.puesto.value) {
+        badgePuesto.querySelector("span").textContent = filtrosEmpleados.puesto.value;
+        badgePuesto.classList.remove("d-none");
+        hay = true;
+    } else {
+        badgePuesto.classList.add("d-none");
+    }
+
+    // Email
+    if (filtrosEmpleados.email.value) {
+        badgeEmail.querySelector("span").textContent = filtrosEmpleados.email.value;
+        badgeEmail.classList.remove("d-none");
+        hay = true;
+    } else {
+        badgeEmail.classList.add("d-none");
+    }
+
+    // Teléfono
+    if (filtrosEmpleados.telefono.value) {
+        badgeTelefono.querySelector("span").textContent = filtrosEmpleados.telefono.value;
+        badgeTelefono.classList.remove("d-none");
+        hay = true;
+    } else {
+        badgeTelefono.classList.add("d-none");
+    }
+
+    contenedor.classList.toggle("d-none", !hay);
+}
+
+// Detectar cambios para actualizar estado
+["input", "change"].forEach((ev) => {
+    filtrosEmpleados.buscar.addEventListener(ev, actualizarEstadoBotonLimpiarEm);
+    filtrosEmpleados.puesto.addEventListener(ev, actualizarEstadoBotonLimpiarEm);
+    filtrosEmpleados.email.addEventListener(ev, actualizarEstadoBotonLimpiarEm);
+    filtrosEmpleados.telefono.addEventListener(ev, actualizarEstadoBotonLimpiarEm);
+    filtrosEmpleados.ordenarNombre.addEventListener(ev, actualizarEstadoBotonLimpiarEm);
+});
+
+function animarTablaEmpleados() {
+    const tabla = document.getElementById("tabla-empleados-content");
+    tabla.classList.add("resaltar-tabla");
+    setTimeout(() => tabla.classList.remove("resaltar-tabla"), 1000);
+}
+
