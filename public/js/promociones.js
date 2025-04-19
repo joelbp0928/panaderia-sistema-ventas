@@ -1,5 +1,5 @@
 import { supabase } from "./supabase-config.js";
-import { mostrarToast, showLoading, hideLoading } from "./manageError.js";
+import { mostrarToast, showLoading, hideLoading, marcarErrorCampo, limpiarErrorCampo } from "./manageError.js";
 import { cargarProductos } from "./productos.js";
 import { storage, ref, uploadBytes, getDownloadURL, deleteObject } from "./firebase-config.js";
 
@@ -17,14 +17,12 @@ window.aceptarSugerencia = aceptarSugerencia;
 document.addEventListener("DOMContentLoaded", function () {
     setupPromocionModal();
     setupEventListeners();
-    cargarSugerencias();
+  //  cargarSugerencias();
 });
 
 // 🔧 Configuración del modal de promoción
 function setupPromocionModal() {
     promocionModal = new bootstrap.Modal(document.getElementById("promocionModal"), {
-        keyboard: false,
-        backdrop: 'static'
     });
 
     document.getElementById("promocionModal").addEventListener("hidden.bs.modal", () => {
@@ -40,7 +38,6 @@ function setupEventListeners() {
         gestionarPromocion();
     });
 
-    // Vista previa de imagen
     // Vista previa de imagen mejorada
     document.getElementById('promotion-image').addEventListener('change', function (e) {
         const preview = document.getElementById('promotion-image-preview');
@@ -83,7 +80,6 @@ function setupEventListeners() {
         };
 
         reader.onerror = function () {
-            console.error("Error al leer la imagen");
             mostrarToast("Error al cargar la imagen", "error");
             preview.style.display = 'none';
             preview.src = '#';
@@ -159,7 +155,7 @@ function renderizarPromociones() {
       `;
     }).join('');
 }
-
+/*
 // 💡 Cargar sugerencias de promociones
 async function cargarSugerencias() {
     try {
@@ -197,24 +193,24 @@ function renderizarSugerencias() {
         </li>
     `).join('');
 }
-
+*/
 // ✅ Función principal para gestionar promociones (crear/editar)
 export async function gestionarPromocion() {
     const form = document.getElementById("create-promotion-form");
     const tipo = document.getElementById("promotion-discount-type").value;
     const imagenInput = document.getElementById("promotion-image");
-    const esEdicion = promoEditandoId !== null;
+    const esEdicion = promoEditandoId !== null; // 🤔 Verificar si estamos en modo edición
 
-    if (!validarFormularioPromocion(tipo)) return;
+    if (!validarFormularioPromocion(tipo)) return; // ❌ Validar si el formulario es correcto
 
     const boton = document.getElementById("btn-save-promotion");
-    boton.disabled = true;
-    boton.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>${esEdicion ? "Actualizando" : "Creando"}...`;
+    boton.disabled = true; // 🚫 Deshabilitar botón mientras guardamos
+    boton.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>${esEdicion ? "Actualizando" : "Creando"}...`; // 🔄 Mostrar spinner
 
     try {
-        showLoading();
+        showLoading(); // 🔄 Mostrar loading
 
-        // 1. Manejar la imagen
+        // 1. Manejar la imagen (si hay una nueva)
         let imagenUrl = null;
         if (imagenInput.files?.length) {
             const file = imagenInput.files[0];
@@ -225,7 +221,7 @@ export async function gestionarPromocion() {
             await uploadBytes(fileRef, file);
             imagenUrl = await getDownloadURL(fileRef);
 
-            // 🗑️ Eliminar imagen anterior si es edición
+            // 🗑️ Eliminar imagen anterior si estamos editando
             if (esEdicion) {
                 const promo = promocionesActivas.find(p => p.id === promoEditandoId);
                 if (promo?.imagen_url) {
@@ -234,12 +230,12 @@ export async function gestionarPromocion() {
             }
         }
 
-        // 2. Construir objeto principal
+        // 2. Construir objeto principal de la promoción
         const dataPromo = {
             nombre: document.getElementById("promotion-name").value.trim(),
             tipo,
-            buy_quantity: document.getElementById("buy-quantity").value,
-            get_quantity: document.getElementById("get-quantity").value,
+            buy_quantity: parseInt(document.getElementById("buy-quantity").value) || 0, // ✅ Asegurarse que sea un número entero válido
+            get_quantity: parseInt(document.getElementById("get-quantity").value) || 0, // ✅ Asegurarse que sea un número entero válido
             fecha_inicio: document.getElementById("promotion-inicio").value,
             fecha_expiracion: document.getElementById("promotion-fin").value,
             activa: true
@@ -277,29 +273,28 @@ export async function gestionarPromocion() {
 
         switch (tipo) {
             case "percentage":
-                dataPromo.porcentaje = parseFloat(document.getElementById("percentage-value").value);
+                dataPromo.porcentaje = parseFloat(document.getElementById("percentage-value").value) || 0; // ✅ Asegurarse que sea un número válido
                 break;
             case "products":
-                dataPromo.porcentaje = parseFloat(document.getElementById("products-value").value);
+                dataPromo.porcentaje = parseFloat(document.getElementById("products-value").value) || 0; // ✅ Asegurarse que sea un número válido
                 productosSeleccionados = obtenerProductosSeleccionados(tipo);
                 break;
             case "buy-get":
-                dataPromo.buy_quantity = parseInt(document.getElementById("buy-quantity").value);
-                dataPromo.get_quantity = parseInt(document.getElementById("get-quantity").value);
+                dataPromo.buy_quantity = parseInt(document.getElementById("buy-quantity").value) || 0; // ✅ Asegurarse que sea un número válido
+                dataPromo.get_quantity = parseInt(document.getElementById("get-quantity").value) || 0; // ✅ Asegurarse que sea un número válido
                 productosSeleccionados = obtenerProductosSeleccionados(tipo);
 
                 // Validación adicional
                 if (productosSeleccionados.buyProducts.length === 0 || productosSeleccionados.freeProducts.length === 0) {
-                    mostrarToast("Debe seleccionar productos para comprar y productos gratis", "warning");
+                    mostrarToast("Debe seleccionar productos para comprar y productos gratis", "warning"); // ⚠️ Alerta si no hay productos seleccionados
                     return;
                 }
                 break;
             case "threshold":
-                dataPromo.threshold = parseFloat(document.getElementById("threshold-value").value);
-                dataPromo.porcentaje = parseFloat(document.getElementById("threshold-percentage").value);
+                dataPromo.threshold = parseFloat(document.getElementById("threshold-value").value) || 0; // ✅ Asegurarse que sea un número válido
+                dataPromo.porcentaje = parseFloat(document.getElementById("threshold-percentage").value) || 0; // ✅ Asegurarse que sea un número válido
                 break;
             case "bogo":
-                // 4. Productos seleccionados
                 productosSeleccionados = obtenerProductosSeleccionados(tipo);
                 break;
         }
@@ -307,29 +302,29 @@ export async function gestionarPromocion() {
         // 5. Guardar
         if (esEdicion) {
             await actualizarPromocionEnSupabase(promoEditandoId, dataPromo, productosSeleccionados);
-            mostrarToast("✅ Promoción actualizada", "success");
+            mostrarToast("✅ Promoción actualizada", "success"); // 🎉 Mensaje de éxito
         } else {
             await crearPromocionEnSupabase(dataPromo, productosSeleccionados);
-            mostrarToast("✅ Promoción creada exitosamente", "success");
+            mostrarToast("✅ Promoción creada exitosamente", "success"); // 🎉 Mensaje de éxito
         }
 
         // 6. Reset UI
         promocionModal.hide();
         form.reset();
-        await cargarPromociones();
+        bootstrap.Modal.getInstance(document.getElementById("detallePromocionModal"))?.hide();
+        await cargarPromociones(); // Actualizar la lista de promociones
 
     } catch (error) {
         console.error("❌ Error al guardar promoción:", error);
-        mostrarToast("❌ Error al guardar promoción", "error");
+        mostrarToast("❌ Error al guardar promoción", "error"); // 😱 Mensaje de error
     } finally {
         boton.disabled = false;
-        boton.innerHTML = `<i class="fas fa-check-circle me-2"></i>${esEdicion ? "Actualizar" : "Crear"} Promoción`;
-        hideLoading();
+        boton.innerHTML = `<i class="fas fa-check-circle me-2"></i>${esEdicion ? "Actualizar" : "Crear"} Promoción`; // 🔘 Habilitar el botón
+        hideLoading(); // 🔽 Ocultar el loading
     }
 }
 
 // 🔁 Actualizar una promoción
-// 🛠️ Actualizar promoción en Supabase (versión mejorada)
 async function actualizarPromocionEnSupabase(id, dataPromo, productosSeleccionados) {
     try {
         // 1. Actualizar datos principales de la promoción
@@ -430,10 +425,18 @@ async function manejarRelacionesNormales(promocionId, productosIds) {
 async function eliminarImagenAnterior(imagenUrl) {
     try {
         if (imagenUrl && imagenUrl.includes('firebasestorage.googleapis.com')) {
+            // Obtener la ruta de la imagen y asegurarse de que está bien formateada
             const url = new URL(imagenUrl);
-            const path = decodeURIComponent(url.pathname.split('/o/')[1].split('?')[0]);
+            let path = url.pathname.split('/o/')[1]; // Obtener la ruta completa
+
+            // Decodificar la ruta correctamente
+            path = decodeURIComponent(path);  // Asegurarse de que la ruta esté correctamente decodificada
+
+            // Eliminar la imagen de Firebase Storage
             const oldImageRef = ref(storage, path);
-            await deleteObject(oldImageRef);
+            await deleteObject(oldImageRef);  // Eliminar la imagen
+        } else {
+            console.warn("La URL no es válida para eliminar la imagen");
         }
     } catch (error) {
         console.warn("⚠️ No se pudo eliminar la imagen anterior:", error);
@@ -443,13 +446,43 @@ async function eliminarImagenAnterior(imagenUrl) {
 // 🔍 Validar formulario de promoción
 function validarFormularioPromocion(tipo) {
     let valido = true;
-
+    limpiarErrorCampo(["promotion-inicio", "promotion-fin", "products-value",
+        "promotion-percentage-products", "promotion-products-buy", "promotion-products-free",
+        "threshold-value", "threshold-percentage", "promotion-products", "buy-quantity", "get-quantity"]);
     // Validación básica
     if (!document.getElementById("promotion-name").value.trim()) {
         mostrarToast("El nombre de la promoción es obligatorio", "warning");
+        marcarErrorCampo("promotion-name", "El nombre de la promoción es obligatorio.")
+        valido = false;
+    }
+    // 1. Validar fecha de inicio
+    const fechaInicio = document.getElementById("promotion-inicio").value;
+    if (!fechaInicio.trim()) {
+        mostrarToast("Define una fecha de inicio. Obligatorio", "warning");
+        marcarErrorCampo("promotion-inicio", "Selecciona una fecha de inicio.");
         valido = false;
     }
 
+    // 2. Validar fecha de fin
+    const fechaFin = document.getElementById("promotion-fin").value;
+    if (!fechaFin.trim()) {
+        mostrarToast("Define una fecha de fin. Obligatorio", "warning");
+        marcarErrorCampo("promotion-fin", "Selecciona una fecha de fin.");
+        valido = false;
+    }
+
+    // 3. Validar que la fecha de inicio no sea posterior a la fecha de fin
+    if (valido) {
+        const inicio = new Date(fechaInicio);
+        const fin = new Date(fechaFin);
+
+        if (inicio > fin) {
+            mostrarToast("La fecha de inicio no puede ser posterior a la fecha de fin.", "warning");
+            marcarErrorCampo("promotion-inicio", "La fecha de inicio no puede ser posterior a la fecha de fin.");
+            valido = false;
+        }
+    }
+    console.log(document.getElementById("get-quantity").value)
     // Validaciones específicas por tipo
     switch (tipo) {
         case "percentage":
@@ -461,34 +494,52 @@ function validarFormularioPromocion(tipo) {
         case "products":
             if (!document.getElementById("products-value").value) {
                 mostrarToast("Debe especificar un porcentaje", "warning");
+                marcarErrorCampo("products-value", "Debe especificar un porcentaje.")
                 valido = false;
             } else if (!document.getElementById("promotion-percentage-products").value) {
                 mostrarToast("Debe especificar los productos en descuento", "warning");
+                marcarErrorCampo("promotion-percentage-products", "Debe especificar los productos en descuento.");
                 valido = false;
             }
             break;
         case "buy-get":
-            if (!document.getElementById("promotion-products-buy").value ||
-                !document.getElementById("promotion-products-free").value) {
+            if(!document.getElementById("buy-quantity").value) {
+                mostrarToast("Debe especificar cantidad a comprar", "warning");
+                marcarErrorCampo("buy-quantity", "Debe especificar la cantidad a comprar.");
+                valido = false;
+            } else if(!document.getElementById("get-quantity").value) {
+                mostrarToast("Debe especificar cantidad a levar gratis", "warning");
+                marcarErrorCampo("get-quantity", "Debe especificar la cantidad a llevar gratis.");
+                valido = false;
+            }else if(!document.getElementById("promotion-products-buy").value) {
                 mostrarToast("Debe especificar productos", "warning");
+                marcarErrorCampo("promotion-products-buy", "Debe especificar productos.");
+                valido = false;
+            } else if(!document.getElementById("promotion-products-free").value) {
+                mostrarToast("Debe especificar productos", "warning");
+                marcarErrorCampo("promotion-products-free", "Debe especificar productos.");
                 valido = false;
             }
             break;
         case "threshold":
-            if (!document.getElementById("threshold-value").value ||
-                !document.getElementById("threshold-percentage").value) {
+            if (!document.getElementById("threshold-value").value) {
                 mostrarToast("Debe especificar monto y porcentaje", "warning");
+                marcarErrorCampo("threshold-value", "Debe especificar monto.");
+                valido = false;
+            } else if (!document.getElementById("threshold-percentage").value) {
+                mostrarToast("Debe especificar porcentaje", "warning");
+                marcarErrorCampo("threshold-percentage", "Debe especificar porcentaje.");
                 valido = false;
             }
             break;
         case "bogo":
             if (!document.getElementById("promotion-products").value) {
                 mostrarToast("Debe especificar los productos en descuento", "warning");
+                marcarErrorCampo("promotion-products", "Debe especificar los productos en descuento");
                 valido = false;
             }
             break;
     }
-
     return valido;
 }
 
@@ -597,7 +648,6 @@ async function generarSugerencia() {
 
 // 🎯 Mostrar detalle de promoción
 async function mostrarDetallePromocion(promocion) {
-    console.log("que hay en codigo", promocion)
     // 🧠 Render contenido dinámico
     document.getElementById("detalle-promo-nombre").textContent = promocion.nombre;
     document.getElementById("detalle-promo-fechas-inicio").textContent = new Date(promocion.fecha_inicio).toLocaleDateString();
@@ -627,7 +677,7 @@ async function mostrarDetallePromocion(promocion) {
             condiciones = `Descuento del ${promocion.porcentaje}% en productos seleccionados`;
             break;
         case "buy-get":
-            condiciones = `Compra ${promocion.buy_quantity} de un producto y llevate ${promocion.get_quantity} de otro gratis`;
+            condiciones = `Compra ${promocion.buy_quantity} y recibe ${promocion.get_quantity} gratis`;
             break;
         case "threshold":
             condiciones = `Descuento del ${promocion.porcentaje}% en compras desde $${promocion.threshold}`;
@@ -693,9 +743,6 @@ async function mostrarDetallePromocion(promocion) {
 
     console.log("Nombres obtenidos:", nombres);
 
-
-
-
     // Mostrar modal
     const modal = new bootstrap.Modal(document.getElementById("detallePromocionModal"));
     modal.show();
@@ -732,7 +779,7 @@ function prepararEdicionPromocion(promocion) {
         document.getElementById("buy-quantity").value = promocion.buy_quantity;
         document.getElementById("get-quantity").value = promocion.get_quantity;
         // Productos asociados
-        cargarProductos().then(() => {
+      /*  cargarProductos().then(() => {
             const select = document.getElementById("promotion-products-buy");
             Array.from(select.options).forEach(opt => {
                 opt.selected = false;
@@ -746,9 +793,9 @@ function prepararEdicionPromocion(promocion) {
                         if (option) option.selected = true;
                     });
                 });
-        });
+        });*/
         // Productos asociados
-        cargarProductos().then(() => {
+    /*    cargarProductos().then(() => {
             const select = document.getElementById("promotion-products-free");
             Array.from(select.options).forEach(opt => {
                 opt.selected = false;
@@ -762,13 +809,13 @@ function prepararEdicionPromocion(promocion) {
                         if (option) option.selected = true;
                     });
                 });
-        });
+        });*/
     } else if (promocion.tipo === "threshold") {
         document.getElementById("threshold-value").value = promocion.threshold;
         document.getElementById("threshold-percentage").value = promocion.porcentaje;
     } else if (promocion.tipo === "products") {
         document.getElementById("products-value").value = promocion.porcentaje;
-        // Productos asociados
+   /*     // Productos asociados
         cargarProductos().then(() => {
             const select = document.getElementById("promotion-percentage-products");
             Array.from(select.options).forEach(opt => {
@@ -783,11 +830,10 @@ function prepararEdicionPromocion(promocion) {
                         if (option) option.selected = true;
                     });
                 });
-        });
-        console.log("aquiiii")
+        });*/
     } else if (promocion.tipo === "bogo") {
         // Productos asociados
-        cargarProductos().then(() => {
+    /*    cargarProductos().then(() => {
             const select = document.getElementById("promotion-products");
             Array.from(select.options).forEach(opt => {
                 opt.selected = false;
@@ -801,11 +847,8 @@ function prepararEdicionPromocion(promocion) {
                         if (option) option.selected = true;
                     });
                 });
-        });
-        console.log("hereree")
+        });*/
     }
-
-
 
     // Cambiar texto del botón
     const boton = document.getElementById("btn-save-promotion");
@@ -846,7 +889,6 @@ async function eliminarPromocion(id) {
         if (promocion?.imagen_url) {
             try {
                 await eliminarImagenAnterior(promocion.imagen_url);
-                console.log("Imagen eliminada de Firebase Storage");
             } catch (storageError) {
                 console.warn("No se pudo eliminar la imagen de Firebase:", storageError);
                 // Continuar con la eliminación aunque falle la imagen
@@ -902,7 +944,6 @@ function resetFormularioPromocion() {
 }
 
 // Función para cargar productos en el select
-// Función para cargar productos en los selects
 export async function cargarProductosPromocion() {
     try {
         const select = document.getElementById("promotion-products");
@@ -1005,7 +1046,7 @@ function obtenerIconoTipo(tipo) {
 
 function obtenerTextoTipo(tipo) {
     const textos = {
-        percentage: "Porcentaje de descuento",
+        percentage: "Porcentaje de descuento en la tienda",
         products: "Descuento en productos",
         "buy-get": "Compra y lleva gratis",
         bogo: "2x1",
@@ -1017,7 +1058,7 @@ function obtenerTextoTipo(tipo) {
 // 🧩 Helper para traducir tipo
 function traducirTipoPromocion(tipo) {
     return {
-        "percentage": "Porcentaje de descuento",
+        "percentage": "Porcentaje de descuento en la tienda",
         "products": "Descuento en productos",
         "buy-get": "Compra y lleva gratis",
         "bogo": "2x1",
@@ -1052,3 +1093,4 @@ function generarNombreUnicoImagen(nombreOriginal) {
 
     return `promo_${nombreLimpio}_${timestamp}_${randomString}.${extension}`;
 }
+

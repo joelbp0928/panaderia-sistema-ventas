@@ -3,11 +3,11 @@ import { marcarErrorCampo, limpiarErrorCampo, mostrarToast, showLoading, hideLoa
 import { validarTelefono, validarEdad } from "./validaciones.js";
 import { supabase } from "./supabase-config.js";
 import { formatearFecha } from "./formatearFecha.js";
-import { showProductForm } from "./productos.js";
 
 // 🏷️ VARIABLES GLOBALES DE ESTADO
 let selectedEmployeeRow = null;
 let selectedEmployeeId = null;
+let empleadoModal; // Instancia única del modal
 
 // 🌐 EXPOSICIÓN DE FUNCIONES AL SCOPE GLOBAL
 window.editarEmpleado = editarEmpleado;
@@ -34,6 +34,12 @@ document.addEventListener("DOMContentLoaded", function () {
             clearEmployeeSelection();
         }
     });
+    empleadoModal = new bootstrap.Modal(document.getElementById("empleadoModal"));
+    // En DOMContentLoaded, agrega este evento: mejor manejo del modal segun xd xd 
+    empleadoModal._element.addEventListener('hidden.bs.modal', () => {
+        document.getElementById("form-empleado").reset();
+        clearEmployeeSelection();
+    });
 });
 
 // 🧩 FUNCIONES PRINCIPALES
@@ -48,12 +54,11 @@ export function mostrarFormularioEmpleado() {
         "empleado-telefono", "empleado-fecha"
     ]);
     const form = document.getElementById("form-empleado");
-    const modal = new bootstrap.Modal(document.getElementById("empleadoModal"));
     form.reset();
     form.dataset.empleadoId = "";
     document.getElementById("empleadoModalLabel").textContent = "Agregar Empleado";
     document.querySelector("#form-empleado button[type='submit']").textContent = "Guardar Empleado";
-    modal.show();
+    empleadoModal.show();
 }
 
 /**
@@ -154,9 +159,7 @@ export async function gestionarEmpleado(event) {
             await registrarNuevoEmpleado({ nombre, email, telefono, fechaNacimiento, puesto, genero });
         }
         // Cerrar el modal después de guardar
-        const modal = bootstrap.Modal.getInstance(document.getElementById("empleadoModal"));
-        modal.hide(); // Ocultar el modal después de guardar o actualizar
-        modal.style = "display: inline-block"
+        empleadoModal.hide(); // ✅ Usa la instancia global
 
         // 🔄 Refrescar la lista
         cargarEmpleados();
@@ -434,3 +437,4 @@ export async function registrarNuevoEmpleado(datos) {
         mostrarToast("❌ Error al registrar empleado", "error");
     }
 }
+

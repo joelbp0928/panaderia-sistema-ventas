@@ -652,6 +652,9 @@ async function cargarHistorialPedidos() {
     const badgeResultados = document.getElementById("badge-resultados");
     const cantidadPedidos = document.getElementById("cantidad-pedidos");
 
+    const lista = document.getElementById("lista-historial");
+    lista.innerHTML = "";
+    
     if (!pedidos.length) {
         badgeResultados.style.display = "none";
         lista.innerHTML = `<li class="list-group-item text-muted">No se encontraron pedidos con los filtros.</li>`;
@@ -663,8 +666,7 @@ async function cargarHistorialPedidos() {
     badgeResultados.style.display = "block";
     setTimeout(() => badgeResultados.classList.add("show"), 50);
 
-    const lista = document.getElementById("lista-historial");
-    lista.innerHTML = "";
+
 
     if (error) {
         lista.innerHTML = `<li class="list-group-item text-danger">Error al cargar pedidos</li>`;

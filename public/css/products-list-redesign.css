@@ -1,0 +1,130 @@
+/* Card Style */
+.card-product {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  height: 210px; /* Ajusta según necesites */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Animaciones y efectos hover */
+.card-product:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.card-product img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  transition: all 0.3s ease;
+}
+
+.card-product:hover img {
+  transform: scale(1.05); /* Efecto de zoom suave */
+}
+
+.card-body-product {
+  padding: 7px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.card-title-product {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  max-height: 50px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: auto; /* empuja el precio hacia abajo */
+}
+
+.card-price-product {
+  margin-top: auto;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #28a745;
+  align-self: flex-start; /* esto lo coloca a la izquierda */
+}
+
+/* Modal Styling */
+.modal-dialog {
+  max-width: 800px;
+}
+
+.modal-body {
+  font-size: 1rem;
+  color: #555;
+}
+
+/* Flexbox para la lista de productos */
+.row-product {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Asegura que cada tarjeta ocupe 4 columnas (3 tarjetas por fila) */
+.col-md-4 {
+  flex: 0 0 19.2%; /* Cada tarjeta ocupará un 32% de la fila */
+  max-width: 19.2%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card {
+    flex: 0 0 48%; /* Dos tarjetas por fila en pantallas más pequeñas */
+    max-width: 48%;
+  }
+}
+
+@media (max-width: 480px) {
+  .col-md-4 {
+    flex: 0 0 100%; /* Una tarjeta por fila en pantallas pequeñas */
+    max-width: 100%;
+  }
+}
+/* Modal Styling */
+.modal-dialog {
+  max-width: 800px;
+}
+
+.modal-body {
+  font-size: 1rem;
+  color: #555;
+}
+
+.modal-header {
+  background-color: var(--primary-color);
+  color: var(--light-color);
+}
+
+
+.card-price {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #28a745;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .ingredient-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .modal-dialog {
+    max-width: 90%; /* Asegura que el modal ocupe el 90% en pantallas pequeñas */
+  }
+
+  button[type="submit"] {
+    width: auto;
+  }
+}

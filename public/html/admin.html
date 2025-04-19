@@ -18,7 +18,7 @@
       href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
     />
     <link rel="stylesheet" href="../css/promotions-list-redesign.css" />
-
+    <link rel="stylesheet" href="../css/products-list-redesign.css" />
     <link rel="stylesheet" href="../css/stylesAdmin.css" />
   </head>
   <body>
@@ -605,10 +605,114 @@
           role="tabpanel"
           aria-labelledby="products-tab"
         >
-          <h2>Catálogo de Productos</h2>
+          <!--Catalogo en lista-->
+          <div class="container my-4">
+            <h2>Catálogo de Productos</h2>
+            <button class="btn btn-primary mb-3" id="btn-agregar-producto">
+              <i class="fas fa-plus-circle me-1"></i> Agregar Producto
+            </button>
+
+            <div class="row-product" id="product-catalog">
+              <!-- Los productos se cargarán aquí dinámicamente -->
+            </div>
+          </div>
+
+          <!-- 🔍 Modal Detalles de Producto -->
+          <div
+            class="modal fade"
+            id="detalleProductoModal"
+            tabindex="-1"
+            aria-labelledby="detalleProductoLabel"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+              <div class="modal-content rounded-4 shadow-lg">
+                <div class="modal-header rounded-top-4">
+                  <h5 class="modal-title" id="detalleProductoLabel">
+                    <i class="fas fa-cube me-2"></i>Detalles del Producto
+                  </h5>
+                  <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div class="modal-body p-4">
+                  <div class="row g-4">
+                    <!-- Imagen del Producto -->
+                    <div class="col-md-4 text-center">
+                      <img
+                        id="detalle-producto-imagen"
+                        src="#"
+                        alt="Imagen del producto"
+                        class="img-fluid rounded shadow-sm border border-light-subtle"
+                      />
+                    </div>
+
+                    <!-- Información del Producto -->
+                    <div class="col-md-8">
+                      <h4
+                        id="detalle-producto-nombre"
+                        class="fw-bold mb-2"
+                      ></h4>
+                      <p class="mb-1">
+                        <i class="fa-solid fa-layer-group text-muted"></i>
+                        <strong>Categoria:</strong>
+                        <span id="detalle-producto-categoria"></span>
+                      </p>
+                      <p class="mb-1">
+                        <i class="fas fa-calendar-day me-2 text-muted"></i>
+                        <strong>Fecha de Registro:</strong>
+                        <span id="detalle-producto-fecha-registro"></span>
+                      </p>
+                      <p class="mb-1">
+                        <i class="fas fa-dollar-sign me-2 text-muted"></i>
+                        <strong>Precio:</strong>
+                        <span id="detalle-producto-precio"></span>
+                      </p>
+                      <p class="mb-1">
+                        <i class="fa-solid fa-cubes text-muted"></i>
+                        <strong>Stock:</strong>
+                        <span id="detalle-producto-stock"></span>
+                      </p>
+                      <p class="mb-1">
+                        <i
+                          class="fa-solid fa-magnifying-glass-dollar text-muted"
+                        ></i>
+                        <strong>Costo Unitario:</strong>
+                        <span id="detalle-producto-costo-unitario"></span>
+                      </p>
+                      <p class="mb-0">
+                        <i class="fas fa-boxes me-2 text-muted"></i>
+                        <strong>Ingredientes:</strong>
+                        <span id="detalle-producto-ingredientes"></span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-footer justify-content-between px-4 py-3">
+                  <button
+                    class="btn btn-outline-danger"
+                    id="btn-eliminar-producto"
+                  >
+                    <i class="fas fa-trash me-2"></i>Eliminar
+                  </button>
+                  <button
+                    class="btn btn-outline-primary"
+                    id="btn-editar-producto"
+                  >
+                    <i class="fas fa-pen-to-square me-2"></i>Editar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!--     <h2>Catálogo de Productos</h2>
           <button class="btn btn-primary mb-3" id="btn-agregar-producto">
             <i class="fas fa-plus-circle me-1"></i>Agregar Producto
-          </button>
+          </button>-->
           <!-- Modal para agregar/editar producto -->
           <div
             class="modal fade"
@@ -626,8 +730,8 @@
                   <button
                     type="button"
                     class="btn-close"
+                    aria-label="Cerrar modal"
                     data-bs-dismiss="modal"
-                    aria-label="Cerrar"
                   ></button>
                 </div>
                 <div class="modal-body">
@@ -707,19 +811,28 @@
                       id="selected-ingredients-list"
                       class="form-section"
                     ></div>
-                    <button
-                      type="submit"
-                      class="btn btn-success"
-                      id="product-form-submit"
-                    >
-                      Guardar Producto
-                    </button>
+                    <div class="text-end">
+                      <button
+                        type="button"
+                        class="btn btn-secondary me-2"
+                        data-bs-dismiss="modal"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        class="btn btn-success"
+                        id="product-form-submit"
+                      >
+                        Guardar Producto
+                      </button>
+                    </div>
                   </form>
                 </div>
               </div>
             </div>
           </div>
-          <!-- Modal de Confirmación de Eliminación -->
+          <!-- Modal Confirmación Básica (Eliminar Producto) -->
           <div
             class="modal fade"
             id="deleteProductModal"
@@ -731,7 +844,7 @@
               <div class="modal-content">
                 <div class="modal-header">
                   <h5 class="modal-title" id="deleteProductModalLabel">
-                    Confirmar Eliminación
+                    ¿Estás seguro de eliminar este producto?
                   </h5>
                   <button
                     type="button"
@@ -741,10 +854,16 @@
                   ></button>
                 </div>
                 <div class="modal-body">
-                  ⚠️ ¿Estás seguro de que deseas eliminar este producto? Esta
-                  acción es irreversible.
+                  <p>Estás por eliminar un producto. ¿Deseas continuar?</p>
                 </div>
                 <div class="modal-footer">
+                  <button
+                    type="button"
+                    class="btn btn-danger"
+                    id="confirmDeleteProduct"
+                  >
+                    Eliminar Producto
+                  </button>
                   <button
                     type="button"
                     class="btn btn-secondary"
@@ -752,24 +871,70 @@
                   >
                     Cancelar
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Modal Confirmación de Relaciones -->
+          <div
+            class="modal fade"
+            id="deleteRelationsModal"
+            tabindex="-1"
+            aria-labelledby="deleteRelationsModalLabel"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="deleteRelationsModalLabel">
+                    ¿Eliminar también las relaciones del producto?
+                  </h5>
+                  <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div class="modal-body">
+                  <p>
+                    Este producto tiene relaciones con otros pedidos. ¿Deseas
+                    eliminar también esas relaciones?
+                  </p>
+                </div>
+                <div class="modal-footer">
                   <button
                     type="button"
                     class="btn btn-danger"
-                    id="confirm-delete-btn-producto"
+                    id="confirmDeleteRelations"
                   >
-                    Eliminar
+                    Eliminar Relaciones y Producto
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-warning"
+                    id="confirmKeepRelations"
+                  >
+                    Mantener Relaciones (Actualizar a null)
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                  >
+                    Cancelar
                   </button>
                 </div>
               </div>
             </div>
           </div>
           <!-- Contenedor para los botones de eliminar y editar cantidad -->
-          <div class="button-container">
-            <!-- Botón de eliminar (bote de basura) -->
+          <!--          <div class="button-container">
+             Botón de eliminar (bote de basura) 
             <div id="delete-product-btn" class="button-delete">
               <i class="fa-solid fa-trash"></i>
             </div>
-            <!-- Botón de actualizar cantidad (lápiz) -->
+            Botón de actualizar cantidad (lápiz) 
             <div id="edit-product-btn" class="button-edit">
               <i class="fa-regular fa-pen-to-square"></i>
             </div>
@@ -792,9 +957,9 @@
               </tr>
             </thead>
             <tbody id="products-list">
-              <!-- Los productos se cargarán aquí dinámicamente -->
+               Los productos se cargarán aquí dinámicamente
             </tbody>
-          </table>
+          </table>-->
         </div>
 
         <!-- Categorías -->
@@ -930,13 +1095,13 @@
           <div class="container mt-4">
             <!-- Botones superiores -->
             <div class="d-flex justify-content-between mb-4">
-              <button
+              <!--  <button
                 class="btn btn-primary"
                 data-bs-toggle="modal"
                 data-bs-target="#sugerenciaModal"
               >
                 <i class="fas fa-lightbulb me-2"></i>Crear Sugerencia
-              </button>
+              </button>-->
               <button
                 class="btn btn-primary"
                 data-bs-toggle="modal"
@@ -1012,7 +1177,8 @@
                         <span id="detalle-promo-fechas-fin"></span>
                       </p>
                       <p class="mb-1">
-                        <i class="fas fa-cogs me-2 text-muted"></i><strong>Condiciones:</strong>
+                        <i class="fas fa-cogs me-2 text-muted"></i
+                        ><strong>Condiciones:</strong>
                         <span id="detalle-promo-condiciones"></span>
                       </p>
                       <p class="mb-0">
@@ -1211,9 +1377,7 @@
                           id="get-quantity"
                           placeholder="Ejemplo: 1"
                         />
-                        <label
-                          for="promotion-products-buy"
-                          class="form-label"
+                        <label for="promotion-products-buy" class="form-label"
                           >Productos a comprar</label
                         >
                         <select
@@ -1228,23 +1392,23 @@
                           seleccionar múltiples productos</small
                         >
                         <div>
-                        <label
-                          for="promotion-products-free"
-                          class="form-label"
-                          >Productos de regalo</label
-                        >
-                        <select
-                          multiple
-                          class="form-select"
-                          id="promotion-products-free"
-                        >
-                          <!-- Productos se cargarán dinámicamente aquí -->
-                        </select>
-                        <small class="text-muted"
-                          >Mantén presionado Ctrl (o Cmd en Mac) para
-                          seleccionar múltiples productos</small
-                        >
-                      </div>
+                          <label
+                            for="promotion-products-free"
+                            class="form-label"
+                            >Productos de regalo</label
+                          >
+                          <select
+                            multiple
+                            class="form-select"
+                            id="promotion-products-free"
+                          >
+                            <!-- Productos se cargarán dinámicamente aquí -->
+                          </select>
+                          <small class="text-muted"
+                            >Mantén presionado Ctrl (o Cmd en Mac) para
+                            seleccionar múltiples productos</small
+                          >
+                        </div>
                       </div>
 
                       <div id="bogo-config" class="discount-option d-none">

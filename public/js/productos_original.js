@@ -4,32 +4,23 @@ import { mostrarToast, marcarErrorCampo, limpiarErrorCampo, showLoading, hideLoa
 import { formatearFecha } from "./formatearFecha.js";
 
 // 🏷️ VARIABLES GLOBALES DE ESTADO
-let productModal;
-let productModalDetalles;
-
+let selectedProductRow = null;
+let selectedProductId = null;
 // Inicializar al cargar la página
+let productModal;
+// Hacer accesibles globalmente las funciones necesarias
 window.editarProducto = editarProducto;
 window.eliminarProducto = eliminarProducto;
 window.updateIngredientsList = updateIngredientsList;
 
 // 🚀 INICIALIZACIÓN AL CARGAR LA PÁGINA
 document.addEventListener("DOMContentLoaded", function () {
-    // setupProductRowSelection();
+    setupProductRowSelection();
     cargarProductos();
-    // Inicializar el modal de producto
-    productModal = new bootstrap.Modal(document.getElementById('productModal'), {
-        //   keyboard: false,
-        //   backdrop: 'static'
-    });
-
-    productModalDetalles = new bootstrap.Modal(document.getElementById('detalleProductoModal'), {
-        //   keyboard: false,
-        //   backdrop: 'static'
-    });
-
+    productModal = configurarModalProducto();
     // Evento para agregar producto
     document.getElementById("btn-agregar-producto").addEventListener("click", () => {
-        //   clearProductSelection();
+        clearProductSelection();
         showProductForm();
     });
 
@@ -37,47 +28,35 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("product-form").addEventListener("submit", gestionarProducto);
 
     // Deseleccionar al hacer clic fuera
-    /*  document.addEventListener('click', (e) => {
-          if (!e.target.closest('#products-list') && !e.target.closest('.product-actions')) {
-           //   clearProductSelection();
-          }
-      });*/
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#products-list') && !e.target.closest('.product-actions')) {
+            clearProductSelection();
+        }
+    });
 });
 
 // 📌 Mostrar el formulario de producto dentro del modal
 export function showProductForm() {
-    // Limpiar el formulario
+    limpiarErrorCampo([
+        "product-category"
+    ]);
     document.getElementById("product-form").reset();
-    document.getElementById("product-form").dataset.productId = "";
-
-    // Limpiar vista previa de imagen
-    const imgPreview = document.getElementById("product-image-preview");
-    imgPreview.src = "";
-    imgPreview.style.display = "none";
-    delete imgPreview.dataset.originalUrl;
-
-    // Limpiar selección de ingredientes
-    document.querySelectorAll("#product-ingredients input[type='checkbox']").forEach(checkbox => {
-        checkbox.checked = false;
-        const quantityInput = document.getElementById(`quantity-${checkbox.value}`);
-        if (quantityInput) {
-            quantityInput.value = "";
-            quantityInput.style.display = "none";
-        }
+    document.getElementById("product-image-preview").src = ""; // Limpiar la vista previa de la imagen
+    document.getElementById("selected-ingredients-list").innerHTML = ''; //limpiamos lista de ingredientes
+    document.getElementById("productModalLabel").innerText = "Agregar Producto"; // Cambiar título
+    document.querySelector("#product-form button[type='submit']").innerText = "Guardar Producto"; // Cambiar texto del botón
+    document.getElementById("product-form").dataset.productId = ""; // Limpiar el ID
+    // Ocultar todos los inputs de cantidad (inicialmente)
+    const quantityInputs = document.querySelectorAll(".ingredient-quantity");
+    quantityInputs.forEach(input => {
+        input.style.display = "none"; // Ocultar todos los inputs de cantidad
     });
-
-    // Configurar para "agregar nuevo"
-    document.getElementById("productModalLabel").textContent = "Agregar Producto";
-    document.querySelector("#product-form button[type='submit']").innerHTML =
-        '<i class="fas fa-check-circle me-2"></i>Guardar Producto';
-
-    // Cargar categorías e ingredientes
+    // Cargar las categorías al abrir el formulario
     cargarCategorias();
-    loadIngredients();
-
-    // Mostrar el modal
+    // Mostrar modal
     productModal.show();
 }
+
 // 📌 Función para gestionar el producto (crear o actualizar)
 export async function gestionarProducto(event) {
     event.preventDefault();
@@ -155,28 +134,28 @@ function validarFormulario({ nombre, precio, stock, categoria, ingredientes, ima
     const MAX_SIZE_BYTES = 2 * 1024 * 1024;
 
     if (!nombre || isNaN(precio) || isNaN(stock)) {
-        mostrarToast("⚠️ Todos los campos son obligatorios", "warning");
+        mostrarToast("⚠️ Todos los campos son obligatorios", "error");
         return false;
     }
 
     if (categoria === "" || categoria === "Seleccionar Categoría") {
-        mostrarToast("⚠️ Por favor selecciona una categoría", "warning");
+        mostrarToast("⚠️ Por favor selecciona una categoría", "error");
         marcarErrorCampo("product-category", "⚠️ Por favor selecciona una categoría")
         return false;
     }
 
     if (ingredientes.length === 0) {
-        mostrarToast("⚠️ Debes seleccionar al menos un ingrediente", "warning");
+        mostrarToast("⚠️ Debes seleccionar al menos un ingrediente", "error");
         return false;
     }
 
     if (imagenFile) {
         if (!ALLOWED_TYPES.includes(imagenFile.type)) {
-            mostrarToast("⚠️ Tipo de imagen no permitido", "warning");
+            mostrarToast("⚠️ Tipo de imagen no permitido", "error");
             return false;
         }
         if (imagenFile.size > MAX_SIZE_BYTES) {
-            mostrarToast("⚠️ La imagen excede los 2MB permitidos", "warning");
+            mostrarToast("⚠️ La imagen excede los 2MB permitidos", "error");
             return false;
         }
     }
@@ -227,7 +206,7 @@ async function eliminarImagenAnterior(idProducto) {
 function limpiarYOcultarFormulario() {
     document.getElementById("product-form").reset();
     productModal.hide();
-    //  clearProductSelection();
+    clearProductSelection();
 }
 
 async function calcularPrecioCantidadUsada(ingredienteId, cantidadUsada) {
@@ -301,6 +280,7 @@ async function calcularCostoProducto(ingredientesSeleccionados, cantidades, cant
 // Crear un nuevo producto en la base de datos
 async function agregarProducto(data) {
     try {
+        console.log(data)
         const { data: product, error } = await supabase
             .from("productos")
             .insert([{
@@ -340,6 +320,7 @@ async function agregarProducto(data) {
 // Actualizar un producto existente en la base de datos
 async function actualizarProducto(idProducto, data) {
     try {
+        console.log(data.categoria)
         const { error } = await supabase
             .from("productos")
             .update({
@@ -363,7 +344,7 @@ async function actualizarProducto(idProducto, data) {
         //  cargarIngredientes();
         // ✅ Mostrar mensaje de éxito
         mostrarToast("✅ Producto actualizado correctamente.", "success");
-        productModalDetalles.hide();
+
     } catch (error) {
         console.error("❌ Error al actualizar el producto:", error);
         mostrarToast("❌ Error al actualizar el producto", "error");
@@ -372,71 +353,66 @@ async function actualizarProducto(idProducto, data) {
 
 // Función para preseleccionar ingredientes en edición
 async function editarProducto(idProducto) {
-    try {
-        // 1. Mostrar el formulario limpio primero
-        showProductForm();
-        //  selectProductRow(idProducto);
+    console.log("editando Producto:", idProducto);
+    showProductForm();
+    selectProductRow(idProducto);
 
-        // 2. Obtener los datos del producto
-        const { data: producto, error } = await supabase
-            .from("productos")
-            .select(`*, categoria:categoria_id (id, nombre)`)
-            .eq("id", idProducto)
-            .single();
+    // Obtener los detalles del producto desde Supabase
+    const { data: producto, error } = await supabase
+        .from("productos")
+        .select(`*, categoria:categoria_id (id, nombre)`)
+        .eq("id", idProducto)
+        .single();
 
-        if (error) throw error;
+    if (error) throw error;
 
-        // 3. Llenar los campos del formulario
-        document.getElementById("product-name").value = producto.nombre;
-        document.getElementById("product-price").value = producto.precio;
-        document.getElementById("product-stock").value = producto.stock;
-        document.getElementById("product-category").value = producto.categoria?.id || "";
+    // Llenar los campos del formulario con los detalles del producto
+    document.getElementById("product-name").value = producto.nombre;
+    document.getElementById("product-price").value = producto.precio;
+    document.getElementById("product-stock").value = producto.stock;
+    console.log(producto.categoria_id)
+    document.getElementById("product-category").value = producto.categoria.id;
 
-        // 4. Mostrar la imagen si existe
-        const imgPreview = document.getElementById("product-image-preview");
-        if (producto.imagen_url) {
-            imgPreview.src = producto.imagen_url;
-            imgPreview.style.display = "block";
-            // Guardar la URL original para posible eliminación
-            imgPreview.dataset.originalUrl = producto.imagen_url;
-        } else {
-            imgPreview.style.display = "none";
-        }
+    // Mostrar la imagen si existe
+    const imagen = producto.imagen_url ? producto.imagen_url : ""; // Imagen por defecto si no tiene imagen
+    document.getElementById("product-image-preview").src = imagen; // Mostrar la imagen en el formulario
 
-        // 5. Obtener y marcar los ingredientes asociados
-        const { data: ingredientes, error: ingredientesError } = await supabase
-            .from("productos_ingredientes")
-            .select("ingrediente_id, cantidad_usada")
-            .eq("producto_id", idProducto);
+    // Obtener los ingredientes del producto desde la tabla productos_ingredientes
+    const { data: ingredientes, error: ingredientesError } = await supabase
+        .from("productos_ingredientes")
+        .select("ingrediente_id, cantidad_usada")
+        .eq("producto_id", idProducto);
 
-        if (ingredientesError) throw ingredientesError;
+    if (ingredientesError) throw ingredientesError;
 
-        document.querySelectorAll("#product-ingredients input[type='checkbox']").forEach(checkbox => {
-            const ingrediente = ingredientes.find(i => i.ingrediente_id == checkbox.value);
-            if (ingrediente) {
+    // Obtener los checkboxes de ingredientes
+    const ingredientCheckboxes = document.querySelectorAll("#product-ingredients input[type='checkbox']");
+
+    // Pre-seleccionar los checkboxes de los ingredientes que ya están asociados al producto
+    ingredientCheckboxes.forEach(checkbox => {
+        // Marcar el checkbox si el ingrediente está asociado al producto
+        ingredientes.forEach(ingrediente => {
+            if (checkbox.value == ingrediente.ingrediente_id) {
                 checkbox.checked = true;
+
+                // Obtener el input de cantidad correspondiente al checkbox seleccionado
                 const quantityInput = document.getElementById(`quantity-${ingrediente.ingrediente_id}`);
                 if (quantityInput) {
-                    quantityInput.value = ingrediente.cantidad_usada;
-                    quantityInput.style.display = "block";
+                    quantityInput.value = ingrediente.cantidad_usada; // Actualizar el valor con la cantidad usada
+                    quantityInput.style.display = "block"; // Asegurar que esté visible
                 }
+
+                console.log("Ingrediente seleccionado:", ingrediente);
             }
         });
+    });
 
-        // 6. Configurar el formulario para edición
-        document.getElementById("productModalLabel").textContent = "Editar Producto";
-        document.querySelector("#product-form button[type='submit']").innerHTML =
-            '<i class="fas fa-save me-2"></i>Actualizar Producto';
-        document.getElementById("product-form").dataset.productId = idProducto;
+    // Cambiar el título del modal y el botón de acción
+    document.getElementById("productModalLabel").innerText = "Editar Producto";
+    document.querySelector('#product-form button[type="submit"]').innerText = "Actualizar Producto";
 
-        // 7. Mostrar el modal
-        productModal.show();
-
-    } catch (error) {
-        console.error("Error al cargar producto para edición:", error);
-        mostrarToast("Error al cargar datos del producto", "error");
-        productModal.hide();
-    }
+    const formulario = document.getElementById("product-form");
+    formulario.dataset.productId = idProducto;
 }
 
 /**
@@ -473,6 +449,7 @@ export async function createProductoIngredientes(productoId, ingredientesIds, ca
     }
 }
 
+
 /**
  * Elimina todas las relaciones de un producto con ingredientes
  * @param {number} productoId - ID del producto
@@ -492,149 +469,24 @@ export async function deleteProductoIngredientes(productoId) {
     }
 }
 
-// 🗑️ Eliminar un producto con confirmación de relaciones
+// 🗑️ Elimina un producto con confirmación
 async function eliminarProducto(idProducto) {
-    // 1. Mostrar el modal de confirmación inicial para eliminar el producto
-    const modalConfirmacion = new bootstrap.Modal(document.getElementById('deleteProductModal'));
-    modalConfirmacion.show();
+    console.log("Eliminando producto:", idProducto);
 
-    // 2. Manejar la confirmación de eliminar el producto
-    document.getElementById("confirmDeleteProduct").addEventListener("click", async () => {
-        // 3. Verificar si el producto tiene relaciones en la tabla 'pedido_productos'
-        const { data: relaciones, error: relacionesError } = await supabase
-            .from("pedido_productos")
-            .select("*")
-            .eq("producto_id", idProducto);
+    // Mostrar el modal de confirmación
+    const modal = new bootstrap.Modal(document.getElementById('deleteProductModal'));
+    modal.show();
 
-        if (relacionesError) {
-            console.error("Error al verificar relaciones:", relacionesError);
-            mostrarToast("❌ Error al verificar las relaciones.", "error");
-            return;
+    // Manejar el evento de confirmación del modal
+    document.getElementById("confirm-delete-btn-producto").addEventListener("click", async () => {
+        const success = await eliminarProductoBackend(idProducto);
+        if (success) {
+            modal.hide(); // Cerrar el modal solo si la eliminación fue exitosa
+            clearProductSelection();
         }
-
-        // 4. Si tiene relaciones, mostrar el modal de confirmación de relaciones
-        if (relaciones.length > 0) {
-            const modalRelaciones = new bootstrap.Modal(document.getElementById('deleteRelationsModal'));
-            modalRelaciones.show();
-
-            // 5. Si el usuario decide eliminar las relaciones y el producto
-            document.getElementById("confirmDeleteRelations").addEventListener("click", async () => {
-                await eliminarProductoConRelaciones(idProducto); // Eliminar producto y relaciones
-                modalRelaciones.hide();
-                modalConfirmacion.hide();
-            });
-
-            // 6. Si el usuario decide mantener las relaciones (ponerlas a null)
-            document.getElementById("confirmKeepRelations").addEventListener("click", async () => {
-                await actualizarRelacionPedido(idProducto); // Solo poner relaciones a null
-                modalRelaciones.hide();
-                modalConfirmacion.hide();
-            });
-        } else {
-            // Si no tiene relaciones, proceder a eliminar el producto directamente
-            await eliminarProductoConRelaciones(idProducto); // Eliminar producto
-            modalConfirmacion.hide();
-        }
-        productModalDetalles.hide();
-    });
+    }, { once: true }); // Usamos {once: true} para que el evento se ejecute solo una vez
 }
 
-// 🗑️ Eliminar el producto y sus relaciones
-async function eliminarProductoConRelaciones(idProducto) {
-    try {
-        // 1. Obtener la imagen del producto antes de eliminarlo
-        const { data: producto, error: productoError } = await supabase
-            .from("productos")
-            .select("imagen_url")
-            .eq("id", idProducto)
-            .single();
-
-        if (productoError) throw productoError;
-
-        // Eliminar la imagen de Firebase Storage si existe
-        if (producto.imagen_url) {
-            const imagePath = producto.imagen_url.split('/o/')[1].split('?')[0]; // Obtener el path
-            const imageRef = ref(storage, decodeURIComponent(imagePath));
-            await deleteObject(imageRef);
-        }
-
-        // 2. Eliminar las relaciones en 'pedido_productos'
-        const { error: eliminarRelacionesError } = await supabase
-            .from("pedido_productos")
-            .delete()
-            .eq("producto_id", idProducto);
-
-        if (eliminarRelacionesError) {
-            throw new Error("No se pudieron eliminar las relaciones en pedidos.");
-        }
-
-        // 3. Eliminar el producto de la tabla 'productos'
-        const { error: eliminarProductoError } = await supabase
-            .from("productos")
-            .delete()
-            .eq("id", idProducto);
-
-        if (eliminarProductoError) {
-            throw new Error("No se pudo eliminar el producto.");
-        }
-
-        // 3. Recargar los productos
-        cargarProductos(true);
-        mostrarToast("✅ Producto eliminado completamente.", "success");
-    } catch (error) {
-        console.error("❌ Error al eliminar el producto:", error);
-        mostrarToast(`❌ Error: ${error.message}`, "error");
-    }
-}
-
-// 🔄 Actualizar las relaciones de los pedidos a null si no se desea eliminar
-async function actualizarRelacionPedido(idProducto) {
-    try {
-        // 1. Obtener la imagen del producto antes de eliminarlo
-        const { data: producto, error: productoError } = await supabase
-            .from("productos")
-            .select("imagen_url")
-            .eq("id", idProducto)
-            .single();
-
-        if (productoError) throw productoError;
-
-        // Eliminar la imagen de Firebase Storage si existe
-        if (producto.imagen_url) {
-            const imagePath = producto.imagen_url.split('/o/')[1].split('?')[0]; // Obtener el path
-            const imageRef = ref(storage, decodeURIComponent(imagePath));
-            await deleteObject(imageRef);
-        }
-
-        // 2. Actualizar las relaciones en 'pedido_productos' a null
-        const { error: actualizarError } = await supabase
-            .from("pedido_productos")
-            .update({ producto_id: null }) // Establecer el producto como null
-            .eq("producto_id", idProducto);
-
-        if (actualizarError) {
-            throw new Error("No se pudieron actualizar las relaciones.");
-        }
-
-        // 3. Eliminar el producto de la tabla 'productos'
-        const { error: eliminarProductoError } = await supabase
-            .from("productos")
-            .delete()
-            .eq("id", idProducto);
-
-        if (eliminarProductoError) {
-            throw new Error("No se pudo eliminar el producto.");
-        }
-
-        // Recargar los productos
-        cargarProductos(true);
-        mostrarToast("✅ Relaciones actualizadas a null.", "success");
-    } catch (error) {
-        console.error("❌ Error al actualizar las relaciones:", error);
-        mostrarToast(`❌ Error: ${error.message}`, "error");
-    }
-}
-/*
 // 🗑️ Función mejorada para eliminar completamente un producto
 async function eliminarProductoBackend(idProducto) {
     try {
@@ -647,40 +499,26 @@ async function eliminarProductoBackend(idProducto) {
 
         if (productoError) throw productoError;
 
-        // 2. Eliminar las relaciones en productos_promocion primero
-        const { error: eliminarRelacionesError } = await supabase
-            .from("productos_promocion")
-            .delete()
-            .eq("producto_id", idProducto);
-
-        if (eliminarRelacionesError) {
-            throw new Error("No se pudieron eliminar las relaciones del producto con promociones.");
-        }
-
-        // 3. Eliminar las relaciones en productos_ingredientes
-        const { error: eliminarIngredientesError } = await supabase
-            .from("productos_ingredientes")
-            .delete()
-            .eq("producto_id", idProducto);
-
-        if (eliminarIngredientesError) {
-            throw new Error("No se pudieron eliminar las relaciones con los ingredientes.");
-        }
-
-        // 4. Verificar si existe imagen y eliminarla de Firebase Storage
+        // 2. Eliminar la imagen de Firebase Storage si existe
         if (producto.imagen_url) {
             try {
+                // Método más robusto para extraer el path de Firebase Storage
                 let imagePath = producto.imagen_url;
 
-                // Si es una URL completa de Firebase Storage
-                if (producto.imagen_url.startsWith('https://firebasestorage.googleapis.com')) {
+                // Si es una URL completa (https://...)
+                if (producto.imagen_url.startsWith('http')) {
                     const url = new URL(producto.imagen_url);
+                    // Extraer el path entre '/o/' y '?alt=media'
                     const pathMatch = url.pathname.match(/\/o\/(.+?)(?:\?|$)/);
                     if (pathMatch && pathMatch[1]) {
                         imagePath = decodeURIComponent(pathMatch[1]);
                     } else {
-                        throw new Error("URL de Firebase no tiene el formato esperado");
+                        throw new Error("Formato de URL no reconocido");
                     }
+                }
+                // Si ya es un path directo (gs://...)
+                else if (producto.imagen_url.startsWith('gs://')) {
+                    imagePath = producto.imagen_url.replace('gs://', '');
                 }
 
                 const imageRef = ref(storage, imagePath);
@@ -688,12 +526,22 @@ async function eliminarProductoBackend(idProducto) {
                 console.log("✅ Imagen eliminada de Firebase Storage:", imagePath);
             } catch (storageError) {
                 console.warn("⚠️ No se pudo eliminar la imagen de Firebase Storage:", storageError);
+                // Continuamos aunque falle la eliminación de la imagen
+                return;
             }
-        } else {
-            console.warn("⚠️ El producto no tiene imagen URL. No se eliminará ninguna imagen.");
         }
 
-        // 5. Finalmente, eliminar el producto
+        // 3. Eliminar las relaciones en productos_ingredientes (primero)
+        const { error: eliminarRelacionesError } = await supabase
+            .from("productos_ingredientes")
+            .delete()
+            .eq("producto_id", idProducto);
+
+        if (eliminarRelacionesError) {
+            throw new Error("No se pudieron eliminar las relaciones del producto con los ingredientes.");
+        }
+
+        // 4. Finalmente, eliminar el producto
         const { error: eliminarProductoError } = await supabase
             .from("productos")
             .delete()
@@ -705,6 +553,7 @@ async function eliminarProductoBackend(idProducto) {
 
         // Recargar los datos
         cargarProductos(true);
+        //  cargarIngredientes();
 
         mostrarToast("✅ Producto eliminado completamente.", "success");
         return true;
@@ -713,7 +562,7 @@ async function eliminarProductoBackend(idProducto) {
         mostrarToast(`❌ Error: ${error.message}`, "error");
         return false;
     }
-}*/
+}
 // Función para agregar o editar el producto con los ingredientes
 export async function loadIngredients() {
     // showLoading();
@@ -823,8 +672,25 @@ async function cargarCategorias() {
     }
 }
 
-export async function cargarProductos() {
+// 📋 Carga la lista de productos
+// Cache simple
+let cacheProductos = null;
+
+export async function cargarProductos(forceRefresh = false) {
     try {
+        showLoading();
+
+        // Mostrar skeleton o placeholder
+        document.getElementById("products-list").innerHTML =
+            '<tr><td colspan="8"><div class="skeleton-loader"></div></td></tr>'.repeat(5);
+
+        // Usar cache si está disponible y no se fuerza refresco
+        if (cacheProductos && !forceRefresh) {
+            renderizarProductos(cacheProductos);
+            return;
+        }
+
+        // Consulta optimizada
         const { data, error } = await supabase
             .from("productos")
             .select(`
@@ -837,111 +703,88 @@ export async function cargarProductos() {
             `)
             .order('nombre');
 
-
         if (error) throw error;
 
-        const catalogoContainer = document.getElementById("product-catalog");
-        catalogoContainer.innerHTML = '';  // Limpiar contenedor
+        // Guardar en cache y renderizar
+        cacheProductos = data;
+        renderizarProductos(data);
 
-        // Iterar sobre los productos
-        data.forEach(producto => {
-            const card = document.createElement("div");
-            card.classList.add("col-md-4");
-            card.innerHTML = `
-                <div class="card-product" data-id="${producto.id}" data-bs-toggle="modal" data-bs-target="#detalleProductoModal">
-                    <img src="${producto.imagen_url}" alt="${producto.nombre}" class="card-img-top-product">
-                    <div class="card-body-product">
-                        <h5 class="card-title-product">${producto.nombre}</h5>
-                        <p class="card-price-product">$${producto.precio}</p>
-                    </div>
-                </div>
-            `;
-            catalogoContainer.appendChild(card);
-
-            // Añadir evento de clic en la card para mostrar los detalles del producto
-            card.addEventListener("click", () => {
-                mostrarDetallesProducto(producto.id);
-            });
-        });
     } catch (error) {
-        console.error("Error al cargar los productos:", error);
+        console.error("Error al cargar productos:", error);
+        mostrarToast("Error al cargar productos", "error");
+    } finally {
+        hideLoading();
     }
 }
 
-// Función para cargar los detalles del producto en el modal
-async function mostrarDetallesProducto(idProducto) {
-    try {
-        const { data: producto, error } = await supabase
-            .from("productos")
-            .select(`
-            nombre, precio, stock, categoria_id, imagen_url, fecha_registro, precio_unitario,
-            productos_ingredientes:productos_ingredientes(ingrediente_id, cantidad_usada, precio_cantidad_usada),
-            categorias:categoria_id(nombre)
-        `)
-            .eq("id", idProducto)
-            .single();
+function renderizarProductos(productos) {
+    const fragment = document.createDocumentFragment();
 
-        if (error) throw error;
+    productos.forEach(producto => {
+        const fila = document.createElement("tr");
+        fila.dataset.id = producto.id;
+        const fechaRegistro = formatearFecha(producto.fecha_registro);
+        fila.innerHTML = `
+            <td><img src="${producto.imagen_url || ''}" alt="${producto.nombre}" 
+                 class="img-thumbnail" loading="lazy"></td>
+            <td>${producto.nombre}</td>
+            <td>${producto.categoria?.nombre || "Sin categoría"}</td>
+            <td>$${producto.precio.toFixed(2)}</td>
+            <td>${producto.stock}</td>
+            <td>${formatearIngredientes(producto.productos_ingredientes)}</td>
+            <td>$${producto.precio_unitario.toFixed(2)}</td>
+            <td>$${producto.precio_total.toFixed(2)}</td>
+            <rd>${fechaRegistro}</td>
+        `;
+        fragment.appendChild(fila);
+    });
 
-        // Llenar el modal con los datos del producto
-        document.getElementById("detalle-producto-nombre").innerText = producto.nombre;
-        document.getElementById("detalle-producto-precio").innerText = `$${producto.precio.toFixed(2)}`;
-        document.getElementById("detalle-producto-stock").innerText = producto.stock;
-        document.getElementById("detalle-producto-categoria").innerText = producto.categorias?.nombre || "Sin categoría";
-        document.getElementById("detalle-producto-fecha-registro").innerText = formatearFecha(producto.fecha_registro);
-        document.getElementById("detalle-producto-costo-unitario").innerText = `$${producto.precio_unitario.toFixed(2)}`;
-        // Mostrar imagen
-        document.getElementById("detalle-producto-imagen").src = producto.imagen_url;
-
-        // Mostrar ingredientes
-        // Mostrar ingredientes
-        const ingredientes = await Promise.all(producto.productos_ingredientes.map(async (i) => {
-            // Consultar el nombre del ingrediente desde la base de datos
-            const { data: ingrediente, error: ingredienteError } = await supabase
-                .from("ingredientes")
-                .select("nombre, medida")
-                .eq("id", i.ingrediente_id)
-                .single();
-
-            if (ingredienteError) {
-                console.error("Error al obtener el ingrediente:", ingredienteError);
-                return `${i.ingrediente_id}: ${i.cantidad_usada} x $${i.precio_cantidad_usada.toFixed(2)}`;  // Mostrar solo el id si falla la consulta
-            }
-
-            // Formatear el ingrediente con nombre, cantidad y precio
-            return `${ingrediente.nombre}: ${i.cantidad_usada}${ingrediente.medida} x $${i.precio_cantidad_usada.toFixed(2)}`;
-        }));
-
-        // Unir todos los ingredientes con una coma
-        document.getElementById("detalle-producto-ingredientes").innerText = ingredientes.join(", ");
-        // Mostrar el modal
-        productModalDetalles.show(); // ✅ Usa la instancia global ya creada
-
-
-        document.getElementById("btn-eliminar-producto").removeEventListener("click", eliminarProducto);
-        document.getElementById("btn-editar-producto").removeEventListener("click", editarProducto);
-        // Acción de eliminar producto
-        document.getElementById("btn-eliminar-producto").onclick = () => eliminarProducto(idProducto);
-        document.getElementById("btn-editar-producto").onclick = () => editarProducto(idProducto);
-
-    } catch (error) {
-        console.error("Error al cargar los detalles del producto:", error);
-        mostrarToast("Error al cargar los detalles del producto", "error");
-    }
+    const tabla = document.getElementById("products-list");
+    tabla.innerHTML = "";
+    tabla.appendChild(fragment);
 }
-/*
-// Función para abrir los detalles al hacer clic en una tarjeta
+
+function formatearIngredientes(ingredientes) {
+    return ingredientes?.map(i =>
+        `${i.ingrediente.nombre}: ${parseFloat(i.cantidad_usada).toFixed(2)} ${i.ingrediente.medida} x $${i.precio_cantidad_usada.toFixed(2)}`
+    ).join(", ") || "Sin ingredientes";
+}
+
+//🖱️ Configura la selección de filas
 function setupProductRowSelection() {
-    const productCards = document.querySelectorAll('.card-product');
-    productCards.forEach(card => {
-        card.addEventListener('click', () => {
-            const productId = card.dataset.id;
-            console.log("aquiiii")
-            mostrarDetallesProducto(productId);
-        });
+    const table = document.getElementById('products-list');
+    if (!table) return;
+
+    table.addEventListener('click', (e) => {
+        const row = e.target.closest('tr[data-id]');
+        if (!row) return;
+
+        const productId = row.dataset.id;
+        if (selectedProductId === productId) {
+            clearProductSelection();
+        } else {
+            selectProductRow(productId);
+        }
+    });
+
+    const deleteBtn = document.getElementById('delete-product-btn');
+    const editBtn = document.getElementById('edit-product-btn');
+
+    // Evento para el botón de eliminar
+    deleteBtn.addEventListener('click', () => {
+        if (selectedProductId) {
+            eliminarProducto(selectedProductId);
+        }
+    });
+
+    // Evento para el botón de editar
+    editBtn.addEventListener('click', () => {
+        if (selectedProductId) {
+            editarProducto(selectedProductId);
+        }
     });
 }
-*//*
+
 //🔘 Selecciona una fila de producto
 function selectProductRow(productId) {
     clearProductSelection();
@@ -959,9 +802,9 @@ function selectProductRow(productId) {
     if (deleteBtn) deleteBtn.style.display = 'inline-block';
     if (editBtn) editBtn.style.display = 'inline-block';
 }
-*/
+
 //🧹 Limpia la selección actual
-/*function clearProductSelection() {
+function clearProductSelection() {
     if (selectedProductRow) {
         selectedProductRow.classList.remove('selected-row');
         selectedProductRow = null;
@@ -969,11 +812,11 @@ function selectProductRow(productId) {
     }
 
     // Ocultar botones de acción
- /*   const deleteBtn = document.getElementById('delete-product-btn');
+    const deleteBtn = document.getElementById('delete-product-btn');
     const editBtn = document.getElementById('edit-product-btn');
     if (deleteBtn) deleteBtn.style.display = 'none';
-    if (editBtn) editBtn.style.display = 'none';*/
-//}
+    if (editBtn) editBtn.style.display = 'none';
+}
 
 // Vista previa de la imagen seleccionada
 document.getElementById('product-image').addEventListener('change', function (e) {
@@ -1003,7 +846,7 @@ function generarNombreUnico(originalName) {
     return `producto_${timestamp}_${randomString}.${extension}`;
 }
 
-/*function configurarModalProducto() {
+function configurarModalProducto() {
     const modalElement = document.getElementById('productModal');
     const modalInstance = new bootstrap.Modal(modalElement, {
         focus: true,
@@ -1027,4 +870,3 @@ function generarNombreUnico(originalName) {
     return modalInstance;
 }
 
-*/
