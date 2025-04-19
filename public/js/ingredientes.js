@@ -14,16 +14,16 @@ window.eliminarIngrediente = eliminarIngrediente;
 
 // 🚀 INICIALIZACIÓN AL CARGAR LA PÁGINA
 document.addEventListener('DOMContentLoaded', () => {
-   // showLoading(); // Mostrar spinner al cargar la página
+    // showLoading(); // Mostrar spinner al cargar la página
 
     // Configuración inicial
     setupRowSelection(); // Manejo de selección de filas
     setupRealTimePriceUpdate(); // Actualizaciones en tiempo real
 
     // Cargar ingredientes iniciales
-  //  cargarIngredientes().finally(() => {
+    //  cargarIngredientes().finally(() => {
     //    hideLoading(); // Asegurarse de ocultar si hay error
-   // });
+    // });
 
     // Manejo de clics fuera de la tabla
     document.addEventListener('click', (e) => {
@@ -214,7 +214,7 @@ export async function gestionarIngrediente(event) {
 // 📌 Agregar un nuevo ingrediente
 export async function agregarIngrediente(datos) {
     const { nombre, medida, cantidad, precio_unitario, precio_total, medida_unitario, cantidad_unitario } = datos;
-   // console.log("datos", datos)
+    // console.log("datos", datos)
 
     try {
         // 🔹 Insertar el ingrediente en la base de datos de Supabase
@@ -278,7 +278,7 @@ export async function cargarIngredientes() {
         console.error("❌ Error al cargar ingredientes:", error);
         mostrarToast("Error al cargar ingredientes", "error");
     } finally {
-       hideLoading(); // Ocultar spinner independientemente del resultado
+        hideLoading(); // Ocultar spinner independientemente del resultado
         clearSelection(); // Limpiar selección al recargar
         //   setupRowSelection()
     }
@@ -325,7 +325,7 @@ async function eliminarIngrediente(idIngrediente) {
 
 // 📌 Función para editar un ingrediente
 async function editarIngrediente(idIngrediente) {
-  //  console.log("editarIngrediente", idIngrediente)
+    //  console.log("editarIngrediente", idIngrediente)
     // Mostrar el formulario en un modal
     showIngredientForm();
     try {
@@ -339,7 +339,7 @@ async function editarIngrediente(idIngrediente) {
         if (error || !data) {
             throw new Error("No se pudo cargar el ingrediente.");
         }
-    //    console.log("data", data)
+        //    console.log("data", data)
         // 🔹 Llenar el formulario con los datos del ingrediente
         document.getElementById("ingredient-name").value = data.nombre;
         document.getElementById("ingredient-measure").value = data.medida;
@@ -354,7 +354,7 @@ async function editarIngrediente(idIngrediente) {
             document.getElementById("medida-unitario").value = data.medida_unitario;
         } else {
             document.querySelector('input[name="price-type"][value="total"]').checked = true;
-            
+
         }
         // Asegurar que los campos numéricos tengan valores válidos
         const priceTotalInput = document.getElementById("ingredient-price-total");
@@ -369,7 +369,7 @@ async function editarIngrediente(idIngrediente) {
         // 📌 Establecer el ID en el formulario para actualizar
         const formulario = document.getElementById("ingredient-form");
         formulario.dataset.ingredienteId = idIngrediente;
-    //    console.log(formulario);
+        //    console.log(formulario);
     } catch (error) {
         console.error("❌ Error al cargar el ingrediente para edición:", error);
         mostrarToast(`❌ Error al cargar el ingrediente para edición.`, "error");
@@ -379,7 +379,7 @@ async function editarIngrediente(idIngrediente) {
 // 📌 Función para actualizar un ingrediente
 export async function actualizarIngrediente(idIngrediente, datos) {
     const { nombre, medida, cantidad, precio_unitario, precio_total, medida_unitario, cantidad_unitario } = datos;
-  //  console.log("preciototal: ", datos)
+    //  console.log("preciototal: ", datos)
     try {
         // 🔹 Actualizar el ingrediente en la base de datos
         const { error } = await supabase
@@ -406,11 +406,11 @@ export async function actualizarIngrediente(idIngrediente, datos) {
 
 // Función para manejar la selección de filas
 function setupRowSelection() {
- //   console.log('Configurando selección de filas...');
+    //   console.log('Configurando selección de filas...');
     const table = document.getElementById('ingredient-table');
     const deleteBtn = document.getElementById('delete-btn');
     const editBtn = document.getElementById('edit-cuantity-modal-btn');
-  //  console.log('Elementos encontrados:', { table, deleteBtn, editBtn });
+    //  console.log('Elementos encontrados:', { table, deleteBtn, editBtn });
     table.addEventListener('click', (e) => {
         const row = e.target.closest('tr');
 
@@ -418,7 +418,7 @@ function setupRowSelection() {
         if (row && row.parentElement.id === 'ingredients-list') {
             // Deseleccionar la fila anterior si existe
             if (row.classList.contains('selected-row')) {
-           //     console.log("seleccion", row)
+                //     console.log("seleccion", row)
                 row.classList.remove('selected-row');
                 selectedIngredientId = null; // Deseleccionar el producto
                 selectedRow = null;
@@ -459,7 +459,7 @@ function setupRowSelection() {
 
 // Función para limpiar la selección
 function clearSelection() {
-   // console.log(selectedRow)
+    // console.log(selectedRow)
     try {
         // Remover selección visual
         const table = document.getElementById('ingredient-table');
@@ -559,4 +559,151 @@ function validarFormulario() {
         }
     }
     return isValid;
+}
+
+const filtrosIngrediente = {
+    buscar: document.getElementById("buscarIngrediente"),
+    fecha: document.getElementById("filtroFecha"),
+    ordenarNombre: document.getElementById("ordenarNombreIngrediente"),
+    limpiarBtn: document.getElementById("btn-limpiar-filtros-ing"),
+};
+
+// Activar botón limpiar si hay filtros activos
+function actualizarEstadoBotonLimpiarIng() {
+    const hayFiltros =
+        filtrosIngrediente.buscar.value.trim() !== "" ||
+        filtrosIngrediente.fecha.value !== "";
+
+    filtrosIngrediente.limpiarBtn.classList.toggle("disabled", !hayFiltros);
+    filtrosIngrediente.limpiarBtn.disabled = !hayFiltros;
+
+    actualizarBadgesFiltroIng();
+}
+
+// Búsqueda por Nombre
+filtrosIngrediente.buscar.addEventListener("input", () => {
+    const texto = filtrosIngrediente.buscar.value.toLowerCase();
+    document.querySelectorAll("#ingredients-list tr").forEach((fila) => {
+        const nombre = fila.children[0].textContent.toLowerCase();
+        fila.style.display = nombre.includes(texto) ? "" : "none";
+    });
+    actualizarEstadoBotonLimpiarIng();
+});
+
+// Filtro por Fecha de Registro
+filtrosIngrediente.fecha.addEventListener("change", () => {
+    const fecha = filtrosIngrediente.fecha.value;
+    const fechaFormateada = formatDate(fecha); // Formatear la fecha del input a dd/mm/yyyy
+
+    document.querySelectorAll("#ingredients-list tr").forEach((fila) => {
+        const fechaRegistro = fila.children[2].textContent.trim();
+        // Comparamos las fechas en el formato correcto
+        fila.style.display = !fecha || fechaRegistro === fechaFormateada ? "" : "none";
+    });
+
+    actualizarEstadoBotonLimpiarIng();
+});
+
+// Función para formatear la fecha a dd/mm/yyyy
+function formatDate(inputDate) {
+    const dateParts = inputDate.split("-"); // Separamos la fecha en partes [yyyy, mm, dd]
+    return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`; // Lo convertimos a dd/mm/yyyy
+}
+
+// Ordenar por Nombre (A-Z / Z-A)
+filtrosIngrediente.ordenarNombre.addEventListener("change", () => {
+    const orden = filtrosIngrediente.ordenarNombre.value;
+    const tbody = document.getElementById("ingredients-list");
+    const filas = Array.from(tbody.querySelectorAll("tr"));
+
+    filas.sort((a, b) => {
+        const nombreA = a.children[0].textContent.toLowerCase();
+        const nombreB = b.children[0].textContent.toLowerCase();
+
+        // Si seleccionamos A-Z, ordenamos de manera ascendente
+        if (orden === "az") {
+            return nombreA.localeCompare(nombreB);
+        }
+        // Si seleccionamos Z-A, ordenamos de manera descendente
+        return nombreB.localeCompare(nombreA);
+    });
+
+    // Volver a añadir las filas ordenadas a la tabla
+    filas.forEach((fila) => tbody.appendChild(fila));
+});
+
+
+// Limpiar filtros
+filtrosIngrediente.limpiarBtn.addEventListener("click", () => {
+    if (filtrosIngrediente.limpiarBtn.classList.contains("disabled")) return;
+
+    const original = filtrosIngrediente.limpiarBtn.innerHTML;
+    filtrosIngrediente.limpiarBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span> Limpiando...`;
+    filtrosIngrediente.limpiarBtn.disabled = true;
+
+    setTimeout(() => {
+        filtrosIngrediente.buscar.value = "";
+        filtrosIngrediente.fecha.value = "";
+
+        filtrosIngrediente.buscar.dispatchEvent(new Event("input"));
+        filtrosIngrediente.fecha.dispatchEvent(new Event("change"));
+
+        filtrosIngrediente.limpiarBtn.innerHTML = original;
+        filtrosIngrediente.limpiarBtn.classList.add("disabled");
+        filtrosIngrediente.limpiarBtn.disabled = false;
+    }, 600);
+});
+
+
+// Mostrar badges de filtros activos
+function actualizarBadgesFiltroIng() {
+    const contenedor = document.getElementById("filtros-activos-ing");
+    const badgeNombre = document.getElementById("badge-nombre-ingrediente");
+    const badgeFecha = document.getElementById("badge-fecha-ingrediente");
+    const badgeOrden = document.getElementById("badge-orden-ingrediente");
+
+    let hay = false;
+
+    animarTablaIngredientes();
+    // Orden
+    if (filtrosIngrediente.ordenarNombre.value) {
+        badgeOrden.querySelector("span").textContent = filtrosIngrediente.ordenarNombre.value;
+        badgeOrden.classList.remove("d-none");
+        hay = true;
+    } else {
+        badgeOrden.classList.add("d-none");
+    }
+    // Nombre
+    if (filtrosIngrediente.buscar.value) {
+        badgeNombre.querySelector("span").textContent = filtrosIngrediente.buscar.value;
+        badgeNombre.classList.remove("d-none");
+        hay = true;
+    } else {
+        badgeNombre.classList.add("d-none");
+    }
+
+    // Fecha
+    if (filtrosIngrediente.fecha.value) {
+        badgeFecha.querySelector("span").textContent = filtrosIngrediente.fecha.value;
+        badgeFecha.classList.remove("d-none");
+        hay = true;
+    } else {
+        badgeFecha.classList.add("d-none");
+    }
+
+
+
+    contenedor.classList.toggle("d-none", !hay);
+}
+
+// Detectar cambios para actualizar estado
+["input", "change"].forEach((ev) => {
+    filtrosIngrediente.buscar.addEventListener(ev, actualizarEstadoBotonLimpiarIng);
+    filtrosIngrediente.fecha.addEventListener(ev, actualizarEstadoBotonLimpiarIng);
+});
+
+function animarTablaIngredientes() {
+    const tabla = document.getElementById("ingredients-list");
+    tabla.classList.add("resaltar-tabla");
+    setTimeout(() => tabla.classList.remove("resaltar-tabla"), 1000);
 }

@@ -382,15 +382,27 @@
               Nombre: <span class="fw-bold"></span>
             </span>
             <span
+              id="badge-orden-empleados"
+              class="badge rounded-pill bg-secondary d-none"
+            >
+              Orden: <span class="fw-bold"></span>
+            </span>
+            <span
               id="badge-puesto-empleados"
               class="badge rounded-pill bg-secondary d-none"
             >
               Puesto: <span class="fw-bold"></span>
             </span>
-            <span id="badge-email-empleados" class="badge rounded-pill bg-secondary d-none">
+            <span
+              id="badge-email-empleados"
+              class="badge rounded-pill bg-secondary d-none"
+            >
               Email: <span class="fw-bold"></span>
             </span>
-            <span id="badge-telefono-empleados" class="badge rounded-pill bg-secondary d-none">
+            <span
+              id="badge-telefono-empleados"
+              class="badge rounded-pill bg-secondary d-none"
+            >
               Teléfono: <span class="fw-bold"></span>
             </span>
           </div>
@@ -629,6 +641,74 @@
               </div>
             </div>
           </div>
+          <!-- Filtros Ingredientes -->
+          <div class="d-flex flex-wrap align-items-end gap-3 mb-3">
+            <!-- Buscar por Nombre -->
+            <div class="flex-fill">
+              <label for="buscarIngrediente" class="form-label">
+                <i class="fas fa-search me-1"></i> Buscar Nombre
+              </label>
+              <input
+                type="text"
+                id="buscarIngrediente"
+                class="form-control"
+                placeholder="Ej. Azúcar, Harina..."
+              />
+            </div>
+
+            <!-- Filtro por Fecha de Registro -->
+            <div class="flex-fill">
+              <label for="filtroFecha" class="form-label">
+                <i class="fas fa-calendar me-1"></i> Fecha de Registro
+              </label>
+              <input type="date" id="filtroFecha" class="form-control" />
+            </div>
+            <!-- Ordenar por Nombre -->
+            <div class="flex-fill">
+              <label for="ordenarNombreIngrediente" class="form-label">
+                <i class="fas fa-sort-alpha-down me-1"></i>Nombre
+              </label>
+              <select id="ordenarNombreIngrediente" class="form-select">
+                <option value="az">A - Z</option>
+                <option value="za">Z - A</option>
+              </select>
+            </div>
+
+            <!-- Botón limpiar filtros -->
+            <div>
+              <button
+                id="btn-limpiar-filtros-ing"
+                class="btn btn-outline-secondary disabled"
+                disabled
+              >
+                <i class="fas fa-eraser me-1"></i> Limpiar Filtros
+              </button>
+            </div>
+          </div>
+
+          <!-- Badges de filtros activos -->
+          <div id="filtros-activos-ing" class="mb-3 d-none">
+            <span class="me-2">Filtros activos:</span>
+            <span
+              id="badge-orden-ingrediente"
+              class="badge rounded-pill bg-secondary d-none"
+            >
+              Orden: <span class="fw-bold"></span>
+            </span>
+            <span
+              id="badge-nombre-ingrediente"
+              class="badge rounded-pill bg-secondary d-none"
+            >
+              Nombre: <span class="fw-bold"></span>
+            </span>
+            <span
+              id="badge-fecha-ingrediente"
+              class="badge rounded-pill bg-secondary d-none"
+            >
+              Fecha Registro: <span class="fw-bold"></span>
+            </span>
+          </div>
+
           <!-- Contenedor para los botones de eliminar y editar cantidad -->
           <div class="button-container">
             <!-- Botón de eliminar (bote de basura) -->
@@ -643,19 +723,24 @@
           <span class="text-muted small"
             >Selecciona un cliente para ver acciones</span
           >
-          <table id="ingredient-table" class="table">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Precio Total x Medida</th>
-                <!--    <th>Precio x Medida</th> -->
-                <th>Fecha Registro</th>
-              </tr>
-            </thead>
-            <tbody id="ingredients-list">
-              <!-- Lista dinámica de ingredientes -->
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table
+              id="ingredient-table"
+              class="table table-hover table-borderless align-middle text-center mb-0"
+            >
+              <thead class="table-card-title">
+                <tr>
+                  <th>Nombre</th>
+                  <th>Precio Total x Medida</th>
+                  <!--    <th>Precio x Medida</th> -->
+                  <th>Fecha Registro</th>
+                </tr>
+              </thead>
+              <tbody id="ingredients-list">
+                <!-- Lista dinámica de ingredientes -->
+              </tbody>
+            </table>
+          </div>
           <!-- Modal de Confirmación de Eliminación de ingrediente-->
           <div
             class="modal fade"

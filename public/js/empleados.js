@@ -527,18 +527,21 @@ filtrosEmpleados.limpiarBtn.addEventListener("click", () => {
     filtrosEmpleados.limpiarBtn.disabled = true;
 
     setTimeout(() => {
+        // Limpiar los campos de filtro
         filtrosEmpleados.buscar.value = "";
         filtrosEmpleados.puesto.value = "";
         filtrosEmpleados.email.value = "";
         filtrosEmpleados.telefono.value = "";
-        filtrosEmpleados.ordenarNombre.value = "az";
+        filtrosEmpleados.ordenarNombre.value = "az"; // Reset to A-Z by default
 
+        // Disparar eventos de cambio en cada filtro para que se actualicen los resultados
         filtrosEmpleados.buscar.dispatchEvent(new Event("input"));
         filtrosEmpleados.puesto.dispatchEvent(new Event("change"));
         filtrosEmpleados.email.dispatchEvent(new Event("input"));
         filtrosEmpleados.telefono.dispatchEvent(new Event("input"));
         filtrosEmpleados.ordenarNombre.dispatchEvent(new Event("change"));
 
+        // Reset button state
         filtrosEmpleados.limpiarBtn.innerHTML = original;
         filtrosEmpleados.limpiarBtn.classList.add("disabled");
         filtrosEmpleados.limpiarBtn.disabled = true;
@@ -552,10 +555,9 @@ function actualizarBadgesFiltroEm() {
     const badgePuesto = document.getElementById("badge-puesto-empleados");
     const badgeEmail = document.getElementById("badge-email-empleados");
     const badgeTelefono = document.getElementById("badge-telefono-empleados");
+    const badgeOrden = document.getElementById("badge-orden-empleados");
 
     let hay = false;
-
-    animarTablaEmpleados()
 
     // Nombre
     if (filtrosEmpleados.buscar.value) {
@@ -591,6 +593,15 @@ function actualizarBadgesFiltroEm() {
         hay = true;
     } else {
         badgeTelefono.classList.add("d-none");
+    }
+
+    // Orden
+    if (filtrosEmpleados.ordenarNombre.value) {
+        badgeOrden.querySelector("span").textContent = filtrosEmpleados.ordenarNombre.value === "az" ? "A - Z" : "Z - A";
+        badgeOrden.classList.remove("d-none");
+        hay = true;
+    } else {
+        badgeOrden.classList.add("d-none");
     }
 
     contenedor.classList.toggle("d-none", !hay);
