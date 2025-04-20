@@ -692,13 +692,6 @@ function actualizarBadgesFiltroIng() {
     contenedor.classList.toggle("d-none", !hay);
 }
 
-// Detectar cambios para actualizar estado
-/*["input", "change"].forEach((ev) => {
-    filtrosIngrediente.buscar.addEventListener(ev, actualizarEstadoBotonLimpiarIng);
-    filtrosIngrediente.fecha.addEventListener(ev, actualizarEstadoBotonLimpiarIng);
-    filtrosIngrediente.ordenarNombre.addEventListener(ev, actualizarEstadoBotonLimpiarIng);
-});*/
-
 function animarTablaIngredientes() {
     const tabla = document.getElementById("ingredients-list");
     tabla.classList.add("resaltar-tabla");

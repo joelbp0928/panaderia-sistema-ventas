@@ -77,7 +77,7 @@ header {
 }
 
 /* 📢 Promociones */
-#promotions {
+/*#promotions {
   width: 100%;
   max-height: 200px;
   overflow: hidden;
@@ -85,7 +85,7 @@ header {
   justify-content: center;
   align-items: center;
   padding: 10px;
-}
+}*/
 
 .promo-slider img {
   width: 100%;
@@ -330,3 +330,51 @@ color: var(--primary-color)
   border-radius: 0 0 10px 10px;
 }
 
+#promo-carousel .carousel-inner {
+  max-height: 400px; /* Ajustar la altura de la imagen */
+}
+
+#promo-carousel .carousel-item {
+  transition: transform 0.5s ease;
+}
+
+
+#promo-carousel .carousel-item img {
+  object-fit: contain; /* Ajusta las imágenes para que no se deformen */
+  height: 100%; /* Asegura que las imágenes no sobrepasen el tamaño del contenedor */
+  max-height: 300px; /* Limitar la altura máxima de las imágenes */
+}
+
+#promo-carousel .carousel-caption h5 {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+#promo-carousel .carousel-caption p {
+  font-size: 1rem;
+}
+
+/* Estilo de las flechas (Next y Previous) */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  background-color: black; /* Cambiar el color de fondo a negro */
+}
+
+/* Asegúrate de que las flechas tengan un buen tamaño y se vean bien en cualquier pantalla */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  height: 40px; /* Ajusta el tamaño de las flechas */
+  width: 40px; /* Ajusta el tamaño de las flechas */
+}
+
+/* Cambiar el color de las flechas cuando se pasa el mouse */
+.carousel-control-prev-icon:hover,
+.carousel-control-next-icon:hover {
+  background-color: #333; /* Un negro más oscuro al hacer hover */
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  background-color: black;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Sombra sutil para resaltar */
+}

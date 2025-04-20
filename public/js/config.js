@@ -1,7 +1,7 @@
 import { supabase } from './supabase-config.js'; // Importa la configuración de Supabase
 
 // 🔹 Cargar promociones desde Firebase
-export function cargarPromociones() {
+/*export function cargarPromociones() {
     fetch("https://us-central1-gestor-panaderia.cloudfunctions.net/api/config/promociones")
         .then(response => response.json())
         .then(data => {
@@ -17,6 +17,51 @@ export function cargarPromociones() {
         })
         .catch(error => console.error("❌ Error cargando promociones:", error));
 }
+*/
+export async function cargarPromociones() {
+    try {
+      // Consulta para obtener solo promociones activas
+      const { data, error } = await supabase
+        .from('promociones')
+        .select('id, nombre, imagen_url, activa')
+        .eq('activa', true) // Filtrar solo las promociones activas
+        .order('fecha_inicio', { ascending: false }); // Ordenar por fecha de inicio
+  
+      if (error) throw error;
+  
+      const promoSlider = document.getElementById("promo-slider");
+      promoSlider.innerHTML = ''; // Limpiar el carrusel antes de cargar las nuevas promociones
+  
+      if (data.length === 0) {
+        promoSlider.innerHTML = "<p>No hay promociones activas.</p>";
+        return;
+      }
+  
+      // Crear las slides para el carrusel
+      data.forEach((promocion, index) => {
+        const slide = document.createElement("div");
+        slide.classList.add("carousel-item");
+        if (index === 0) slide.classList.add("active"); // Agregar clase active al primer item
+  
+        slide.innerHTML = `
+          <img src="${promocion.imagen_url}" class="d-block w-100 promo-image" alt="${promocion.nombre}" loading="lazy">
+          <div class="carousel-caption d-none d-md-block">
+        <!--    <h5>${promocion.nombre}</h5>
+            <p>${promocion.descripcion}</p>-->
+          </div>
+        `;
+  
+        promoSlider.appendChild(slide);
+      });
+    } catch (error) {
+      console.error("Error al cargar las promociones:", error);
+    }
+  }
+  
+  // Cargar promociones cuando la página cargue
+  document.addEventListener('DOMContentLoaded', cargarPromociones);
+  
+
 
 // 🔹 Cargar productos dinámicamente
 export async function cargarProductos() {

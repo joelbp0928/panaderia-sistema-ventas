@@ -88,8 +88,14 @@ export async function gestionarProducto(event) {
     try {
         showLoading();
 
+        // Lógica de manejo de imagen
         if (formData.imagenFile) {
             formData.imagen_url = await manejarImagen(formData.imagenFile, formData.nombre, formData.idProducto);
+        } else {
+            // Forzar null si no hay imagenFile y la URL no es de Firebase
+            if (!formData.imagen_url || !formData.imagen_url.includes('firebasestorage.googleapis.com')) {
+                formData.imagen_url = null;
+            }
         }
 
         const { costoTotal, costoUnitario } = await calcularCostoProducto(formData.ingredientes, formData.cantidades, formData.stock);
@@ -127,6 +133,13 @@ function obtenerDatosFormulario() {
     const categoria = document.getElementById("product-category").value;
     const imagenFile = document.getElementById("product-image").files[0];
 
+    const imagePreview = document.getElementById("product-image-preview");
+    let imagen_url = null;
+
+    // Solo considerar la URL del preview si es una URL de Firebase Storage
+    if (imagePreview.src && imagePreview.src.includes('firebasestorage.googleapis.com')) {
+        imagen_url = imagePreview.src;
+    }
     const ingredientes = Array.from(document.querySelectorAll("#product-ingredients input[type='checkbox']:checked"))
         .map(cb => cb.value);
     const cantidades = ingredientes.map(id => {
@@ -141,7 +154,7 @@ function obtenerDatosFormulario() {
         stock,
         categoria,
         imagenFile,
-        imagen_url: document.getElementById("product-image-preview").src || "",
+        imagen_url,
         ingredientes,
         cantidades
     };
@@ -511,7 +524,7 @@ async function eliminarProducto(idProducto) {
             mostrarToast("❌ Error al verificar las relaciones.", "error");
             return;
         }
-
+        console.log(relaciones.length)
         // 4. Si tiene relaciones, mostrar el modal de confirmación de relaciones
         if (relaciones.length > 0) {
             const modalRelaciones = new bootstrap.Modal(document.getElementById('deleteRelationsModal'));
@@ -532,13 +545,50 @@ async function eliminarProducto(idProducto) {
             });
         } else {
             // Si no tiene relaciones, proceder a eliminar el producto directamente
-            await eliminarProductoConRelaciones(idProducto); // Eliminar producto
+            await eliminarProductoSinRelaciones(idProducto); // Eliminar producto
             modalConfirmacion.hide();
         }
         productModalDetalles.hide();
     });
 }
 
+// 🗑️ Eliminar el producto sin relaciones
+async function eliminarProductoSinRelaciones(idProducto) {
+    try {
+        // 1. Obtener la imagen del producto antes de eliminarlo
+        const { data: producto, error: productoError } = await supabase
+            .from("productos")
+            .select("imagen_url")
+            .eq("id", idProducto)
+            .single();
+
+        if (productoError) throw productoError;
+
+        // Eliminar la imagen de Firebase Storage si existe
+        if (producto.imagen_url) {
+            const imagePath = producto.imagen_url.split('/o/')[1].split('?')[0]; // Obtener el path
+            const imageRef = ref(storage, decodeURIComponent(imagePath));
+            await deleteObject(imageRef);
+        }
+
+        // 2. Eliminar el producto de la tabla 'productos'
+        const { error: eliminarProductoError } = await supabase
+            .from("productos")
+            .delete()
+            .eq("id", idProducto);
+
+        if (eliminarProductoError) {
+            throw new Error("No se pudo eliminar el producto.");
+        }
+
+        // 3. Recargar los productos
+        cargarProductos(true);
+        mostrarToast("✅ Producto eliminado completamente.", "success");
+    } catch (error) {
+        console.error("❌ Error al eliminar el producto:", error);
+        mostrarToast(`❌ Error: ${error.message}`, "error");
+    }
+}
 // 🗑️ Eliminar el producto y sus relaciones
 async function eliminarProductoConRelaciones(idProducto) {
     try {
@@ -644,34 +694,34 @@ async function eliminarProductoBackend(idProducto) {
             .select("imagen_url")
             .eq("id", idProducto)
             .single();
-
+ 
         if (productoError) throw productoError;
-
+ 
         // 2. Eliminar las relaciones en productos_promocion primero
         const { error: eliminarRelacionesError } = await supabase
             .from("productos_promocion")
             .delete()
             .eq("producto_id", idProducto);
-
+ 
         if (eliminarRelacionesError) {
             throw new Error("No se pudieron eliminar las relaciones del producto con promociones.");
         }
-
+ 
         // 3. Eliminar las relaciones en productos_ingredientes
         const { error: eliminarIngredientesError } = await supabase
             .from("productos_ingredientes")
             .delete()
             .eq("producto_id", idProducto);
-
+ 
         if (eliminarIngredientesError) {
             throw new Error("No se pudieron eliminar las relaciones con los ingredientes.");
         }
-
+ 
         // 4. Verificar si existe imagen y eliminarla de Firebase Storage
         if (producto.imagen_url) {
             try {
                 let imagePath = producto.imagen_url;
-
+ 
                 // Si es una URL completa de Firebase Storage
                 if (producto.imagen_url.startsWith('https://firebasestorage.googleapis.com')) {
                     const url = new URL(producto.imagen_url);
@@ -682,7 +732,7 @@ async function eliminarProductoBackend(idProducto) {
                         throw new Error("URL de Firebase no tiene el formato esperado");
                     }
                 }
-
+ 
                 const imageRef = ref(storage, imagePath);
                 await deleteObject(imageRef);
                 console.log("✅ Imagen eliminada de Firebase Storage:", imagePath);
@@ -692,20 +742,20 @@ async function eliminarProductoBackend(idProducto) {
         } else {
             console.warn("⚠️ El producto no tiene imagen URL. No se eliminará ninguna imagen.");
         }
-
+ 
         // 5. Finalmente, eliminar el producto
         const { error: eliminarProductoError } = await supabase
             .from("productos")
             .delete()
             .eq("id", idProducto);
-
+ 
         if (eliminarProductoError) {
             throw new Error("No se pudo eliminar el producto.");
         }
-
+ 
         // Recargar los datos
         cargarProductos(true);
-
+ 
         mostrarToast("✅ Producto eliminado completamente.", "success");
         return true;
     } catch (error) {
@@ -822,7 +872,10 @@ async function cargarCategorias() {
         console.error("Error al cargar categorías:", error);
     }
 }
+// Variable para almacenar los productos cargados
+let productosCargados = [];
 
+// Modifica la función cargarProductos para guardar los datos
 export async function cargarProductos() {
     try {
         const { data, error } = await supabase
@@ -840,29 +893,11 @@ export async function cargarProductos() {
 
         if (error) throw error;
 
+        productosCargados = data; // Guardar los productos para filtrar
         const catalogoContainer = document.getElementById("product-catalog");
         catalogoContainer.innerHTML = '';  // Limpiar contenedor
-
-        // Iterar sobre los productos
-        data.forEach(producto => {
-            const card = document.createElement("div");
-            card.classList.add("col-md-4");
-            card.innerHTML = `
-                <div class="card-product" data-id="${producto.id}" data-bs-toggle="modal" data-bs-target="#detalleProductoModal">
-                    <img src="${producto.imagen_url}" alt="${producto.nombre}" class="card-img-top-product">
-                    <div class="card-body-product">
-                        <h5 class="card-title-product">${producto.nombre}</h5>
-                        <p class="card-price-product">$${producto.precio}</p>
-                    </div>
-                </div>
-            `;
-            catalogoContainer.appendChild(card);
-
-            // Añadir evento de clic en la card para mostrar los detalles del producto
-            card.addEventListener("click", () => {
-                mostrarDetallesProducto(producto.id);
-            });
-        });
+        mostrarProductos(data);
+        cargarCategorias(data); // Cargar categorías dinámicamente
     } catch (error) {
         console.error("Error al cargar los productos:", error);
     }
@@ -945,14 +980,14 @@ function setupProductRowSelection() {
 //🔘 Selecciona una fila de producto
 function selectProductRow(productId) {
     clearProductSelection();
-
+ 
     const row = document.querySelector(`#products-list tr[data-id="${productId}"]`);
     if (!row) return;
-
+ 
     row.classList.add('selected-row');
     selectedProductRow = row;
     selectedProductId = productId;
-
+ 
     // Mostrar botones de acción
     const deleteBtn = document.getElementById('delete-product-btn');
     const editBtn = document.getElementById('edit-product-btn');
@@ -967,7 +1002,7 @@ function selectProductRow(productId) {
         selectedProductRow = null;
         selectedProductId = null;
     }
-
+ 
     // Ocultar botones de acción
  /*   const deleteBtn = document.getElementById('delete-product-btn');
     const editBtn = document.getElementById('edit-product-btn');
@@ -1009,7 +1044,7 @@ function generarNombreUnico(originalName) {
         focus: true,
         keyboard: true
     });
-
+ 
     // Manejar foco al abrir
     modalElement.addEventListener('shown.bs.modal', () => {
         setTimeout(() => {
@@ -1017,14 +1052,187 @@ function generarNombreUnico(originalName) {
             firstInput?.focus();
         }, 100);
     });
-
+ 
     // Limpiar al cerrar
     modalElement.addEventListener('hidden.bs.modal', () => {
         document.getElementById("product-form").reset();
         clearProductSelection();
     });
-
+ 
     return modalInstance;
 }
-
+ 
 */
+// Objeto para almacenar los filtros
+const filtrosProductos = {
+    buscar: document.getElementById("buscarProducto"),
+    categoria: document.getElementById("filtroCategoria"),
+    precio: document.getElementById("filtroPrecio"),
+    limpiarBtn: document.getElementById("btn-limpiar-filtros-prod")
+};
+
+
+
+// Función para mostrar productos (con filtros aplicables)
+function mostrarProductos(productos) {
+    const catalogoContainer = document.getElementById("product-catalog");
+    catalogoContainer.innerHTML = '';
+
+    productos.forEach(producto => {
+        const card = document.createElement("div");
+        card.classList.add("col-md-4", "producto-card"); // Añadir clase producto-card
+        card.dataset.categoria = producto.categoria?.nombre || '';
+        card.dataset.precio = producto.precio;
+
+        card.innerHTML = `
+              <div class="card-product" data-id="${producto.id}" data-bs-toggle="modal" data-bs-target="#detalleProductoModal">
+                  <img src="${producto.imagen_url || 'https://via.placeholder.com/300?text=Producto'}" 
+                       alt="${producto.nombre}" 
+                       class="card-img-top-product">
+                  <div class="card-body-product">
+                      <h5 class="producto-nombre">${producto.nombre}</h5>
+                      <p class="producto-precio">$${producto.precio.toFixed(2)}</p>
+                      <p class="producto-categoria d-none">${producto.categoria?.nombre || ''}</p>
+                  </div>
+              </div>
+          `;
+
+        catalogoContainer.appendChild(card);
+        card.addEventListener("click", () => mostrarDetallesProducto(producto.id));
+    });
+}
+
+// Función para cargar categorías dinámicamente
+/*function cargarCategorias(productos) {
+    const selectCategoria = document.getElementById("filtroCategoria");
+ 
+    // Obtener categorías únicas de los productos
+    const categoriasUnicas = [...new Set(
+        productos.map(p => p.categoria?.nombre).filter(Boolean)
+    )].sort();
+ 
+    // Limpiar y agregar opciones
+    selectCategoria.innerHTML = '<option value="">Todas</option>';
+    categoriasUnicas.forEach(cat => {
+        const option = document.createElement("option");
+        option.value = cat;
+        option.textContent = cat;
+        selectCategoria.appendChild(option);
+    });
+}
+*/
+// Event listeners para los filtros
+filtrosProductos.buscar.addEventListener("input", aplicarFiltros);
+filtrosProductos.categoria.addEventListener("change", aplicarFiltros);
+filtrosProductos.precio.addEventListener("input", aplicarFiltros);
+
+// Función para aplicar todos los filtros
+// Función para aplicar filtros con efectos visuales
+function aplicarFiltros() {
+    const textoBusqueda = filtrosProductos.buscar.value.toLowerCase();
+    const categoriaSeleccionada = filtrosProductos.categoria.value;
+    const precioMax = parseFloat(filtrosProductos.precio.value) || Infinity;
+
+    // Contador para animaciones escalonadas
+    let delay = 0;
+    const delayIncrement = 50; // milisegundos entre animaciones
+
+    document.querySelectorAll(".producto-card").forEach(card => {
+        const nombre = card.querySelector(".producto-nombre").textContent.toLowerCase();
+        const categoria = card.dataset.categoria;
+        const precio = parseFloat(card.dataset.precio);
+
+        const cumpleNombre = nombre.includes(textoBusqueda);
+        const cumpleCategoria = !categoriaSeleccionada || categoria === categoriaSeleccionada;
+        const cumplePrecio = precio <= precioMax;
+
+        if (cumpleNombre && cumpleCategoria && cumplePrecio) {
+            // Producto que cumple con los filtros
+            card.classList.remove("filtro-no-coincide");
+            card.classList.add("filtro-coincide");
+            card.style.animationDelay = `${delay}ms`;
+            delay += delayIncrement;
+        } else {
+            // Producto que no cumple con los filtros
+            card.classList.remove("filtro-coincide");
+            card.classList.add("filtro-no-coincide");
+        }
+    });
+
+    // Efecto en el botón de limpiar
+    const hayFiltros = textoBusqueda || categoriaSeleccionada || isFinite(precioMax);
+    if (hayFiltros) {
+        filtrosProductos.limpiarBtn.classList.add("btn-limpiar-active");
+    } else {
+        filtrosProductos.limpiarBtn.classList.remove("btn-limpiar-active");
+    }
+
+    actualizarEstadoBotonLimpiar();
+    actualizarBadgesFiltros();
+}
+
+
+// Función para actualizar el estado del botón limpiar
+function actualizarEstadoBotonLimpiar() {
+    const hayFiltros =
+        filtrosProductos.buscar.value.trim() !== "" ||
+        filtrosProductos.categoria.value !== "" ||
+        filtrosProductos.precio.value !== "";
+
+    filtrosProductos.limpiarBtn.classList.toggle("disabled", !hayFiltros);
+    filtrosProductos.limpiarBtn.disabled = !hayFiltros;
+}
+
+// Función para limpiar filtros
+filtrosProductos.limpiarBtn.addEventListener("click", () => {
+    const original = filtrosProductos.limpiarBtn.innerHTML;
+    filtrosProductos.limpiarBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span> Limpiando...`;
+    filtrosProductos.limpiarBtn.disabled = true;
+
+    setTimeout(() => {
+        filtrosProductos.buscar.value = "";
+        filtrosProductos.categoria.value = "";
+        filtrosProductos.precio.value = "";
+        
+        // Reset button state
+        filtrosProductos.limpiarBtn.innerHTML = original;
+        filtrosProductos.limpiarBtn.classList.add("disabled");
+        filtrosProductos.limpiarBtn.disabled = true;
+        
+        aplicarFiltros(); // Esto mostrará todos los productos nuevamente
+    }, 600);
+});
+
+// Función para actualizar badges de filtros activos
+function actualizarBadgesFiltros() {
+    const contenedor = document.getElementById("filtros-activos-prod");
+    contenedor.innerHTML = '<span class="me-2">Filtros activos:</span>';
+    const efectos = [
+        { name: "bounceIn", duration: "0.5s" },
+        { name: "fadeIn", duration: "0.3s" },
+        { name: "zoomIn", duration: "0.4s" }
+    ];
+    let efectoIndex = 0;
+    if (filtrosProductos.buscar.value) {
+        agregarBadgeConEfecto("Nombre", filtrosProductos.buscar.value, efectos[efectoIndex++ % efectos.length]);
+    }
+
+    if (filtrosProductos.categoria.value) {
+        const badge = document.createElement("span");
+        badge.className = "badge rounded-pill bg-secondary me-2";
+        badge.innerHTML = `Categoría: <span class="fw-bold">${filtrosProductos.categoria.value}</span>`;
+        contenedor.appendChild(badge);
+    }
+
+    if (filtrosProductos.precio.value) {
+        const badge = document.createElement("span");
+        badge.className = "badge rounded-pill bg-secondary me-2";
+        badge.innerHTML = `Precio ≤ <span class="fw-bold">$${filtrosProductos.precio.value}</span>`;
+        contenedor.appendChild(badge);
+    }
+
+    contenedor.classList.toggle("d-none", contenedor.children.length <= 1);
+}
+
+// Inicialización al cargar la página
+document.addEventListener('DOMContentLoaded', cargarProductos);

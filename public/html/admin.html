@@ -802,10 +802,52 @@
             <button class="btn btn-primary mb-3" id="btn-agregar-producto">
               <i class="fas fa-plus-circle me-1"></i> Agregar Producto
             </button>
+<!-- Filtros de Productos -->
+<div class="d-flex flex-wrap align-items-end gap-3 mb-3">
+  <!-- Buscar por Nombre -->
+  <div class="flex-fill">
+    <label for="buscarProducto" class="form-label">
+      <i class="fas fa-search me-1"></i> Buscar Nombre
+    </label>
+    <input type="text" id="buscarProducto" class="form-control" placeholder="Ej. Pan, Donas...">
+  </div>
 
-            <div class="row-product" id="product-catalog">
-              <!-- Los productos se cargarán aquí dinámicamente -->
-            </div>
+  <!-- Filtro por Categoría -->
+  <div class="flex-fill">
+    <label for="filtroCategoria" class="form-label">
+      <i class="fas fa-tags me-1"></i> Categoría
+    </label>
+    <select id="filtroCategoria" class="form-select">
+      <option value="">Todas</option>
+      <!-- Las categorías se cargarán dinámicamente -->
+    </select>
+  </div>
+
+  <!-- Filtro por Rango de Precio -->
+  <div class="flex-fill">
+    <label for="filtroPrecio" class="form-label">
+      <i class="fas fa-dollar-sign me-1"></i> Precio Máx
+    </label>
+    <input type="number" id="filtroPrecio" class="form-control" placeholder="Precio máximo" min="0">
+  </div>
+
+  <!-- Botón limpiar filtros -->
+  <div>
+    <button id="btn-limpiar-filtros-prod" class="btn btn-outline-secondary disabled" disabled>
+      <i class="fas fa-eraser me-1"></i> Limpiar Filtros
+    </button>
+  </div>
+</div>
+
+<!-- Badges de filtros activos -->
+<div id="filtros-activos-prod" class="mb-3 d-none">
+  <span class="me-2">Filtros activos:</span>
+  <!-- Los badges se actualizarán dinámicamente -->
+</div>
+
+<div class="row-product" id="product-catalog">
+  <!-- Los productos se cargarán aquí dinámicamente -->
+</div>
           </div>
 
           <!-- 🔍 Modal Detalles de Producto -->

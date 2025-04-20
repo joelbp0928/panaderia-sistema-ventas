@@ -17,6 +17,7 @@ window.verHistorialProducto = verHistorialProducto;
 document.addEventListener("DOMContentLoaded", () => {
     //  cargarInventarioProductos();
     setupProductRowSelection();
+    cargarCategorias();
 
     document.getElementById("btn-restar-producto-inventario")?.addEventListener("click", () => {
         if (selectedProductId && selectedProductName && selectedProductStock != null) {
@@ -449,7 +450,47 @@ document.addEventListener("keydown", (e) => {
 });
 document.getElementById("btn-cerrar-historial-producto").addEventListener("click", cerrarHistorialProducto);
 
-
+// Función mejorada para cargar categorías
+async function cargarCategorias() {
+    const selectCategoria = document.getElementById('filtroCategoria');
+    
+    // Mostrar estado de carga
+    selectCategoria.disabled = true;
+    selectCategoria.innerHTML = '<option value="">Cargando categorías...</option>';
+  
+    try {
+      const { data: categorias, error } = await supabase
+        .from('categorias')
+        .select('id, nombre')
+        .order('nombre', { ascending: true });
+  
+      if (error) throw error;
+  
+      // Limpiar y llenar el select
+      selectCategoria.innerHTML = '<option value="">Todas</option>';
+      
+      if (categorias.length === 0) {
+        selectCategoria.innerHTML = '<option value="">No hay categorías</option>';
+        return;
+      }
+  
+      categorias.forEach(categoria => {
+        const option = document.createElement('option');
+        option.value = categoria.nombre;
+        option.textContent = categoria.nombre;
+        selectCategoria.appendChild(option);
+      });
+  
+      selectCategoria.disabled = false;
+  
+    } catch (error) {
+      console.error('Error al cargar categorías:', error);
+      selectCategoria.innerHTML = '<option value="">Error al cargar</option>';
+      
+      // Opcional: Reintentar después de 5 segundos
+      setTimeout(cargarCategorias, 5000);
+    }
+  }
 //-----------Filtros-------------
 
 const filtros = {
@@ -536,13 +577,22 @@ document.getElementById("buscarProducto").addEventListener("input", function () 
 document.getElementById("filtroCategoria").addEventListener("change", function () {
     const categoriaSeleccionada = this.value.toLowerCase();
     const filas = document.querySelectorAll("#tabla-productos tr");
+    
+    // Saltar la fila de encabezado si existe
     filas.forEach(fila => {
-        const categoria = fila.children[0].textContent.toLowerCase();
-        fila.style.display = !categoriaSeleccionada || categoria === categoriaSeleccionada ? "" : "none";
+        // Asume que la categoría está en la primera columna (children[0])
+        const categoria = fila.children[0]?.textContent.toLowerCase();
+        
+        // Mostrar fila si coincide con la categoría seleccionada o si no hay selección
+        if (!categoriaSeleccionada || categoria === categoriaSeleccionada) {
+            fila.style.display = "";
+        } else {
+            fila.style.display = "none";
+        }
     });
-    actualizarBadgesFiltro()
+    
+    actualizarBadgesFiltro();
 });
-
 
 document.getElementById("ordenarStock").addEventListener("change", function () {
     const orden = this.value;
