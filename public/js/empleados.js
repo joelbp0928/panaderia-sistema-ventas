@@ -454,7 +454,7 @@ function actualizarEstadoBotonLimpiarEm() {
         filtrosEmpleados.email.value.trim() !== "" ||
         filtrosEmpleados.telefono.value.trim() !== "" ||
         filtrosEmpleados.ordenarNombre.value !== "az";
-
+console.log(filtrosEmpleados.ordenarNombre.value)
     filtrosEmpleados.limpiarBtn.classList.toggle("disabled", !hayFiltros);
     filtrosEmpleados.limpiarBtn.disabled = !hayFiltros;
 
@@ -559,6 +559,8 @@ function actualizarBadgesFiltroEm() {
 
     let hay = false;
 
+    animarTablaEmpleados();
+
     // Nombre
     if (filtrosEmpleados.buscar.value) {
         badgeNombre.querySelector("span").textContent = filtrosEmpleados.buscar.value;
@@ -608,14 +610,14 @@ function actualizarBadgesFiltroEm() {
 }
 
 // Detectar cambios para actualizar estado
-["input", "change"].forEach((ev) => {
+/*["input", "change"].forEach((ev) => {
     filtrosEmpleados.buscar.addEventListener(ev, actualizarEstadoBotonLimpiarEm);
     filtrosEmpleados.puesto.addEventListener(ev, actualizarEstadoBotonLimpiarEm);
     filtrosEmpleados.email.addEventListener(ev, actualizarEstadoBotonLimpiarEm);
     filtrosEmpleados.telefono.addEventListener(ev, actualizarEstadoBotonLimpiarEm);
     filtrosEmpleados.ordenarNombre.addEventListener(ev, actualizarEstadoBotonLimpiarEm);
 });
-
+*/
 function animarTablaEmpleados() {
     const tabla = document.getElementById("tabla-empleados-content");
     tabla.classList.add("resaltar-tabla");

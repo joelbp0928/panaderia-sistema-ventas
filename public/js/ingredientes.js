@@ -565,14 +565,15 @@ const filtrosIngrediente = {
     buscar: document.getElementById("buscarIngrediente"),
     fecha: document.getElementById("filtroFecha"),
     ordenarNombre: document.getElementById("ordenarNombreIngrediente"),
-    limpiarBtn: document.getElementById("btn-limpiar-filtros-ing"),
+    limpiarBtn: document.getElementById("btn-limpiar-filtros-ing-1"),
 };
 
 // Activar botón limpiar si hay filtros activos
 function actualizarEstadoBotonLimpiarIng() {
     const hayFiltros =
         filtrosIngrediente.buscar.value.trim() !== "" ||
-        filtrosIngrediente.fecha.value !== "";
+        filtrosIngrediente.fecha.value !== "" ||
+        filtrosIngrediente.ordenarNombre.value !== "az"; // Considerar si no es el valor por defecto
 
     filtrosIngrediente.limpiarBtn.classList.toggle("disabled", !hayFiltros);
     filtrosIngrediente.limpiarBtn.disabled = !hayFiltros;
@@ -619,17 +620,12 @@ filtrosIngrediente.ordenarNombre.addEventListener("change", () => {
     filas.sort((a, b) => {
         const nombreA = a.children[0].textContent.toLowerCase();
         const nombreB = b.children[0].textContent.toLowerCase();
-
-        // Si seleccionamos A-Z, ordenamos de manera ascendente
-        if (orden === "az") {
-            return nombreA.localeCompare(nombreB);
-        }
-        // Si seleccionamos Z-A, ordenamos de manera descendente
-        return nombreB.localeCompare(nombreA);
+        return orden === "az" ? nombreA.localeCompare(nombreB) : nombreB.localeCompare(nombreA);
     });
 
     // Volver a añadir las filas ordenadas a la tabla
     filas.forEach((fila) => tbody.appendChild(fila));
+    actualizarEstadoBotonLimpiarIng();
 });
 
 
@@ -644,13 +640,15 @@ filtrosIngrediente.limpiarBtn.addEventListener("click", () => {
     setTimeout(() => {
         filtrosIngrediente.buscar.value = "";
         filtrosIngrediente.fecha.value = "";
+        filtrosIngrediente.ordenarNombre.value = "az"; // Resetear el orden también
 
         filtrosIngrediente.buscar.dispatchEvent(new Event("input"));
         filtrosIngrediente.fecha.dispatchEvent(new Event("change"));
+        filtrosIngrediente.ordenarNombre.dispatchEvent(new Event("change"));
 
         filtrosIngrediente.limpiarBtn.innerHTML = original;
-        filtrosIngrediente.limpiarBtn.classList.add("disabled");
-        filtrosIngrediente.limpiarBtn.disabled = false;
+      //  filtrosIngrediente.limpiarBtn.classList.add("disabled");
+        //filtrosIngrediente.limpiarBtn.disabled = true
     }, 600);
 });
 
@@ -665,14 +663,6 @@ function actualizarBadgesFiltroIng() {
     let hay = false;
 
     animarTablaIngredientes();
-    // Orden
-    if (filtrosIngrediente.ordenarNombre.value) {
-        badgeOrden.querySelector("span").textContent = filtrosIngrediente.ordenarNombre.value;
-        badgeOrden.classList.remove("d-none");
-        hay = true;
-    } else {
-        badgeOrden.classList.add("d-none");
-    }
     // Nombre
     if (filtrosIngrediente.buscar.value) {
         badgeNombre.querySelector("span").textContent = filtrosIngrediente.buscar.value;
@@ -690,17 +680,24 @@ function actualizarBadgesFiltroIng() {
     } else {
         badgeFecha.classList.add("d-none");
     }
-
-
+    // Orden
+    if (filtrosIngrediente.ordenarNombre.value) {
+        badgeOrden.querySelector("span").textContent = filtrosIngrediente.ordenarNombre.value === "az" ? "A - Z" : "Z - A";
+        badgeOrden.classList.remove("d-none");
+        hay = true;
+    } else {
+        badgeOrden.classList.add("d-none");
+    }
 
     contenedor.classList.toggle("d-none", !hay);
 }
 
 // Detectar cambios para actualizar estado
-["input", "change"].forEach((ev) => {
+/*["input", "change"].forEach((ev) => {
     filtrosIngrediente.buscar.addEventListener(ev, actualizarEstadoBotonLimpiarIng);
     filtrosIngrediente.fecha.addEventListener(ev, actualizarEstadoBotonLimpiarIng);
-});
+    filtrosIngrediente.ordenarNombre.addEventListener(ev, actualizarEstadoBotonLimpiarIng);
+});*/
 
 function animarTablaIngredientes() {
     const tabla = document.getElementById("ingredients-list");
