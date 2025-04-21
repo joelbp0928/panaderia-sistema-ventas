@@ -18,49 +18,57 @@ import { supabase } from './supabase-config.js'; // Importa la configuración de
         .catch(error => console.error("❌ Error cargando promociones:", error));
 }
 */
-export async function cargarPromociones() {
+window.onload = async function () {
+    cargarPromociones();
+}
+async function cargarPromociones() {
     try {
-      // Consulta para obtener solo promociones activas
-      const { data, error } = await supabase
-        .from('promociones')
-        .select('id, nombre, imagen_url, activa')
-        .eq('activa', true) // Filtrar solo las promociones activas
-        .order('fecha_inicio', { ascending: false }); // Ordenar por fecha de inicio
-  
-      if (error) throw error;
-  
-      const promoSlider = document.getElementById("promo-slider");
-      promoSlider.innerHTML = ''; // Limpiar el carrusel antes de cargar las nuevas promociones
-  
-      if (data.length === 0) {
-        promoSlider.innerHTML = "<p>No hay promociones activas.</p>";
-        return;
-      }
-  
-      // Crear las slides para el carrusel
-      data.forEach((promocion, index) => {
-        const slide = document.createElement("div");
-        slide.classList.add("carousel-item");
-        if (index === 0) slide.classList.add("active"); // Agregar clase active al primer item
-  
-        slide.innerHTML = `
+        // Verificar si el elemento existe antes de continuar
+        const promoSlider = document.getElementById("promo-slider");
+        if (!promoSlider) {
+            console.log("Elemento promo-slider no encontrado - omitiendo carga de promociones");
+            return;
+        }
+        // Consulta para obtener solo promociones activas
+        const { data, error } = await supabase
+            .from('promociones')
+            .select('id, nombre, imagen_url, activa')
+            .eq('activa', true) // Filtrar solo las promociones activas
+            .order('fecha_inicio', { ascending: false }); // Ordenar por fecha de inicio
+
+        if (error) throw error;
+        
+        promoSlider.innerHTML = ''; // Limpiar el carrusel antes de cargar las nuevas promociones
+
+        if (data.length === 0) {
+            promoSlider.innerHTML = "<p>No hay promociones activas.</p>";
+            return;
+        }
+
+        // Crear las slides para el carrusel
+        data.forEach((promocion, index) => {
+            const slide = document.createElement("div");
+            slide.classList.add("carousel-item");
+            if (index === 0) slide.classList.add("active"); // Agregar clase active al primer item
+
+            slide.innerHTML = `
           <img src="${promocion.imagen_url}" class="d-block w-100 promo-image" alt="${promocion.nombre}" loading="lazy">
           <div class="carousel-caption d-none d-md-block">
         <!--    <h5>${promocion.nombre}</h5>
             <p>${promocion.descripcion}</p>-->
           </div>
         `;
-  
-        promoSlider.appendChild(slide);
-      });
+
+            promoSlider.appendChild(slide);
+        });
     } catch (error) {
-      console.error("Error al cargar las promociones:", error);
+        console.error("Error al cargar las promociones:", error);
     }
-  }
-  
-  // Cargar promociones cuando la página cargue
-  document.addEventListener('DOMContentLoaded', cargarPromociones);
-  
+}
+
+// Cargar promociones cuando la página cargue
+document.addEventListener('DOMContentLoaded', cargarPromociones);
+
 
 
 // 🔹 Cargar productos dinámicamente
@@ -156,6 +164,11 @@ function aplicarColorPrimario(color) {
 
 // Función para cargar las categorías desde la base de datos
 async function cargarCategorias() {
+    const categoryButtonsContainer = document.getElementById("category-buttons");
+    if (!categoryButtonsContainer) {
+        console.log("Elemento category-buttons no encontrado - omitiendo carga de Categorias");
+        return;
+    }
     try {
         const { data, error } = await supabase
             .from("categorias")
@@ -166,7 +179,7 @@ async function cargarCategorias() {
             throw error;
         }
 
-        const categoryButtonsContainer = document.getElementById("category-buttons");
+        
 
         // Limpiar cualquier contenido anterior
         categoryButtonsContainer.innerHTML = "";

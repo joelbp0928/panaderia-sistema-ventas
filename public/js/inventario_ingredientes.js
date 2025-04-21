@@ -412,7 +412,7 @@ document.addEventListener("keydown", (e) => {
 const filtrosIng = {
   buscar: document.getElementById("buscarIngrediente"),
   unidad: document.getElementById("filtroUnidad"),
-  ordenarNombre: document.getElementById("ordenarNombreIngrediente"), // asegúrate de tener este select
+  ordenarNombre: document.getElementById("ordenarNombreIngrediente2"), // asegúrate de tener este select
   limpiarBtn: document.getElementById("btn-limpiar-filtros-ing"),
 };
 
@@ -526,6 +526,7 @@ function actualizarBadgesFiltroIng() {
   filtrosIng.unidad.addEventListener(ev, actualizarEstadoBotonLimpiarIng);
   filtrosIng.ordenarNombre.addEventListener(ev, actualizarEstadoBotonLimpiarIng);
 });
+
 function animarTablaIngredientes() {
   const tabla = document.getElementById("tabla-ingredientes");
   tabla.classList.add("resaltar-tabla");

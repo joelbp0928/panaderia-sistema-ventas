@@ -1,5 +1,5 @@
 // Importar otros módulos
-import { cargarPromociones, cargarProductos, cargarConfiguracion } from "./config.js";
+import { cargarProductos, cargarConfiguracion } from "./config.js";
 import { verificarSesion } from './auth-check.js'; // Importa la función para verificar la sesión
 import { inicializarCarrito } from "./cart.js";
 import { iniciarSesion } from "./auth.js";
@@ -10,7 +10,7 @@ window.onload = async function () {
     try {
     //    verificarSesion();
         // Cargar elementos principales de la página
-        cargarPromociones();
+      //  cargarPromociones();
         cargarProductos();
 
         // Inicializar otros módulos

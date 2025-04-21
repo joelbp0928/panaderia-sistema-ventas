@@ -500,7 +500,7 @@ async function cargarCategorias() {
 
     } catch (error) {
         console.error('Error al cargar categorías:', error);
-        
+
         // Mostrar error en todos los selects
         selects.forEach(select => {
             if (select) {
@@ -555,17 +555,17 @@ filtros.limpiarBtn.addEventListener("click", async () => {
 
 
     // Simular un pequeño delay visual (700ms)
-    setTimeout(async () => {
+    setTimeout(() => {
         // Limpiar valores
         filtros.buscar.value = "";
         filtros.categoria.value = "";
         filtros.ordenarStock.value = "desc";
         filtros.ordenarNombre.value = "az";
 
-        await cargarInventarioProductos(); // Recargar tabla
-
-        // Animación visual
-        animarTablaProductos();
+        filtros.buscar.dispatchEvent(new Event("input"));
+        filtros.categoria.dispatchEvent(new Event("change"));
+        filtros.ordenarStock.dispatchEvent(new Event("change"));
+        filtros.ordenarNombre.dispatchEvent(new Event("change"));
 
         filtros.limpiarBtn.innerHTML = originalIcon;
         filtros.limpiarBtn.classList.add("disabled");
@@ -598,12 +598,12 @@ document.getElementById("buscarProducto").addEventListener("input", function () 
 document.getElementById("filtroCategoria").addEventListener("change", function () {
     const categoriaSeleccionada = this.value.toLowerCase();
     const filas = document.querySelectorAll("#tabla-productos tr");
-    
+
     // Saltar la fila de encabezado si existe
     filas.forEach(fila => {
         // Asume que la categoría está en la primera columna (children[0])
         const categoria = fila.children[0]?.textContent.toLowerCase();
-        
+
         // Mostrar fila si coincide con la categoría seleccionada o si no hay selección
         if (!categoriaSeleccionada || categoria === categoriaSeleccionada) {
             fila.style.display = "";
@@ -611,7 +611,7 @@ document.getElementById("filtroCategoria").addEventListener("change", function (
             fila.style.display = "none";
         }
     });
-    
+
     actualizarBadgesFiltro();
 });
 
@@ -651,6 +651,8 @@ function actualizarBadgesFiltro() {
     const nombre = document.getElementById("ordenarNombre").value;
 
     let hayFiltros = false;
+
+    animarTablaProductos();
 
     // Categoría
     const badgeCategoria = document.getElementById("badge-categoria");

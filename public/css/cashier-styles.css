@@ -337,3 +337,88 @@ header img {
 footer {
   display: none;
 }
+/*REvisarrrrr----------------------------------*/
+/* Añade esto a tu cashier-styles.css */
+
+/* Tabla responsiva */
+#ticket-details {
+  width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+
+#ticket-details thead {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+#ticket-details tbody {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+#ticket-details tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+#ticket-details th, 
+#ticket-details td {
+  padding: 12px 8px;
+  text-align: left;
+  word-wrap: break-word;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  #main-content {
+      flex-direction: column;
+  }
+  
+  #products-section, 
+  #payment-section,
+  #change-section {
+      width: 100%;
+      margin-bottom: 1rem;
+  }
+  
+  #ticket-details {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+  }
+  
+  .payment-grid {
+      grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .payment-btn {
+      width: 60px;
+      height: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  #ticket-details th, 
+  #ticket-details td {
+      padding: 8px 4px;
+      font-size: 0.9rem;
+  }
+  
+  #total {
+      font-size: 1rem;
+  }
+  
+  .payment-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 5px;
+  }
+  
+  .payment-btn {
+      width: 50px;
+      height: 50px;
+  }
+}

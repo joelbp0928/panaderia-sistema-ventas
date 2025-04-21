@@ -1,4 +1,4 @@
-import { cargarPromociones, cargarProductos, cargarConfiguracion, configuracionGlobal } from "./config.js";
+import { cargarProductos, cargarConfiguracion, configuracionGlobal } from "./config.js";
 import { marcarErrorCampo, mostrarToast } from "./manageError.js";
 import { verificarSesion, cerrarSesion } from './auth-check.js'; // Importa la función para verificar la sesión
 import { guardarPedido } from "./guardarPedido.js";
