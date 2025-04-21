@@ -1065,16 +1065,21 @@ function generarNombreUnico(originalName) {
 */
 // Objeto para almacenar los filtros
 const filtrosProductos = {
-    buscar: document.getElementById("buscarProducto"),
+    buscar: document.getElementById("buscarProducto1"),
     categoria: document.getElementById("filtroCategoria"),
-    precio: document.getElementById("filtroPrecio"),
+    //  ordenarPrecio: document.getElementById("ordenarProductosPrecio"),
+    ordenarNombre: document.getElementById("ordenarProductos"),
     limpiarBtn: document.getElementById("btn-limpiar-filtros-prod")
 };
+// Variable para almacenar todos los productos originales
+let productosOriginales = [];
 
-
+// Variable para el timeout de filtrado
+let timeoutFiltro;
 
 // Función para mostrar productos (con filtros aplicables)
 function mostrarProductos(productos) {
+    productosOriginales = [...productos]; // Guardamos copia de los originales
     const catalogoContainer = document.getElementById("product-catalog");
     catalogoContainer.innerHTML = '';
 
@@ -1091,7 +1096,7 @@ function mostrarProductos(productos) {
                        class="card-img-top-product">
                   <div class="card-body-product">
                       <h5 class="producto-nombre">${producto.nombre}</h5>
-                      <p class="producto-precio">$${producto.precio.toFixed(2)}</p>
+                      <p class="card-price-product">$${producto.precio.toFixed(2)}</p>
                       <p class="producto-categoria d-none">${producto.categoria?.nombre || ''}</p>
                   </div>
               </div>
@@ -1101,83 +1106,164 @@ function mostrarProductos(productos) {
         card.addEventListener("click", () => mostrarDetallesProducto(producto.id));
     });
 }
+// Event listeners para filtros
+filtrosProductos.buscar.addEventListener("input", function () {
+    if (this.value.trim()) {
+        this.classList.add("input-busqueda-active");
+        this.style.backgroundImage = "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"%236c757d\" width=\"24px\" height=\"24px\"><path d=\"M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z\"/></svg>')";
+    } else {
+        this.classList.remove("input-busqueda-active");
+        this.style.backgroundImage = "";
+    }
+    timeoutFiltro = setTimeout(aplicarFiltros, 300); // Espera 300ms después de la última tecla
+});
 
-// Función para cargar categorías dinámicamente
-/*function cargarCategorias(productos) {
-    const selectCategoria = document.getElementById("filtroCategoria");
- 
-    // Obtener categorías únicas de los productos
-    const categoriasUnicas = [...new Set(
-        productos.map(p => p.categoria?.nombre).filter(Boolean)
-    )].sort();
- 
-    // Limpiar y agregar opciones
-    selectCategoria.innerHTML = '<option value="">Todas</option>';
-    categoriasUnicas.forEach(cat => {
-        const option = document.createElement("option");
-        option.value = cat;
-        option.textContent = cat;
-        selectCategoria.appendChild(option);
-    });
+filtrosProductos.categoria.addEventListener("input", function () {
+    timeoutFiltro = setTimeout(aplicarFiltros, 300); // Espera 300ms después de la última tecla
+});
+filtrosProductos.ordenarNombre.addEventListener("input", function () {
+    timeoutFiltro = setTimeout(aplicarFiltros, 300); // Espera 300ms después de la última tecla
+});
+// Variable para almacenar el timeout
+//let timeoutFiltro;
+
+// Función debounce para optimizar el filtrado
+/*function debounceFiltros() {
+    clearTimeout(timeoutFiltro);
+    timeoutFiltro = setTimeout(aplicarFiltros, 400); // Espera 300ms después de la última tecla
 }
 */
-// Event listeners para los filtros
-filtrosProductos.buscar.addEventListener("input", aplicarFiltros);
-filtrosProductos.categoria.addEventListener("change", aplicarFiltros);
-filtrosProductos.precio.addEventListener("input", aplicarFiltros);
+// Modifica tus event listeners
+//filtrosProductos.buscar.addEventListener("input", debounceFiltros);
+//filtrosProductos.categoria.addEventListener("change", aplicarFiltros); // No necesita debounce
+//filtrosProductos.precio.addEventListener("input", debounceFiltros);
 
-// Función para aplicar todos los filtros
-// Función para aplicar filtros con efectos visuales
-function aplicarFiltros() {
-    const textoBusqueda = filtrosProductos.buscar.value.toLowerCase();
-    const categoriaSeleccionada = filtrosProductos.categoria.value;
-    const precioMax = parseFloat(filtrosProductos.precio.value) || Infinity;
 
-    // Contador para animaciones escalonadas
-    let delay = 0;
-    const delayIncrement = 50; // milisegundos entre animaciones
 
-    document.querySelectorAll(".producto-card").forEach(card => {
-        const nombre = card.querySelector(".producto-nombre").textContent.toLowerCase();
-        const categoria = card.dataset.categoria;
-        const precio = parseFloat(card.dataset.precio);
+// Ordenar por Precio (Menor a Mayor / Mayor a Menor)
+//filtrosProductos.ordenarPrecio.addEventListener("change", debounceFiltros);
 
-        const cumpleNombre = nombre.includes(textoBusqueda);
-        const cumpleCategoria = !categoriaSeleccionada || categoria === categoriaSeleccionada;
-        const cumplePrecio = precio <= precioMax;
+// Efecto para el input de búsqueda
 
-        if (cumpleNombre && cumpleCategoria && cumplePrecio) {
-            // Producto que cumple con los filtros
-            card.classList.remove("filtro-no-coincide");
-            card.classList.add("filtro-coincide");
-            card.style.animationDelay = `${delay}ms`;
-            delay += delayIncrement;
-        } else {
-            // Producto que no cumple con los filtros
-            card.classList.remove("filtro-coincide");
-            card.classList.add("filtro-no-coincide");
+async function aplicarFiltros() {
+    try {
+        const textoBusqueda = filtrosProductos.buscar.value.toLowerCase();
+        const categoriaSeleccionada = filtrosProductos.categoria.value;
+        const ordenNombre = filtrosProductos.ordenarNombre.value;
+        //  const ordenPrecio = filtrosProductos.ordenarPrecio.value;
+
+        // 1. Filtrar desde los productos originales
+        let productosFiltrados = productosOriginales.filter(producto => {
+            const coincideNombre = producto.nombre.toLowerCase().includes(textoBusqueda);
+            const coincideCategoria = !categoriaSeleccionada ||
+                (producto.categoria?.nombre === categoriaSeleccionada);
+            return coincideNombre && coincideCategoria;
+        });
+
+        // 2. Ordenar
+        if (ordenNombre === "az") {
+            productosFiltrados.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        } else if (ordenNombre === "za") {
+            productosFiltrados.sort((a, b) => b.nombre.localeCompare(a.nombre));
         }
-    });
 
-    // Efecto en el botón de limpiar
-    const hayFiltros = textoBusqueda || categoriaSeleccionada || isFinite(precioMax);
-    if (hayFiltros) {
-        filtrosProductos.limpiarBtn.classList.add("btn-limpiar-active");
-    } else {
-        filtrosProductos.limpiarBtn.classList.remove("btn-limpiar-active");
+        // 3. Ordenar por precio (Menor a Mayor o Mayor a Menor)
+        /*  if (ordenPrecio === "asc") {
+              cardsFiltradas.sort((a, b) => parseFloat(a.querySelector(".card-price-product").textContent.replace('$', '')) - parseFloat(b.querySelector(".card-price-product").textContent.replace('$', '')));
+          } else if (ordenPrecio === "desc") {
+              cardsFiltradas.sort((a, b) => parseFloat(b.querySelector(".card-price-product").textContent.replace('$', '')) - parseFloat(a.querySelector(".card-price-product").textContent.replace('$', '')));
+          }*/
+
+        // 3. Mostrar resultados con efectos
+        const catalogoContainer = document.getElementById("product-catalog");
+        catalogoContainer.innerHTML = '';
+
+        if (productosFiltrados.length === 0) {
+            mostrarMensajeSinResultados(true);
+        } else {
+            // Primero ocultamos todas las cards (si hubiera)
+            document.querySelectorAll('.producto-card').forEach(card => {
+                card.classList.add("filtro-no-coincide");
+                card.classList.remove("filtro-coincide");
+            });
+
+            // Luego mostramos las filtradas con efecto
+            productosFiltrados.forEach((producto, index) => {
+                setTimeout(() => {
+                    const card = document.createElement("div");
+                    card.classList.add("col-md-4", "producto-card", "filtro-coincide");
+                    card.style.opacity = '0';
+                    card.style.animation = 'fadeIn 0.5s forwards';
+
+                    card.innerHTML = `
+                           <div class="card-product" data-id="${producto.id}" data-bs-toggle="modal" data-bs-target="#detalleProductoModal">
+                               <img src="${producto.imagen_url || 'https://via.placeholder.com/300?text=Producto'}" 
+                                    alt="${producto.nombre}" 
+                                    class="card-img-top-product">
+                               <div class="card-body-product">
+                                   <h5 class="producto-nombre">${producto.nombre}</h5>
+                                   <p class="card-price-product">$${producto.precio.toFixed(2)}</p>
+                               </div>
+                           </div>
+                       `;
+
+                    catalogoContainer.appendChild(card);
+                    card.addEventListener("click", () => mostrarDetallesProducto(producto.id));
+
+                    // Aplicamos el efecto de aparición
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                    }, 50);
+
+                }, index * 100); // Retraso escalonado para cada card
+            });
+            mostrarMensajeSinResultados(false);
+        }
+
+        actualizarEstadoBotonLimpiar();
+        actualizarBadgesFiltros();
+
+    } catch (error) {
+        console.error("Error en filtrado:", error);
     }
+}
+// Función para mostrar mensaje cuando no hay resultados
+function mostrarMensajeSinResultados(mostrar) {
+    let mensaje = document.getElementById("mensaje-sin-resultados");
 
-    actualizarEstadoBotonLimpiar();
-    actualizarBadgesFiltros();
+    if (mostrar) {
+        if (!mensaje) {
+            mensaje = document.createElement("div");
+            mensaje.id = "mensaje-sin-resultados";
+            mensaje.className = "col-12 text-center py-5";
+            mensaje.innerHTML = `
+          <i class="fas fa-search fa-3x mb-3 text-muted"></i>
+          <h4 class="text-muted">No se encontraron productos</h4>
+          <p>Intenta con otros criterios de búsqueda</p>
+        `;
+            document.getElementById("product-catalog").appendChild(mensaje);
+        }
+    } else if (mensaje) {
+        mensaje.remove();
+    }
 }
 
+function agregarBadgeConEfecto(titulo, valor, efecto) {
+    const contenedor = document.getElementById("filtros-activos-prod");
+    const badge = document.createElement("span");
+    badge.className = `badge rounded-pill bg-secondary me-2 badge-filtro animate__animated animate__${efecto.name}`;
+    badge.style.setProperty('--animate-duration', efecto.duration);
+    badge.innerHTML = `${titulo}: <span class="fw-bold">${valor}</span>`;
+    contenedor.appendChild(badge);
+}
 
 // Función para actualizar el estado del botón limpiar
 function actualizarEstadoBotonLimpiar() {
     const hayFiltros =
         filtrosProductos.buscar.value.trim() !== "" ||
         filtrosProductos.categoria.value !== "" ||
-        filtrosProductos.precio.value !== "";
+        filtrosProductos.ordenarNombre.value !== "az"; //||
+    //  filtrosProductos.ordenarPrecio.value !== "asc";
 
     filtrosProductos.limpiarBtn.classList.toggle("disabled", !hayFiltros);
     filtrosProductos.limpiarBtn.disabled = !hayFiltros;
@@ -1192,45 +1278,57 @@ filtrosProductos.limpiarBtn.addEventListener("click", () => {
     setTimeout(() => {
         filtrosProductos.buscar.value = "";
         filtrosProductos.categoria.value = "";
-        filtrosProductos.precio.value = "";
-        
-        // Reset button state
+        filtrosProductos.ordenarNombre.value = "az";
+        //  filtrosProductos.ordenarPrecio.value = "asc";
+
         filtrosProductos.limpiarBtn.innerHTML = original;
-        filtrosProductos.limpiarBtn.classList.add("disabled");
-        filtrosProductos.limpiarBtn.disabled = true;
-        
-        aplicarFiltros(); // Esto mostrará todos los productos nuevamente
+        actualizarEstadoBotonLimpiar();
+
+        aplicarFiltros();
     }, 600);
 });
 
-// Función para actualizar badges de filtros activos
+// Función para actualizar los badges de filtros activos
 function actualizarBadgesFiltros() {
     const contenedor = document.getElementById("filtros-activos-prod");
     contenedor.innerHTML = '<span class="me-2">Filtros activos:</span>';
+
     const efectos = [
         { name: "bounceIn", duration: "0.5s" },
         { name: "fadeIn", duration: "0.3s" },
         { name: "zoomIn", duration: "0.4s" }
     ];
+
     let efectoIndex = 0;
+
+    // Nombre (filtro por búsqueda)
     if (filtrosProductos.buscar.value) {
         agregarBadgeConEfecto("Nombre", filtrosProductos.buscar.value, efectos[efectoIndex++ % efectos.length]);
     }
 
+    // Categoría
     if (filtrosProductos.categoria.value) {
-        const badge = document.createElement("span");
-        badge.className = "badge rounded-pill bg-secondary me-2";
-        badge.innerHTML = `Categoría: <span class="fw-bold">${filtrosProductos.categoria.value}</span>`;
-        contenedor.appendChild(badge);
+        agregarBadgeConEfecto("Categoría", filtrosProductos.categoria.value, efectos[efectoIndex++ % efectos.length]);
     }
 
-    if (filtrosProductos.precio.value) {
-        const badge = document.createElement("span");
-        badge.className = "badge rounded-pill bg-secondary me-2";
-        badge.innerHTML = `Precio ≤ <span class="fw-bold">$${filtrosProductos.precio.value}</span>`;
-        contenedor.appendChild(badge);
+    // Orden por nombre
+    const ordenTextos = {
+        'az': 'A-Z',
+        'za': 'Z-A'//,
+        /*    'precio-asc': 'Orden: Precio ↑',
+            'precio-desc': 'Orden: Precio ↓'*/
+    };
+
+    if (filtrosProductos.ordenarNombre.value !== 'az') {
+        agregarBadgeConEfecto("Orden", ordenTextos[filtrosProductos.ordenarNombre.value], efectos[efectoIndex++ % efectos.length]);
     }
 
+    // Mostrar badge de precio si es diferente de 'precio-asc' (el valor por defecto)
+    //  if (filtrosProductos.ordenarPrecio.value !== 'precio-asc') {
+    //      agregarBadgeConEfecto("Orden", ordenTextos[filtrosProductos.ordenarPrecio.value], efectos[efectoIndex++ % efectos.length]);
+    //  }
+
+    // Mostrar el contenedor de filtros activos si hay filtros
     contenedor.classList.toggle("d-none", contenedor.children.length <= 1);
 }
 

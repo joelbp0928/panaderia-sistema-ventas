@@ -54,6 +54,12 @@
   align-self: flex-start; /* esto lo coloca a la izquierda */
 }
 
+.producto-nombre {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
 /* Modal Styling */
 .modal-dialog {
   max-width: 800px;
@@ -107,12 +113,6 @@
 }
 
 
-.card-price {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #28a745;
-}
-
 /* Responsivo */
 @media (max-width: 768px) {
   .ingredient-item {
@@ -131,7 +131,11 @@
 
 /* Efectos para las cards durante el filtrado */
 .producto-card {
-  transition: all 0.5s ease;
+  transition: 
+  opacity 0.4s ease-out, 
+  transform 0.4s ease-out,
+  height 0.4s ease-out 0.2s,
+  width 0.4s ease-out 0.2s;
   opacity: 1;
   transform: scale(1);
 }
@@ -144,22 +148,6 @@
   margin: 0;
   overflow: hidden;
   transition: all 0.5s ease, height 0.5s ease 0.5s, padding 0.5s ease 0.5s, margin 0.5s ease 0.5s;
-}
-
-/* Efecto de aparición para nuevos resultados */
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.producto-card.filtro-coincide {
-  animation: fadeInScale 0.5s ease forwards;
 }
 
 /* Efecto para el botón de limpiar */
@@ -218,4 +206,116 @@
 .input-busqueda-active:focus {
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
   background-position: right 8px center;
+}
+
+.producto-card.filtro-coincide {
+  opacity: 0; /* Inicia invisible para la animación */
+  animation: fadeInScale 0.5s ease-out forwards;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Efectos para controles de filtro */
+.input-busqueda-active {
+  background-position: right 10px center;
+  background-repeat: no-repeat;
+  background-size: 20px;
+  padding-right: 35px;
+  transition: all 0.3s ease;
+}
+
+.btn-limpiar-active {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-limpiar-active::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(30deg);
+  transition: all 0.5s ease;
+}
+
+.btn-limpiar-active:hover::after {
+  left: 100%;
+}
+
+.badge-filtro {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  margin-right: 10px;
+  margin-bottom: 5px;
+  display: inline-block;
+}
+
+.badge-filtro::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.badge-filtro:hover::after {
+  transform: translateX(100%);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .col-md-4 {
+    flex: 0 0 calc(50% - 20px);
+    max-width: calc(50% - 20px);
+  }
+}
+
+@media (max-width: 576px) {
+  .col-md-4 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+/* Estilos para los badges de ordenamiento */
+.badge-orden {
+  background-color: #6f42c1 !important; /* Color morado para diferenciar */
+}
+
+.badge-orden-precio {
+  background-color: #20c997 !important; /* Color verde para orden de precios */
+}
+
+/* Iconos en los badges */
+.badge-orden[data-orden="az"]::before {
+  content: "A→Z ";
+}
+
+.badge-orden[data-orden="za"]::before {
+  content: "Z→A ";
+}
+
+.badge-orden-precio[data-orden="asc"]::after {
+  content: " ↑";
+}
+
+.badge-orden-precio[data-orden="desc"]::after {
+  content: " ↓";
 }

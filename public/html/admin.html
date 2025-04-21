@@ -17,6 +17,10 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
     <link rel="stylesheet" href="../css/promotions-list-redesign.css" />
     <link rel="stylesheet" href="../css/products-list-redesign.css" />
     <link rel="stylesheet" href="../css/stylesAdmin.css" />
@@ -802,52 +806,100 @@
             <button class="btn btn-primary mb-3" id="btn-agregar-producto">
               <i class="fas fa-plus-circle me-1"></i> Agregar Producto
             </button>
-<!-- Filtros de Productos -->
-<div class="d-flex flex-wrap align-items-end gap-3 mb-3">
-  <!-- Buscar por Nombre -->
-  <div class="flex-fill">
-    <label for="buscarProducto" class="form-label">
-      <i class="fas fa-search me-1"></i> Buscar Nombre
-    </label>
-    <input type="text" id="buscarProducto" class="form-control" placeholder="Ej. Pan, Donas...">
-  </div>
+            <!-- Filtros de Productos -->
+            <div class="d-flex flex-wrap align-items-end gap-3 mb-3">
+              <!-- Buscar por Nombre -->
+              <div class="flex-fill">
+                <label for="buscarProducto1" class="form-label">
+                  <i class="fas fa-search me-1"></i> Buscar Nombre
+                </label>
+                <input
+                  type="text"
+                  id="buscarProducto1"
+                  class="form-control input-busqueda"
+                  placeholder="Ej. Pan, Donas..."
+                />
+              </div>
 
-  <!-- Filtro por Categoría -->
-  <div class="flex-fill">
-    <label for="filtroCategoria" class="form-label">
-      <i class="fas fa-tags me-1"></i> Categoría
-    </label>
-    <select id="filtroCategoria" class="form-select">
-      <option value="">Todas</option>
-      <!-- Las categorías se cargarán dinámicamente -->
-    </select>
-  </div>
+              <!-- Filtro por Categoría -->
+              <div class="flex-fill">
+                <label for="filtroCategoria" class="form-label">
+                  <i class="fas fa-tags me-1"></i> Categoría
+                </label>
+                <select id="filtroCategoria" class="form-select">
+                  <option value="">Todas</option>
+                  <!-- Las categorías se cargarán dinámicamente -->
+                </select>
+              </div>
+              <!-- filtro orden precio -->
+         <!--     <div class="flex-fill">
+                <label for="ordenarProductosPrecio" class="form-label">
+                  <i class="fa-solid fa-arrow-down-1-9"></i> Precio
+                </label>
+                <select id="ordenarProductosPrecio" class="form-select">
+                  <option value="" disabled selected>
+                    Selecciona el filtro
+                  </option>
+                  <option value="asc">Precio: Menor a Mayor</option>
+                  <option value="desc">Precio: Mayor a Menor</option>
+                </select>
+              </div>-->
+              <!-- filtro orden nombre -->
+              <div class="flex-fill">
+                <label for="ordenarProductos" class="form-label">
+                  <i class="fas fa-sort-alpha-down me-1"></i> Nombre
+                </label>
+                <select id="ordenarProductos" class="form-select">
+                  <option value="az">A - Z</option>
+                  <option value="za">Z - A</option>
+                </select>
+              </div>
 
-  <!-- Filtro por Rango de Precio -->
-  <div class="flex-fill">
-    <label for="filtroPrecio" class="form-label">
-      <i class="fas fa-dollar-sign me-1"></i> Precio Máx
-    </label>
-    <input type="number" id="filtroPrecio" class="form-control" placeholder="Precio máximo" min="0">
-  </div>
+              <!-- Botón limpiar filtros -->
+              <div>
+                <button
+                  id="btn-limpiar-filtros-prod"
+                  class="btn btn-outline-secondary disabled btn-limpiar"
+                  disabled
+                >
+                  <i class="fas fa-eraser me-1"></i> Limpiar Filtros
+                </button>
+              </div>
+            </div>
 
-  <!-- Botón limpiar filtros -->
-  <div>
-    <button id="btn-limpiar-filtros-prod" class="btn btn-outline-secondary disabled" disabled>
-      <i class="fas fa-eraser me-1"></i> Limpiar Filtros
-    </button>
-  </div>
-</div>
+            <!-- Badges de filtros activos -->
+            <div id="filtros-activos-prod" class="mb-3 d-none">
+              <span class="me-2">Filtros activos:</span>
+              <span
+                id="badge-nombre-prod"
+                class="badge rounded-pill bg-secondary d-none"
+              >
+                Nombre: <span class="fw-bold"></span>
+              </span>
+              <span
+                id="badge-categoria-prod"
+                class="badge rounded-pill bg-secondary d-none"
+              >
+                Categoria: <span class="fw-bold"></span>
+              </span>
+          <!--    <span
+                id="badge-orden-precio-prod"
+                class="badge rounded-pill bg-secondary d-none"
+              >
+                Orden Precio: <span class="fw-bold"></span>
+              </span>-->
+              <span
+                id="badge-nombre-orden-prod"
+                class="badge rounded-pill bg-secondary d-none"
+              >
+                Orden Nombre: <span class="fw-bold"></span>
+              </span>
+            </div>
 
-<!-- Badges de filtros activos -->
-<div id="filtros-activos-prod" class="mb-3 d-none">
-  <span class="me-2">Filtros activos:</span>
-  <!-- Los badges se actualizarán dinámicamente -->
-</div>
-
-<div class="row-product" id="product-catalog">
-  <!-- Los productos se cargarán aquí dinámicamente -->
-</div>
+            <div class="row-product" id="product-catalog">
+              <!-- Los productos se cargarán aquí dinámicamente -->
+              <!-- El mensaje de no resultados se insertará automáticamente cuando sea necesario -->
+            </div>
           </div>
 
           <!-- 🔍 Modal Detalles de Producto -->
