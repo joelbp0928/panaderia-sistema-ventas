@@ -451,46 +451,67 @@ document.addEventListener("keydown", (e) => {
 document.getElementById("btn-cerrar-historial-producto").addEventListener("click", cerrarHistorialProducto);
 
 // Función mejorada para cargar categorías
+// Función mejorada para cargar categorías en múltiples selects
 async function cargarCategorias() {
-    const selectCategoria = document.getElementById('filtroCategoria');
-    
-    // Mostrar estado de carga
-    selectCategoria.disabled = true;
-    selectCategoria.innerHTML = '<option value="">Cargando categorías...</option>';
-  
+    // Obtener ambos elementos select
+    const selects = [
+        document.getElementById('filtroCategoria'),
+        document.getElementById('filtroCategoria1')
+    ];
+
+    // Mostrar estado de carga en todos los selects
+    selects.forEach(select => {
+        if (select) {
+            select.disabled = true;
+            select.innerHTML = '<option value="">Cargando categorías...</option>';
+        }
+    });
+
     try {
-      const { data: categorias, error } = await supabase
-        .from('categorias')
-        .select('id, nombre')
-        .order('nombre', { ascending: true });
-  
-      if (error) throw error;
-  
-      // Limpiar y llenar el select
-      selectCategoria.innerHTML = '<option value="">Todas</option>';
-      
-      if (categorias.length === 0) {
-        selectCategoria.innerHTML = '<option value="">No hay categorías</option>';
-        return;
-      }
-  
-      categorias.forEach(categoria => {
-        const option = document.createElement('option');
-        option.value = categoria.nombre;
-        option.textContent = categoria.nombre;
-        selectCategoria.appendChild(option);
-      });
-  
-      selectCategoria.disabled = false;
-  
+        const { data: categorias, error } = await supabase
+            .from('categorias')
+            .select('id, nombre')
+            .order('nombre', { ascending: true });
+
+        if (error) throw error;
+
+        // Procesar cada select
+        selects.forEach(select => {
+            if (!select) return; // Si el select no existe, continuar
+
+            // Limpiar y llenar el select
+            select.innerHTML = '<option value="">Todas</option>';
+
+            if (categorias.length === 0) {
+                select.innerHTML = '<option value="">No hay categorías</option>';
+                return;
+            }
+
+            // Agregar cada categoría como opción
+            categorias.forEach(categoria => {
+                const option = document.createElement('option');
+                option.value = categoria.nombre;
+                option.textContent = categoria.nombre;
+                select.appendChild(option);
+            });
+
+            select.disabled = false;
+        });
+
     } catch (error) {
-      console.error('Error al cargar categorías:', error);
-      selectCategoria.innerHTML = '<option value="">Error al cargar</option>';
-      
-      // Opcional: Reintentar después de 5 segundos
-      setTimeout(cargarCategorias, 5000);
+        console.error('Error al cargar categorías:', error);
+        
+        // Mostrar error en todos los selects
+        selects.forEach(select => {
+            if (select) {
+                select.innerHTML = '<option value="">Error al cargar</option>';
+            }
+        });
+
+        // Opcional: Reintentar después de 5 segundos
+        setTimeout(cargarCategorias, 5000);
     }
-  }
+}
 //-----------Filtros-------------
 
 const filtros = {

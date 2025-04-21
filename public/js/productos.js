@@ -1066,7 +1066,7 @@ function generarNombreUnico(originalName) {
 // Objeto para almacenar los filtros
 const filtrosProductos = {
     buscar: document.getElementById("buscarProducto1"),
-    categoria: document.getElementById("filtroCategoria"),
+    categoria: document.getElementById("filtroCategoria1"),
     //  ordenarPrecio: document.getElementById("ordenarProductosPrecio"),
     ordenarNombre: document.getElementById("ordenarProductos"),
     limpiarBtn: document.getElementById("btn-limpiar-filtros-prod")
