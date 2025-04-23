@@ -15,15 +15,33 @@ function actualizarCambio() {
   const total = parseFloat(document.getElementById('total-amount').textContent.replace("$", "")) || 0;
   const pagado = parseFloat(document.getElementById('amount-input').value) || 0;
   const cambio = pagado - total;
-
+  
   const cambioElement = document.getElementById('change');
-  cambioElement.textContent = `$${cambio.toFixed(2)}`;
-
-  // ✨ Agregar clase de animación
+  
+  // Limpiar clases previas
+  cambioElement.classList.remove('text-danger', 'text-success', 'text-primary');
+  
+  // Determinar el texto y clase según el valor
+  let textoCambio;
+  if (cambio < 0) {
+    textoCambio = `-$${Math.abs(cambio).toFixed(2)}`; // Agregar signo negativo
+    cambioElement.classList.add('text-danger'); // Rojo
+  } else if (cambio > 0) {
+    textoCambio = `$${cambio.toFixed(2)}`; // Positivo (sin signo)
+    cambioElement.classList.add('text-success'); // Verde
+  } else {
+    textoCambio = `$${cambio.toFixed(2)}`; // Cero
+    cambioElement.classList.add('text-primary'); // Color primario
+  }
+  
+  cambioElement.textContent = textoCambio;
+  
+  // Animación
   cambioElement.classList.remove('fade-change');
   void cambioElement.offsetWidth; // Forzar reflow
   cambioElement.classList.add('fade-change');
 }
+
 const estiloAnimacion = document.createElement('style');
 estiloAnimacion.textContent = `
   .fade-change {
@@ -96,7 +114,7 @@ window.onload = async function () {
   document.getElementById("logout-btn").addEventListener("click", cerrarSesion);
 
   // Configurar teclado numérico
-  configurarTecladoNumerico();
+  // configurarTecladoNumerico();
   configurarBotonesPago();
 };
 
@@ -153,22 +171,44 @@ function actualizarTablaProductos() {
   document.getElementById('total-amount').textContent = `$${total.toFixed(2)}`;
 }
 
-function configurarTecladoNumerico() {
-  const teclas = document.querySelectorAll('.keypad-btn:not(#clear-key)');
-  const inputMonto = document.getElementById('amount-input');
+document.querySelectorAll(".keypad-btn").forEach(button => {
+  button.addEventListener("click", function () {
+    const value = this.getAttribute("data-num");
+    const quantityInput = document.getElementById("amount-input");
+    // Si es un número, lo agregamos al campo de entrada
+    if (value !== "C" && value !== "backspace") {
+      // Si el campo está vacío o es el primer dígito después de abrir el modal
+      if (quantityInput.value === "0" || quantityInput.dataset.fresh === "true") {
+        quantityInput.value = value; // Reemplazar el valor
+        quantityInput.dataset.fresh = "false"; // Marcar que ya no es "fresco"
+      } else {
+        quantityInput.value += value; // Concatenar normalmente
+      }
+    }
+    // Limpiar el campo de entrada (borrar todo)
+    else if (value === "C") {
+      quantityInput.value = ""; // Borrar todo
+      quantityInput.dataset.fresh = "true"; // Marcar como fresco al limpiar
+    }
+    // Retroceder (borrar un solo número)
+    else if (value === "backspace") {
+      // Borrar el último carácter del campo de entrada
+      if (quantityInput.value.length <= 1) {
+        quantityInput.value = "0";
+        quantityInput.dataset.fresh = "true"; // Marcar como fresco al borrar todo
+      } else {
+        quantityInput.value = quantityInput.value.slice(0, -1);
+      }
+    }
+    // Confirmar la cantidad
+    else {
+      mostrarToast("La cantidad debe ser mayor que 0.", "warning");
+      marcarErrorCampo("amount-input", "Ingrese cantidad mayor a 0.")
 
-  teclas.forEach(tecla => {
-    tecla.addEventListener('click', () => {
-      inputMonto.value += tecla.textContent;
-      actualizarCambio(); // 👈 Agrega esto
-    });
-  });
-
-  document.getElementById('clear-key').addEventListener('click', () => {
-    inputMonto.value = '';
+    }
     actualizarCambio(); // 👈 Y también aquí
   });
-}
+});
 
 function configurarBotonesPago() {
   const botonesPago = document.querySelectorAll('.payment-btn');
@@ -178,7 +218,7 @@ function configurarBotonesPago() {
     boton.addEventListener('click', () => {
       const valor = parseFloat(boton.querySelector('img').alt.replace('$', ''));
       const montoActual = parseFloat(inputMonto.value) || 0;
-      inputMonto.value = (montoActual + valor).toFixed(2);
+      inputMonto.value = (montoActual + valor);
       actualizarCambio(); // 👈 Y también aquí
     });
   });
@@ -352,7 +392,7 @@ function generarTicketHTML(ticket, productos, pagado, cambio) {
           <img src="${configuracionGlobal.logo_url}" class="logo" />
           <h2>${configuracionGlobal.nombre_empresa}</h2>
           <p>Ticket: ${ticket.codigo_ticket}</p>
-          <p>Fecha: ${fecha}</p>
+          <p>Fecha de empaque: ${fecha}</p>
           <p>Cajero: ${document.getElementById("employee-name").textContent.replace("Sesión: ", "")}</p>
   
           <div class="linea"></div>
@@ -404,5 +444,4 @@ function generarTicketHTML(ticket, productos, pagado, cambio) {
       </html>
     `;
 }
-
 

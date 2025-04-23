@@ -43,11 +43,7 @@
       </header>
 
       <!-- NUEVA ESTRUCTURA INTERFAZ FACHERITA -->
-      <div
-        id="main-content"
-        class="fachero-grid"
-        style="height: auto; overflow: hidden"
-      >
+      <div id="main-content">
         <!-- Sección de productos -->
         <div id="products-section">
           <h2>Productos</h2>
@@ -70,8 +66,8 @@
         </div>
 
         <!-- NUEVO CONTENEDOR DE PAGO COMPACTO -->
-        <div id="payment-box">
-          <h2 class="box-title">Cobro y Pago</h2>
+        <div id="totals-section">
+          <h2 class="box-title">Totales</h2>
           <div class="payment-summary">
             <div class="info-box">
               <label>Total:</label>
@@ -86,30 +82,37 @@
               <span id="change">$0.00</span>
             </div>
           </div>
-
           <button id="submit-payment">Confirmar Pago</button>
+        </div>
+        <!-- Teclado Numérico -->
+        <div id="payment-box">
+          <h2 class="box-title">Cobro y Pago</h2>
 
-          <!-- Teclado Numérico -->
-          <div id="numeric-keypad">
-            <div class="keypad-row">
-              <button class="keypad-btn">7</button>
-              <button class="keypad-btn">8</button>
-              <button class="keypad-btn">9</button>
-            </div>
-            <div class="keypad-row">
-              <button class="keypad-btn">4</button>
-              <button class="keypad-btn">5</button>
-              <button class="keypad-btn">6</button>
-            </div>
-            <div class="keypad-row">
-              <button class="keypad-btn">1</button>
-              <button class="keypad-btn">2</button>
-              <button class="keypad-btn">3</button>
-            </div>
-            <div class="keypad-row">
-              <button class="keypad-btn">0</button>
-              <button class="keypad-btn" id="clear-key">Borrar</button>
-            </div>
+          <div class="keypad-row">
+            <button class="keypad-btn" data-num="7">7</button>
+            <button class="keypad-btn" data-num="8">8</button>
+            <button class="keypad-btn" data-num="9">9</button>
+            <button class="keypad-btn" data-num="backspace">
+              <i class="fa-solid fa-delete-left"></i>
+            </button>
+            <!-- Borrar por carácter -->
+          </div>
+          <div class="keypad-row">
+            <button class="keypad-btn" data-num="4">4</button>
+            <button class="keypad-btn" data-num="5">5</button>
+            <button class="keypad-btn" data-num="6">6</button>
+            <button class="keypad-btn" data-num="C">C</button>
+            <!-- Borrar todo -->
+          </div>
+          <div class="keypad-row">
+            <button class="keypad-btn" data-num="1">1</button>
+            <button class="keypad-btn" data-num="2">2</button>
+            <button class="keypad-btn" data-num="3">3</button>
+            <button class="keypad-btn" data-num="0">0</button>
+          </div>
+          <div class="keypad-row">
+            <button class="keypad-btn" data-num=".">.</button>
+            <!-- Botón de punto -->
           </div>
 
           <div class="payment-grid">
