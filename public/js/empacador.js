@@ -609,17 +609,10 @@ document.getElementById("open-history-btn").addEventListener("click", async () =
 async function verDetallePedido(pedidoId) {
     const { data, error } = await supabase
         .from("pedido_productos")
-        .select(`
-            cantidad, 
-            precio_unitario, 
-            productos:producto_id(nombre)
-        `)
+        .select("cantidad, precio_unitario, productos(nombre)")
         .eq("pedido_id", pedidoId);
 
-    if (error) {
-        console.error("Error al cargar detalles:", error);
-        return mostrarToast("Error al cargar detalles", "error");
-    }
+    if (error) return mostrarToast("Error al cargar detalles", "error");
 
     const detalleHTML = data.map(item => `
       <tr>
