@@ -609,10 +609,17 @@ document.getElementById("open-history-btn").addEventListener("click", async () =
 async function verDetallePedido(pedidoId) {
     const { data, error } = await supabase
         .from("pedido_productos")
-        .select("cantidad, precio_unitario, productos(nombre)")
+        .select(`
+            cantidad, 
+            precio_unitario, 
+            productos:producto_id(nombre)
+        `)
         .eq("pedido_id", pedidoId);
 
-    if (error) return mostrarToast("Error al cargar detalles", "error");
+    if (error) {
+        console.error("Error al cargar detalles:", error);
+        return mostrarToast("Error al cargar detalles", "error");
+    }
 
     const detalleHTML = data.map(item => `
       <tr>
@@ -674,7 +681,7 @@ async function cargarHistorialPedidos() {
     }
 
     if (!pedidos.length) {
-        lista.innerHTML = `<li class="list-group-item text-muted">No se encontraron pedidos con los filtros.</li>`;
+        lista.innerHTML = `<li class="list-group-item text-muted"><i class="fa-solid fa-magnifying-glass"></i>No se encontraron pedidos con los filtros.</li>`;
         return;
     }
 

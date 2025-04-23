@@ -11,13 +11,18 @@
 }
 
 body {
-  font-family: Arial, sans-serif;
+  font-family: "Roboto", sans-serif; /* Tipografía moderna */
   margin: 0;
   padding: 0;
   background-color: var(--light-color);
   height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+h2 {
+  font-family: "Poppins", sans-serif; /* Fuente para los títulos */
+  font-weight: bold;
 }
 
 footer {
@@ -46,16 +51,12 @@ footer {
   gap: 1rem;
 }
 
+/* Nombre del usuario */
 #employee-name {
-  color: white;
-  font-size: 0.9rem;
-}
-
-#logout-btn {
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
+  color: white; /* Hacemos el texto blanco para que resalte */
+  font-size: 1rem; /* Tamaño del texto */
+  margin-bottom: 0.3rem; /* Un poco de espacio debajo del nombre */
+  font-weight: 600;
 }
 
 /* Contenedor principal */
@@ -69,15 +70,13 @@ footer {
 /* Contenido principal */
 #main-content {
   display: flex;
-  gap: 1rem;
+  justify-content: space-between; /* Distribuye el espacio */
+
   padding: 1rem;
-  overflow: hidden;
-  flex: 1;
 }
 
 /* Sección de productos */
 #products-section {
-  flex: 1; /* Esta sección ocupa un tercio de la pantalla */
   border: 2px solid var(--primary-color);
   border-radius: var(--border-radius);
   background-color: white;
@@ -85,6 +84,13 @@ footer {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  max-width: 30%; /* Reducimos un poco el tamaño para que no ocupe tanto */
+}
+#products-section,
+#totals-section,
+#payment-box {
+  flex: 1;
+  margin: 0.5rem;
 }
 
 #ticket-details {
@@ -111,7 +117,7 @@ footer {
 
 /* Sección de totales */
 #totals-section {
-  flex: 1; /* Esta sección también ocupa un tercio de la pantalla */
+  max-width: 30%; /* Lo hacemos más pequeño para que quepa bien con el resto */
   border: 2px solid var(--primary-color);
   border-radius: var(--border-radius);
   background-color: white;
@@ -167,6 +173,7 @@ footer {
 
 #submit-payment:hover {
   background-color: var(--primary-color-obscuro);
+  transform: scale(0.95);
 }
 /* Input de código de ticket */
 #scan-input-wrapper {
@@ -184,7 +191,7 @@ footer {
 
 /* Sección de botones de pago */
 #payment-box {
-  flex: 1; /* Esta sección ocupa un tercio de la pantalla */
+  max-width: 35%; /* Un tamaño perfecto para que no se vea desbordado */
   border: 2px solid var(--primary-color);
   border-radius: var(--border-radius);
   background: white;
@@ -239,9 +246,9 @@ footer {
 
 /* Estilo de los botones del teclado */
 .keypad-btn {
-  width: 100%; /* Hace que el botón ocupe el 100% de la celda */
-  height: 50px; /* Ajusta la altura de los botones */
-  font-size: 1.5rem; /* Aumenta el tamaño de la fuente */
+  width: 60%; /* Hace que el botón ocupe el 100% de la celda */
+  height: 60px; /* Ajusta la altura de los botones */
+  font-size: 2rem; /* Aumenta el tamaño de la fuente */
   aspect-ratio: 1;
   border: 1px solid var(--primary-color);
   border-radius: var(--border-radius);
@@ -250,6 +257,7 @@ footer {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.2s ease;
 }
 
 .keypad-btn:hover {
@@ -324,12 +332,117 @@ footer {
   }
 }
 
-.cambio-negativo {
-  color: #dc3545 !important; /* Rojo */
-}
-.cambio-positivo {
-  color: #28a745 !important; /* Verde */
-}
 .cambio-cero {
-  color: var(--primary-color) !important; /* Tu color primario */
+  color: var(--primary-color);
+}
+
+.fade-change {
+  animation: fadeFlash 0.5s ease-in-out;
+}
+
+@keyframes fadeFlash {
+  0% {
+    background-color: #d1ffd6;
+  }
+  50% {
+    background-color: #b4f5c3;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+#clear-key,
+#clear-char {
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 50%; /* Lo hace más atractivo */
+  font-size: 1.5rem;
+  transition: transform 0.2s ease;
+}
+
+#clear-key:active,
+#clear-char:active {
+  transform: scale(0.9); /* Efecto de presión al tocar */
+}
+
+/* Menú de hamburguesa */
+#menu-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.sidebar {
+  position: absolute;
+  top: 0;
+  right: -250px; /* Escondemos el menú inicialmente */
+  width: 250px;
+  height: 100%;
+  background-color: #333;
+  color: white;
+  transition: right 0.3s ease;
+  padding: 1rem;
+}
+
+.sidebar ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.sidebar ul li {
+  margin: 1rem 0;
+}
+
+.sidebar ul li a {
+  color: white;
+  text-decoration: none;
+  font-size: 1.2rem;
+}
+
+/* Cuando se abre el menú */
+.sidebar.open {
+  right: 0;
+}
+
+/* BOTÓN HAMBURGUESA */
+#open-history-btn:hover, #logout-btn:hover {
+  transform: scale(0.95);
+}
+
+
+/* Asegurarse que la tabla en el modal tenga buen aspecto */
+#detallePedidoModal table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#detallePedidoModal th, #detallePedidoModal td {
+  padding: 8px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+}
+
+#detallePedidoModal th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+#detallePedidoModal td {
+  font-size: 14px;
+}
+
+
+@media (max-width: 768px) {
+  #main-content {
+    flex-direction: column;
+  }
+
+  #products-section,
+  #totals-section,
+  #payment-box {
+    max-width: 100%; /* Asegura que todo ocupe el espacio completo en pantallas pequeñas */
+    margin-bottom: 10px;
+  }
 }

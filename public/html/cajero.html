@@ -34,14 +34,141 @@
 
         <!-- Contenedor para el nombre de usuario y el botón de cerrar sesión -->
         <div id="header-right">
-          <span id="employee-name">Sesion:</span>
-          <!-- Este texto se actualizará con el nombre del usuario -->
-          <button id="logout-btn" class="btn">
-            <i class="fas fa-sign-out-alt fa-2x"></i>
+          <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-user-circle fa-lg"></i>
+            <span id="employee-name" class="fw-bold">Sesión: </span>
+          </div>
+
+          <!-- Botón hamburguesa -->
+          <button
+            class="btn text-white"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#menuLateral"
+            aria-label="Menú"
+            style="background-color: var(--primary-color)"
+          >
+            <i class="fas fa-bars fa-2x"></i>
           </button>
         </div>
       </header>
+      <div class="offcanvas offcanvas-end" tabindex="-1" id="menuLateral">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title"><i class="fa-solid fa-gear"></i> Menú</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="offcanvas"
+          ></button>
+        </div>
+        <div class="offcanvas-body">
+          <button
+            class="btn btn-outline-secondary w-100 mb-2"
+            id="open-history-btn"
+          >
+            <i class="fa-solid fa-clock-rotate-left"></i> Ver Historial
+          </button>
+          <button class="btn btn-outline-danger w-100" id="logout-btn">
+            <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+          </button>
+          <hr />
+          <!--  <small class="text-muted">Más funciones próximamente...</small>-->
+        </div>
+      </div>
+      <!-- Panel lateral -->
+      <div id="history-sidebar" class="offcanvas offcanvas-end" tabindex="-1">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title">
+            <i class="fa-solid fa-clock-rotate-left"></i> Historial de Cobros
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="offcanvas"
+          ></button>
+        </div>
+        <div class="offcanvas-body">
+          <div class="mb-3">
+            <label class="form-label"
+              ><i class="fa-solid fa-filter"></i> Filtros</label
+            >
+            <div class="d-flex gap-2 align-items-end flex-wrap">
+              <div>
+                <label class="form-label mb-1">Desde</label>
+                <input
+                  type="date"
+                  id="filtro-fecha-desde"
+                  class="form-control form-control-sm filtro-animado"
+                />
+              </div>
+              <div>
+                <label class="form-label mb-1">Hasta</label>
+                <input
+                  type="date"
+                  id="filtro-fecha-hasta"
+                  class="form-control form-control-sm filtro-animado"
+                />
+              </div>
+              <div>
+                <label class="form-label mb-1">Estado</label>
+                <select
+                  id="filtro-estado"
+                  class="form-select form-select-sm filtro-animado"
+                >
+                  <option value="">Todos</option>
+                  <option value="pendiente">Pendiente</option>
+                  <option value="pagado">Pagado</option>
+                </select>
+              </div>
+              <button id="btn-aplicar-filtros" class="btn btn-sm btn-primary">
+                <i class="fa-solid fa-magnifying-glass"></i> Buscar
+              </button>
+            </div>
+          </div>
+          <p class="text-muted small mt-2">
+            <i class="fa-solid fa-lightbulb"></i> Usa los filtros para buscar
+            cobros por fecha o estado. Por defecto se cargan los de hoy.
+          </p>
+          <div id="badge-resultados" class="text-muted mb-2">
+            <i class="fa-solid fa-list-check"></i>
+            <span id="cantidad-pedidos">0</span> cobros encontrados
+          </div>
+          <ul id="lista-historial" class="list-group">
+            <!-- Aquí se cargan los pedidos -->
+          </ul>
+        </div>
+      </div>
+      <div class="modal fade" id="detallePedidoModal">
+        <div class="modal-dialog modal-sm">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">🧾 Detalle del Pedido</h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+              ></button>
+            </div>
 
+            <div class="modal-body">
+              <p id="codigo-ticket"></p> <!-- Aquí mostrarás el nombre del empleado -->
+              <p id="empleado-nombre"></p> <!-- Aquí mostrarás el nombre del empleado -->           
+              <p id="fecha-empaque"></p>   
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>Cant</th>
+                    <th>P.Unit</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody id="detalle-pedido-body"></tbody>
+              </table>
+              <p id="total-ticket"></p>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- NUEVA ESTRUCTURA INTERFAZ FACHERITA -->
       <div id="main-content">
         <!-- Sección de productos -->

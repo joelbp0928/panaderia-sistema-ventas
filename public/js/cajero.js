@@ -1,11 +1,14 @@
 import { cargarConfiguracion, configuracionGlobal } from "./config.js";
 import { verificarSesion, cerrarSesion } from './auth-check.js';
+import { getCDMXISOString } from './dateLocalDate.js'; // Asegúrate de que la ruta sea correcta
 import { supabase } from './supabase-config.js';
 
 // Variable para almacenar los productos del ticket
 let productosTicket = [];
 let ticketActual = null;
 
+const sonidoTeclado = new Audio('../sounds/teclado.wav');
+sonidoTeclado.volume = 0.8; // Volumen suave
 
 const input = document.getElementById("amount-input");
 const totalSpan = document.getElementById("total-amount");
@@ -15,12 +18,12 @@ function actualizarCambio() {
   const total = parseFloat(document.getElementById('total-amount').textContent.replace("$", "")) || 0;
   const pagado = parseFloat(document.getElementById('amount-input').value) || 0;
   const cambio = pagado - total;
-  
+
   const cambioElement = document.getElementById('change');
-  
+
   // Limpiar clases previas
-  cambioElement.classList.remove('text-danger', 'text-success', 'text-primary');
-  
+  cambioElement.classList.remove('text-danger', 'text-success', 'cambio-cero');
+
   // Determinar el texto y clase según el valor
   let textoCambio;
   if (cambio < 0) {
@@ -31,30 +34,18 @@ function actualizarCambio() {
     cambioElement.classList.add('text-success'); // Verde
   } else {
     textoCambio = `$${cambio.toFixed(2)}`; // Cero
-    cambioElement.classList.add('text-primary'); // Color primario
+    cambioElement.classList.add('cambio-cero'); // Color primario
   }
-  
+
   cambioElement.textContent = textoCambio;
-  
+
   // Animación
   cambioElement.classList.remove('fade-change');
   void cambioElement.offsetWidth; // Forzar reflow
   cambioElement.classList.add('fade-change');
 }
 
-const estiloAnimacion = document.createElement('style');
-estiloAnimacion.textContent = `
-  .fade-change {
-    animation: fadeFlash 0.4s ease-in-out;
-  }
 
-  @keyframes fadeFlash {
-    0% { background-color: #d1ffd6; }
-    50% { background-color: #b4f5c3; }
-    100% { background-color: transparent; }
-  }
-`;
-document.head.appendChild(estiloAnimacion);
 
 input.addEventListener("input", actualizarCambio);
 input.addEventListener("change", actualizarCambio);
@@ -171,8 +162,10 @@ function actualizarTablaProductos() {
   document.getElementById('total-amount').textContent = `$${total.toFixed(2)}`;
 }
 
+
 document.querySelectorAll(".keypad-btn").forEach(button => {
   button.addEventListener("click", function () {
+    sonidoTeclado.play();
     const value = this.getAttribute("data-num");
     const quantityInput = document.getElementById("amount-input");
     // Si es un número, lo agregamos al campo de entrada
@@ -258,12 +251,33 @@ async function procesarPago() {
   if (!confirmacion.isConfirmed) return;
 
   try {
+    // Registrar el cobro en la tabla de pedidos
+    const { data: sessionData } = await supabase.auth.getSession();
+    const empleadoCobroId = sessionData.session.user.id; // Obtener el empleado que hizo el cobro
+
     const { error } = await supabase
-      .from('pedidos')
-      .update({ estado: 'pagado' })
-      .eq('id', ticketActual.id);
+      .from('historial_cobros')
+      .insert([
+        {
+          pedido_id: ticketActual.id,
+          empleado_cobro_id: empleadoCobroId,
+          monto_cobrado: montoPagado,
+          fecha_cobro: getCDMXISOString(), // Usamos la función aquí
+          estado: 'pagado'  // Puedes agregar más estados según necesites
+        }
+      ]);
 
     if (error) throw error;
+
+    const { errorpedidos } = await supabase
+      .from('pedidos')
+      .update({
+        estado: 'pagado',
+        empleado_cobro_id: empleadoCobroId // Guardamos el empleado que realizó el cobro
+      })
+      .eq('id', ticketActual.id);
+
+    if (errorpedidos) throw error;
 
     // 🔔 Reproducir sonido al confirmar pago
     const sonido = new Audio('../sounds/success.mp3');
@@ -445,3 +459,205 @@ function generarTicketHTML(ticket, productos, pagado, cambio) {
     `;
 }
 
+document.getElementById("open-history-btn").addEventListener("click", async () => {
+  new bootstrap.Offcanvas(document.getElementById("history-sidebar")).show();
+
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session.user.id;
+
+  // Obtener los valores de los filtros de fecha
+  const desde = document.getElementById("filtro-fecha-desde").value;
+  const hasta = document.getElementById("filtro-fecha-hasta").value;
+
+  // Crear la consulta con los filtros de fecha
+  let query = supabase
+    .from("historial_cobros")
+    .select("id, fecha_cobro, monto_cobrado, pedidos(codigo_ticket, estado)")
+    .eq("empleado_cobro_id", userId)
+    .order("fecha_cobro", { ascending: false });
+
+  if (desde) {
+    query = query.gte("fecha_cobro", `${desde}T00:00:00`);
+  }
+
+  if (hasta) {
+    query = query.lte("fecha_cobro", `${hasta}T23:59:59`);
+  }
+
+  const { data: cobros, error } = await query;
+
+  const lista = document.getElementById("lista-historial");
+  lista.innerHTML = ""; // Limpiar la lista antes de agregar elementos
+
+  if (error) {
+    lista.innerHTML = `<li class="list-group-item text-danger">Error al cargar cobros</li>`;
+    return;
+  }
+
+  if (!cobros.length) {
+    lista.innerHTML = `<li class="list-group-item text-muted">No se encontraron cobros con los filtros seleccionados.</li>`;
+    return;
+  }
+
+  cobros.forEach(cobro => {
+    const item = document.createElement("li");
+    item.classList.add("list-group-item", "list-group-item-action");
+    item.innerHTML = `
+      <div>
+        <strong><i class="fa-solid fa-ticket"></i> ${cobro.pedidos.codigo_ticket}</strong><br>
+        <small><i class="fa-solid fa-calendar-day"></i> ${new Date(cobro.fecha_cobro).toLocaleString()}</small><br>
+        <small><i class="fa-solid fa-dollar-sign"></i> $${cobro.monto_cobrado}</small> · 
+        <span class="badge bg-success">Cobrado</span>
+      </div>
+    `;
+    item.onclick = () => verDetalleCobro(cobro.id);
+    lista.appendChild(item);
+  });
+});
+
+async function verDetalleCobro(cobroId) {
+  if (!cobroId) {
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "No se ha seleccionado un cobro válido.",
+    });
+    return;
+  }
+
+  // Obtener los detalles del cobro
+  const { data, error } = await supabase
+    .from("historial_cobros")
+    .select(`
+    id,
+    pedido_id,
+    monto_cobrado,
+    fecha_cobro,
+    estado,
+    pedidos (
+      codigo_ticket,
+      estado,
+      total,
+      fecha,
+      empleado_id,
+      empleado:empleado_id(nombre),
+      pedido_productos (
+        producto_id,
+        cantidad,
+        precio_unitario,
+        productos (
+          nombre
+        )
+      )
+    )
+  `)
+    .eq("id", cobroId); // Asegúrate de que 'pedido_id' está bien relacionado.
+  console.log(cobroId)
+  if (error) {
+    console.error("Error al cargar detalles del cobro:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: `Detalles del cobro no encontrados. ${error.message}`,
+    });
+    return;
+  }
+  // Comprobamos si hay datos del cobro
+  if (!data || data.length === 0) {
+    Swal.fire({
+      icon: "error",
+      title: "No se encontraron detalles",
+      text: "No se encontraron productos para este cobro.",
+    });
+    return;
+  }
+
+  // Extraemos los detalles del cobro (productos y cantidades)
+  const cobro = data[0];  // Asumimos que 'data' contiene solo un cobro
+
+  const detalleHTML = cobro.pedidos.pedido_productos.map(item => `
+  <tr>
+    <td>${item.productos.nombre}</td>
+    <td>${item.cantidad}</td>
+    <td>$${item.precio_unitario.toFixed(2)}</td>
+    <td>$${(item.cantidad * item.precio_unitario).toFixed(2)}</td>
+  </tr>
+`).join("");
+
+  // Mostrar el nombre del empleado
+  const nombreEmpleado = cobro.pedidos.empleado ? cobro.pedidos.empleado.nombre : "Empleado no disponible";
+  const codigoTicket = cobro.pedidos.codigo_ticket;
+  // Mostrar el total del ticket y la fecha de empaque
+  const totalTicket = cobro.pedidos.total.toFixed(2);
+  const fechaEmpaque = new Date(cobro.pedidos.fecha).toLocaleString("es-MX");
+
+  // Mostrar los detalles en el modal
+  document.getElementById("detalle-pedido-body").innerHTML = detalleHTML;
+  document.getElementById("codigo-ticket").textContent = `Ticket: ${codigoTicket}`
+  document.getElementById("empleado-nombre").textContent = `Empacado por: ${nombreEmpleado}`;
+  document.getElementById("total-ticket").textContent = `Total: $${totalTicket}`;
+  document.getElementById("fecha-empaque").textContent = `Fecha de Empaque: ${fechaEmpaque}`;
+
+  // Mostrar modal
+  new bootstrap.Modal(document.getElementById("detallePedidoModal")).show();
+}
+
+
+document.getElementById("btn-aplicar-filtros").addEventListener("click", cargarHistorialPedidos);
+
+async function cargarHistorialPedidos() {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session.user.id;
+
+  const desde = document.getElementById("filtro-fecha-desde").value;
+  const hasta = document.getElementById("filtro-fecha-hasta").value;
+  const estado = document.getElementById("filtro-estado").value;
+
+  // Crear la consulta con los filtros de fecha
+  let query = supabase
+    .from("historial_cobros")
+    .select("id, fecha_cobro, monto_cobrado, pedidos(codigo_ticket, estado)")
+    .eq("empleado_cobro_id", userId)
+    .order("fecha_cobro", { ascending: false });
+
+  if (desde) {
+    query = query.gte("fecha_cobro", `${desde}T00:00:00`);
+  }
+
+  if (hasta) {
+    query = query.lte("fecha_cobro", `${hasta}T23:59:59`);
+  }
+
+  const { data: cobros, error } = await query;
+  const badgeResultados = document.getElementById("badge-resultados");
+  const cantidadPedidos = document.getElementById("cantidad-pedidos");
+
+
+  const lista = document.getElementById("lista-historial");
+  lista.innerHTML = ""; // Limpiar la lista antes de agregar elementos
+
+  if (error) {
+    lista.innerHTML = `<li class="list-group-item text-danger">Error al cargar cobros</li>`;
+    return;
+  }
+
+  if (!cobros.length) {
+    lista.innerHTML = `<li class="list-group-item text-muted">No se encontraron cobros con los filtros seleccionados.</li>`;
+    return;
+  }
+
+  cobros.forEach(cobro => {
+    const item = document.createElement("li");
+    item.classList.add("list-group-item", "list-group-item-action");
+    item.innerHTML = `
+      <div>
+        <strong><i class="fa-solid fa-ticket"></i> ${cobro.pedidos.codigo_ticket}</strong><br>
+        <small><i class="fa-solid fa-calendar-day"></i> ${new Date(cobro.fecha_cobro).toLocaleString()}</small><br>
+        <small><i class="fa-solid fa-dollar-sign"></i> $${cobro.monto_cobrado}</small> · 
+        <span class="badge bg-success">Cobrado</span>
+      </div>
+    `;
+    item.onclick = () => verDetalleCobro(cobro.id);
+    lista.appendChild(item);
+  });
+}
