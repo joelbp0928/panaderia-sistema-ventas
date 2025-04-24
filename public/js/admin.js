@@ -253,3 +253,30 @@ document.addEventListener("hidden.bs.modal", function (event) {
   // Mueve el foco a otro elemento fuera del modal (ejemplo: el botón de inicio de sesión)
   document.getElementById("product-form-submit")?.focus();
 });
+
+// Ajustar comportamiento en móviles
+function adjustForMobile() {
+  if (window.innerWidth < 768) {
+    // Cerrar modales al hacer clic fuera en móviles
+    document.querySelectorAll('.modal').forEach(modal => {
+      modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          bootstrap.Modal.getInstance(this).hide();
+        }
+      });
+    });
+    
+    // Mejorar experiencia en inputs
+    document.querySelectorAll('input, select, textarea').forEach(input => {
+      input.addEventListener('focus', function() {
+        setTimeout(() => {
+          this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+      });
+    });
+  }
+}
+
+// Ejecutar al cargar y al redimensionar
+window.addEventListener('load', adjustForMobile);
+window.addEventListener('resize', adjustForMobile);
