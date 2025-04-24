@@ -562,7 +562,7 @@ function validarFormulario() {
 }
 
 const filtrosIngrediente = {
-    buscar: document.getElementById("buscarIngrediente"),
+    buscar: document.getElementById("buscarIngredienteGeneral"),
     fecha: document.getElementById("filtroFecha"),
     ordenarNombre: document.getElementById("ordenarNombreIngrediente"),
     limpiarBtn: document.getElementById("btn-limpiar-filtros-ing-1"),
@@ -655,7 +655,7 @@ filtrosIngrediente.limpiarBtn.addEventListener("click", () => {
 
 // Mostrar badges de filtros activos
 function actualizarBadgesFiltroIng() {
-    const contenedor = document.getElementById("filtros-activos-ing");
+    const contenedor = document.getElementById("filtros-activos-ing-general");
     const badgeNombre = document.getElementById("badge-nombre-ingrediente");
     const badgeFecha = document.getElementById("badge-fecha-ingrediente");
     const badgeOrden = document.getElementById("badge-orden-ingrediente");
