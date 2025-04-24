@@ -492,3 +492,24 @@ body.bloquear-scroll {
   display: none;
 }
 
+#sales-stats-content {
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.stat-card {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+#sales-chart {
+  margin-top: 20px;
+}
+
+.filters {
+  margin-bottom: 20px;
+}

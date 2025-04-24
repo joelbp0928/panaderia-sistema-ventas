@@ -26,13 +26,24 @@
     <link rel="stylesheet" href="../css/stylesAdmin.css" />
   </head>
   <body>
-    <header>
-      <img id="logo-image" src="" alt="Vista previa del logo" />
-      <h1>Panel de Administración</h1>
-      <button id="logout-btn" class="btn">
-        <i class="fas fa-sign-out-alt fa-2x"></i>
-      </button>
-      <span id="employee-name">Sesion: </span>
+    <header class="admin-header">
+      <img
+        id="logo-image"
+        src=""
+        alt="Logo de la empresa"
+        class="header-logo"
+      />
+      <h1 class="header-title">Panel de Administración</h1>
+      <div class="header-actions">
+        <span id="employee-name" class="employee-name">Sesión: </span>
+        <button
+          id="logout-btn"
+          class="btn btn-logout"
+          aria-label="Cerrar sesión"
+        >
+          <i class="fas fa-sign-out-alt fa-2x"></i>
+        </button>
+      </div>
     </header>
     <!-- Navegación de pestañas -->
     <div class="container mt-4">
@@ -130,7 +141,7 @@
             data-bs-target="#inventario"
             type="button"
             role="tab"
-            aria-controls="Inventario"
+            aria-controls="inventario"
             aria-selected="false"
           >
             Inventario
@@ -140,7 +151,7 @@
         <li class="nav-item">
           <button
             class="nav-link"
-            id="sales-stats"
+            id="sales-stats-tab"
             data-bs-toggle="tab"
             data-bs-target="#sales-stats-content"
             type="button"
@@ -832,7 +843,7 @@
                 </select>
               </div>
               <!-- filtro orden precio -->
-         <!--     <div class="flex-fill">
+              <!--     <div class="flex-fill">
                 <label for="ordenarProductosPrecio" class="form-label">
                   <i class="fa-solid fa-arrow-down-1-9"></i> Precio
                 </label>
@@ -882,7 +893,7 @@
               >
                 Categoria: <span class="fw-bold"></span>
               </span>
-          <!--    <span
+              <!--    <span
                 id="badge-orden-precio-prod"
                 class="badge rounded-pill bg-secondary d-none"
               >
@@ -1252,7 +1263,7 @@
           class="tab-pane fade"
           id="categorias"
           role="tabpanel"
-          aria-labelledby="settings-tab"
+          aria-labelledby="categorias-tab"
         >
           <h2>Configuración de Categorías</h2>
 
@@ -1907,7 +1918,7 @@
           class="tab-pane fade"
           id="inventario"
           role="tabpanel"
-          aria-labelledby="settings-tab"
+          aria-labelledby="inventario-tab"
         >
           <div class="container py-4">
             <h2 class="mb-4">Gestión de Inventario</h2>
@@ -2751,23 +2762,49 @@
           class="tab-pane fade"
           id="sales-stats-content"
           role="tabpanel"
-          aria-labelledby="sales-stats"
+          aria-labelledby="sales-stats-tab"
         >
           <h2>Estadísticas de Ventas</h2>
-          <h2>Estamos trabajando 🏗🚧👷‍♂️</h2>
-          <canvas id="sales-chart" width="400" height="200"></canvas>
-          <div class="filters">
-            <label for="stats-period">Periodo:</label>
-            <select
-              id="stats-period"
-              class="form-control"
-              onchange="updateSalesChart()"
-            >
-              <option value="daily">Diario</option>
-              <option value="weekly">Semanal</option>
-              <option value="monthly">Mensual</option>
-            </select>
+          <div class="row">
+            <!-- Filtros -->
+            <div class="col-md-4 mb-3">
+              <div class="filters">
+                <label for="stats-period">Periodo:</label>
+                <select id="stats-period" class="form-control">
+                  <option value="daily">Diario</option>
+                  <option value="weekly">Semanal</option>
+                  <option value="monthly">Mensual</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Resúmenes Rápidos -->
+            <div class="col-md-8 mb-3">
+              <div class="row">
+                <div class="col-sm-4">
+                  <div class="stat-card">
+                    <h5>Total Ventas</h5>
+                    <p id="total-sales">$0</p>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <div class="stat-card">
+                    <h5>Ventas Promedio</h5>
+                    <p id="avg-sales">$0</p>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <div class="stat-card">
+                    <h5>Cambio % Ventas</h5>
+                    <p id="sales-change">+0%</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+
+          <!-- Gráfico de Ventas -->
+          <canvas id="sales-chart" width="400" height="200"></canvas>
         </div>
 
         <!-- Configuraciones -->
@@ -2808,6 +2845,7 @@
       <p id="footer-company-name"></p>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Toastify JS -->
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>

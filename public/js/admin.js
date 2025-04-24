@@ -4,11 +4,11 @@ import { showProductForm, gestionarProducto, loadIngredients, cargarProductos } 
 import { abrirModalEntradaProducto, cargarInventarioProductos } from "./inventario_productos.js";
 import { mostrarFormularioEmpleado, gestionarEmpleado, cargarEmpleados } from "./empleados.js";
 import { verificarAccesoAdmin, verificarSesion, cerrarSesion } from "./auth-check.js";
-import { cargarConfiguracion } from "./admin/configAdmin.js";
-//import { cargarConfiguracion } from "./config.js"
-import { showLoading, hideLoading } from "./manageError.js";
 import { cargarPromociones, cargarProductosPromocion } from './promociones.js';
+import { cargarConfiguracion } from "./admin/configAdmin.js";
+import { showLoading, hideLoading } from "./manageError.js";
 import { cargarCategorias } from './categorias.js';
+import { cargarEstadisticas } from './estadisticas.js';
 
 window.onload = async function () {
   try {
@@ -72,6 +72,9 @@ document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
       case "inventario-tab":
         cargarInventarioIngredientes();
         cargarInventarioProductos();
+        break;
+      case "sales-stats-tab":
+        cargarEstadisticas();
         break;
       // otros casos...
     }
@@ -210,7 +213,7 @@ function deletePromotion(index) {
   promotions.splice(index, 1);
   updatePromotionList();
 }*/
-
+/*
 let salesChart;
 const salesData = {
   daily: [120, 150, 90, 180, 200],
@@ -244,7 +247,7 @@ function updateSalesChart() {
 }
 
 document.addEventListener("DOMContentLoaded", initializeSalesChart);
-
+*/
 // Evento que mueve el foco fuera del modal cuando se cierra
 document.addEventListener("hidden.bs.modal", function (event) {
   // Mueve el foco a otro elemento fuera del modal (ejemplo: el botón de inicio de sesión)
