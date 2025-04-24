@@ -567,6 +567,8 @@ document.getElementById("open-history-btn").addEventListener("click", async () =
     const badgeResultados = document.getElementById("badge-resultados");
     const cantidadPedidos = document.getElementById("cantidad-pedidos");
 
+    const lista = document.getElementById("lista-historial");
+    
     if (!pedidos.length) {
         badgeResultados.style.display = "none";
         lista.innerHTML = `<li class="list-group-item text-muted">No se encontraron pedidos con los filtros.</li>`;
@@ -576,7 +578,7 @@ document.getElementById("open-history-btn").addEventListener("click", async () =
     cantidadPedidos.textContent = pedidos.length;
     badgeResultados.style.display = "block";
     setTimeout(() => badgeResultados.classList.add("show"), 50);
-    const lista = document.getElementById("lista-historial");
+    
     lista.innerHTML = ""; // Limpiar primero
 
     if (error) {
@@ -591,7 +593,7 @@ document.getElementById("open-history-btn").addEventListener("click", async () =
 
     pedidos.forEach(pedido => {
         const item = document.createElement("li");
-        item.classList.add("list-group-item", "list-group-item-action");
+        item.classList.add("list-group-item", "list-group-item-action", "fade-in");
         item.innerHTML = `
         <div>
           <strong><i class="fa-solid fa-ticket"></i> ${pedido.codigo_ticket}</strong><br>

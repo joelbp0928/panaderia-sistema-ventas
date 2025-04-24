@@ -8,7 +8,7 @@ let productosTicket = [];
 let ticketActual = null;
 
 const sonidoTeclado = new Audio('../sounds/teclado.wav');
-sonidoTeclado.volume = 0.8; // Volumen suave
+sonidoTeclado.volume = 1.0; // Volumen suave
 
 const input = document.getElementById("amount-input");
 const totalSpan = document.getElementById("total-amount");
@@ -313,7 +313,7 @@ async function procesarPago() {
     ticketActual = null;
     actualizarTablaProductos();
     document.getElementById('amount-input').value = '';
-    document.getElementById('change').textContent = '$0.00';
+    document.getElementById('change').textContent = '0.00';
     document.getElementById('codigo-ticket-input').value = '';
 
   } catch (error) {
@@ -472,7 +472,7 @@ document.getElementById("open-history-btn").addEventListener("click", async () =
   // Crear la consulta con los filtros de fecha
   let query = supabase
     .from("historial_cobros")
-    .select("id, fecha_cobro, monto_cobrado, pedidos(codigo_ticket, estado)")
+    .select("id, fecha_cobro, monto_cobrado, pedidos(codigo_ticket, total)")
     .eq("empleado_cobro_id", userId)
     .order("fecha_cobro", { ascending: false });
 
@@ -485,11 +485,14 @@ document.getElementById("open-history-btn").addEventListener("click", async () =
   }
 
   const { data: cobros, error } = await query;
+  const badgeResultados = document.getElementById("badge-resultados");
+  const cantidadPedidos = document.getElementById("cantidad-pedidos");
 
   const lista = document.getElementById("lista-historial");
   lista.innerHTML = ""; // Limpiar la lista antes de agregar elementos
 
   if (error) {
+    badgeResultados.style.display = "none";
     lista.innerHTML = `<li class="list-group-item text-danger">Error al cargar cobros</li>`;
     return;
   }
@@ -499,14 +502,19 @@ document.getElementById("open-history-btn").addEventListener("click", async () =
     return;
   }
 
+  // Si hay pedidos, actualiza el badge
+  cantidadPedidos.textContent = cobros.length;
+  badgeResultados.style.display = "block";
+  setTimeout(() => badgeResultados.classList.add("show"), 50);
+
   cobros.forEach(cobro => {
     const item = document.createElement("li");
-    item.classList.add("list-group-item", "list-group-item-action");
+    item.classList.add("list-group-item", "list-group-item-action", "fade-in");
     item.innerHTML = `
       <div>
         <strong><i class="fa-solid fa-ticket"></i> ${cobro.pedidos.codigo_ticket}</strong><br>
         <small><i class="fa-solid fa-calendar-day"></i> ${new Date(cobro.fecha_cobro).toLocaleString()}</small><br>
-        <small><i class="fa-solid fa-dollar-sign"></i> $${cobro.monto_cobrado}</small> · 
+        <small><i class="fa-solid fa-dollar-sign"></i>${cobro.pedidos.total}</small> · 
         <span class="badge bg-success">Cobrado</span>
       </div>
     `;
@@ -552,7 +560,6 @@ async function verDetalleCobro(cobroId) {
     )
   `)
     .eq("id", cobroId); // Asegúrate de que 'pedido_id' está bien relacionado.
-  console.log(cobroId)
   if (error) {
     console.error("Error al cargar detalles del cobro:", error);
     Swal.fire({
@@ -593,10 +600,10 @@ async function verDetalleCobro(cobroId) {
 
   // Mostrar los detalles en el modal
   document.getElementById("detalle-pedido-body").innerHTML = detalleHTML;
-  document.getElementById("codigo-ticket").textContent = `Ticket: ${codigoTicket}`
-  document.getElementById("empleado-nombre").textContent = `Empacado por: ${nombreEmpleado}`;
-  document.getElementById("total-ticket").textContent = `Total: $${totalTicket}`;
-  document.getElementById("fecha-empaque").textContent = `Fecha de Empaque: ${fechaEmpaque}`;
+  document.getElementById("codigo-ticket").textContent = `${codigoTicket}`
+  document.getElementById("empleado-nombre").textContent = `${nombreEmpleado}`;
+  document.getElementById("total-pedido").textContent = `$${totalTicket}`;
+  document.getElementById("fecha-empaque").textContent = `${fechaEmpaque}`;
 
   // Mostrar modal
   new bootstrap.Modal(document.getElementById("detallePedidoModal")).show();
@@ -611,12 +618,11 @@ async function cargarHistorialPedidos() {
 
   const desde = document.getElementById("filtro-fecha-desde").value;
   const hasta = document.getElementById("filtro-fecha-hasta").value;
-  const estado = document.getElementById("filtro-estado").value;
 
   // Crear la consulta con los filtros de fecha
   let query = supabase
     .from("historial_cobros")
-    .select("id, fecha_cobro, monto_cobrado, pedidos(codigo_ticket, estado)")
+    .select("id, fecha_cobro, monto_cobrado, pedidos(codigo_ticket, total)")
     .eq("empleado_cobro_id", userId)
     .order("fecha_cobro", { ascending: false });
 
@@ -637,23 +643,29 @@ async function cargarHistorialPedidos() {
   lista.innerHTML = ""; // Limpiar la lista antes de agregar elementos
 
   if (error) {
+    badgeResultados.style.display = "none";
     lista.innerHTML = `<li class="list-group-item text-danger">Error al cargar cobros</li>`;
     return;
   }
 
   if (!cobros.length) {
+    badgeResultados.style.display = "none";
     lista.innerHTML = `<li class="list-group-item text-muted">No se encontraron cobros con los filtros seleccionados.</li>`;
     return;
   }
+    // Si hay pedidos, actualiza el badge
+    cantidadPedidos.textContent = cobros.length;
+    badgeResultados.style.display = "block";
+    setTimeout(() => badgeResultados.classList.add("show"), 50);
 
   cobros.forEach(cobro => {
     const item = document.createElement("li");
-    item.classList.add("list-group-item", "list-group-item-action");
+    item.classList.add("list-group-item", "list-group-item-action", "fade-in");
     item.innerHTML = `
       <div>
         <strong><i class="fa-solid fa-ticket"></i> ${cobro.pedidos.codigo_ticket}</strong><br>
         <small><i class="fa-solid fa-calendar-day"></i> ${new Date(cobro.fecha_cobro).toLocaleString()}</small><br>
-        <small><i class="fa-solid fa-dollar-sign"></i> $${cobro.monto_cobrado}</small> · 
+        <small><i class="fa-solid fa-dollar-sign"></i>${cobro.pedidos.total}</small> · 
         <span class="badge bg-success">Cobrado</span>
       </div>
     `;

@@ -108,17 +108,6 @@
                   class="form-control form-control-sm filtro-animado"
                 />
               </div>
-              <div>
-                <label class="form-label mb-1">Estado</label>
-                <select
-                  id="filtro-estado"
-                  class="form-select form-select-sm filtro-animado"
-                >
-                  <option value="">Todos</option>
-                  <option value="pendiente">Pendiente</option>
-                  <option value="pagado">Pagado</option>
-                </select>
-              </div>
               <button id="btn-aplicar-filtros" class="btn btn-sm btn-primary">
                 <i class="fa-solid fa-magnifying-glass"></i> Buscar
               </button>
@@ -138,10 +127,12 @@
         </div>
       </div>
       <div class="modal fade" id="detallePedidoModal">
-        <div class="modal-dialog modal-sm">
+        <div class="modal-dialog modal-lg">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">🧾 Detalle del Pedido</h5>
+              <h5 class="modal-title">
+                <i class="fa-solid fa-ticket"></i> Detalle del Pedido
+              </h5>
               <button
                 type="button"
                 class="btn-close"
@@ -150,9 +141,17 @@
             </div>
 
             <div class="modal-body">
-              <p id="codigo-ticket"></p> <!-- Aquí mostrarás el nombre del empleado -->
-              <p id="empleado-nombre"></p> <!-- Aquí mostrarás el nombre del empleado -->           
-              <p id="fecha-empaque"></p>   
+              <p>
+                <strong>Código del Ticket:</strong>
+                <span id="codigo-ticket"></span>
+              </p>
+              <p>
+                <strong>Empleado:</strong> <span id="empleado-nombre"></span>
+              </p>
+              <p>
+                <strong>Fecha de Empaque:</strong>
+                <span id="fecha-empaque"></span>
+              </p>
               <table class="table table-sm">
                 <thead>
                   <tr>
@@ -163,8 +162,15 @@
                   </tr>
                 </thead>
                 <tbody id="detalle-pedido-body"></tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="3" class="text-end">
+                      <strong>Total Pedido:</strong>
+                    </td>
+                    <td id="total-pedido" class="text-end">$</td>
+                  </tr>
+                </tfoot>
               </table>
-              <p id="total-ticket"></p>
             </div>
           </div>
         </div>
@@ -173,7 +179,7 @@
       <div id="main-content">
         <!-- Sección de productos -->
         <div id="products-section">
-          <h2>Productos</h2>
+          <!--   <h2>Productos</h2>-->
           <div
             id="ticket-status"
             style="text-align: right; font-size: 14px; margin-bottom: 5px"
@@ -194,7 +200,7 @@
 
         <!-- NUEVO CONTENEDOR DE PAGO COMPACTO -->
         <div id="totals-section">
-          <h2 class="box-title">Totales</h2>
+          <!--   <h2 class="box-title">Totales</h2>-->
           <div class="payment-summary">
             <div class="info-box">
               <label>Total:</label>
@@ -213,7 +219,7 @@
         </div>
         <!-- Teclado Numérico -->
         <div id="payment-box">
-          <h2 class="box-title">Cobro y Pago</h2>
+          <!--    <h2 class="box-title">Cobro y Pago</h2>-->
 
           <div class="keypad-row">
             <button class="keypad-btn" data-num="7">7</button>

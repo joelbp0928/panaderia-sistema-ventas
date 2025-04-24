@@ -425,12 +425,80 @@ footer {
 }
 
 #detallePedidoModal th {
-  background-color: #f8f9fa;
+  background-color: var(--primary-color);
   font-weight: bold;
 }
 
 #detallePedidoModal td {
-  font-size: 14px;
+  font-size: 17px;
+}
+
+/* Aseguramos que el total esté alineado correctamente a la derecha */
+#total-pedido {
+  font-weight: bold;
+}
+
+/* Hover en lista de pedidos */
+.list-group-item:hover {
+  background-color: #f1f1f1;
+  transition: background-color 0.2s ease;
+}
+
+/* Animación de fade-in */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+
+/* Estilo para mejorar la tabla */
+#detalle-pedido-body tr:nth-child(odd) {
+  background-color: #f9f9f9; /* Fondo claro para filas impares */
+}
+
+#detalle-pedido-body tr:nth-child(even) {
+  background-color: #f1f1f1; /* Fondo más oscuro para filas pares */
+}
+
+th {
+  background-color: var(--primary-color); /* Fondo azul para los encabezados */
+  color: white; /* Texto blanco en encabezados */
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 20px; /* Espaciado abajo de la tabla */
+}
+
+table td, table th {
+  padding: 10px; /* Mayor espacio dentro de las celdas */
+  border: 1px solid wheat; /* Borde sutil en las celdas */
+}
+
+table td {
+  text-align: left; /* Alineación a la derecha para las cantidades y precios */
+  font-size: 1.8rem;
+}
+
+.modal-header {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 15px;
+}
+
+.modal-body {
+  padding: 20px;
+  font-size: 1.1rem;
+}
+
+#detalle-pedido-body {
+  padding: 10px;
+  font-size: 1.1rem;
 }
 
 
