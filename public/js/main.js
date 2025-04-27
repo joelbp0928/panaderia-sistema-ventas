@@ -8,9 +8,9 @@ import "./forgot-password.js";
 
 window.onload = async function () {
     try {
-    //    verificarSesion();
+        //    verificarSesion();
         // Cargar elementos principales de la página
-      //  cargarPromociones();
+        //  cargarPromociones();
         cargarProductos();
 
         // Inicializar otros módulos
@@ -26,6 +26,113 @@ window.onload = async function () {
     }
 
 }
+
+document.getElementById('signup-form').addEventListener('submit', registrarCliente);
+import { supabase } from "./supabase-config.js";
+import { mostrarToast } from "./manageError.js";
+
+export async function registrarCliente(event) {
+  event.preventDefault();
+
+  const signupButton = event.target.querySelector("button[type='submit']");
+  const originalButtonContent = signupButton.innerHTML;
+
+  try {
+    // 🔄 Poner loading en botón
+    signupButton.disabled = true;
+    signupButton.innerHTML = `
+      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Registrando...
+    `;
+
+    // 📋 Datos
+    const nombre = document.getElementById("signup-name").value.trim();
+    const genero = document.getElementById("signup-gender").value;
+    const fechaNacimiento = document.getElementById("signup-birthdate").value;
+    const municipio = document.getElementById("signup-municipio").value.trim();
+    const colonia = document.getElementById("signup-colonia").value.trim();
+    const codigoPostal = document.getElementById("signup-codigo-postal").value.trim();
+    const direccion = document.getElementById("signup-address").value.trim();
+    const email = document.getElementById("signup-email").value.trim();
+    const telefono = document.getElementById("signup-phone").value.trim();
+    const password = document.getElementById("signup-password").value.trim();
+    const confirmPassword = document.getElementById("signup-password-confirm").value.trim();
+
+    // 🧠 Validaciones
+    if (!nombre || !email || !password || !confirmPassword || !telefono || !direccion || !fechaNacimiento || !municipio || !colonia || !codigoPostal) {
+      mostrarToast("⚠️ Todos los campos son obligatorios.", "warning");
+      restoreButton();
+      return;
+    }
+    if (password.length < 6) {
+      mostrarToast("⚠️ La contraseña debe tener al menos 6 caracteres.", "warning");
+      restoreButton();
+      return;
+    }
+    if (password !== confirmPassword) {
+      mostrarToast("⚠️ Las contraseñas no coinciden.", "warning");
+      restoreButton();
+      return;
+    }
+
+    // 🔥 Crear usuario en Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
+    if (authError) throw authError;
+
+    const user = authData.user;
+    if (!user) throw new Error("No se pudo registrar el usuario.");
+
+    // 🔹 Insertar en 'usuarios'
+    const { error: insertUserError } = await supabase.from("usuarios").insert([
+      {
+        id: user.id,
+        email,
+        nombre,
+        rol: "cliente",
+        telefono,
+        fechaNacimiento,
+        fechaRegistro: new Date().toISOString()
+      }
+    ]);
+    if (insertUserError) throw insertUserError;
+
+    // 🔹 Insertar en 'clientes'
+    const { error: insertClienteError } = await supabase.from("clientes").insert([
+      {
+        usuario_id: user.id,
+        direccion,
+        municipio,
+        colonia,
+        codigoPostal: parseInt(codigoPostal),
+        genero
+      }
+    ]);
+    if (insertClienteError) throw insertClienteError;
+
+    // 🎉 Todo OK
+    mostrarToast("✅ ¡Registro exitoso! Revisa tu correo.", "success");
+
+    // 🧹 Limpiar formulario
+    event.target.reset();
+
+    // 🎬 Cerrar modal de forma bonita
+    setTimeout(() => {
+      const modal = bootstrap.Modal.getInstance(document.getElementById('signupModal'));
+      modal?.hide();
+    }, 1500);
+
+  } catch (error) {
+    console.error("❌ Error al registrar cliente:", error);
+    mostrarToast(`❌ Error: ${error.message}`, "error");
+  } finally {
+    restoreButton();
+  }
+
+  function restoreButton() {
+    signupButton.disabled = false;
+    signupButton.innerHTML = originalButtonContent;
+  }
+}
+
 
 // 🔹 Cargar promociones desde Firebase
 /*function cargarPromociones() {

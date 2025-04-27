@@ -17,7 +17,7 @@
         <div class="logo">
           <img
             id="logo-image"
-            src="./img/lona logo mr donut.jpg"
+            src="./img/logo_empresa.jpg"
             alt="Logo Empresa"
             class="img-fluid"
             style="max-height: 60px"
@@ -50,25 +50,34 @@
       </div>
     </header>
 
-<!-- Promociones -->
-<section id="promotions">
-  <div id="promo-carousel" class="carousel slide" data-bs-ride="carousel">
-    <div class="carousel-inner" id="promo-slider">
-      <!-- Aquí se insertarán dinámicamente las promociones -->
-    </div>
-    <button class="carousel-control-prev" type="button" data-bs-target="#promo-carousel" data-bs-slide="prev">
-      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-      <span class="visually-hidden">Previous</span>
-    </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#promo-carousel" data-bs-slide="next">
-      <span class="carousel-control-next-icon" aria-hidden="true"></span>
-      <span class="visually-hidden">Next</span>
-    </button>
-  </div>
-</section>
+    <!-- Promociones -->
+    <section id="promotions">
+      <div id="promo-carousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner" id="promo-slider">
+          <!-- Aquí se insertarán dinámicamente las promociones -->
+        </div>
+        <button
+          class="carousel-control-prev"
+          type="button"
+          data-bs-target="#promo-carousel"
+          data-bs-slide="prev"
+        >
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Previous</span>
+        </button>
+        <button
+          class="carousel-control-next"
+          type="button"
+          data-bs-target="#promo-carousel"
+          data-bs-slide="next"
+        >
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Next</span>
+        </button>
+      </div>
+    </section>
 
-    
-<div class="text-center"><h5>Estamos trabajando 🏗🚧👷‍♂️</h5></div>
+    <div class="text-center"><h5>Estamos trabajando 🏗🚧👷‍♂️</h5></div>
     <!-- Categorías -->
     <section id="categories">
       <h2>Categorías</h2>
@@ -135,161 +144,84 @@
     </div>
 
     <!-- 🔹 Modal de Registro -->
-
     <div class="modal fade" id="signupModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header">
-            <h3>Registro</h3>
-            <button
-              type="button"
-              class="btn-close btn-close-black"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
+          <div class="modal-header bg-vino text-white">
+            <h3 class="modal-title">Registro de Cliente</h3>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
           </div>
           <div class="modal-body">
             <form id="signup-form">
-              <!-- Nombre -->
-              <div>
-                <label for="signup-name">Nombre Completo:</label>
-                <input
-                  type="text"
-                  id="signup-name"
-                  class="form-control"
-                  placeholder="Ingresa tu nombre completo"
-                  required
-                />
+    
+              <!-- Sección 1: Datos Personales -->
+              <h5 class="mb-3">Datos Personales</h5>
+              <div class="mb-3">
+                <label for="signup-name" class="form-label">Nombre Completo</label>
+                <input type="text" id="signup-name" class="form-control" placeholder="Ingresa tu nombre completo" required>
               </div>
-
-              <!-- Género -->
-              <div>
-                <label for="signup-gender">Género:</label>
-                <select id="signup-gender" class="form-control" required>
-                  <option value="" disabled selected>
-                    Selecciona tu género
-                  </option>
+              <div class="mb-3">
+                <label for="signup-gender" class="form-label">Género</label>
+                <select id="signup-gender" class="form-select" required>
+                  <option value="" disabled selected>Selecciona tu género</option>
                   <option value="masculino">Masculino</option>
                   <option value="femenino">Femenino</option>
                   <option value="otro">Otro</option>
                 </select>
               </div>
-
-              <!-- Fecha de Nacimiento -->
-              <div>
-                <label for="signup-birthdate">Fecha de Nacimiento:</label>
-                <input
-                  type="date"
-                  id="signup-birthdate"
-                  class="form-control"
-                  required
-                />
+              <div class="mb-3">
+                <label for="signup-birthdate" class="form-label">Fecha de Nacimiento</label>
+                <input type="date" id="signup-birthdate" class="form-control" required>
               </div>
-
-              <!-- Municipio/Alcaldía -->
-              <div>
-                <label for="signup-municipio">Municipio/Alcaldía:</label>
-                <input
-                  type="text"
-                  id="signup-municipio"
-                  class="form-control"
-                  placeholder="Ej. Cuauhtémoc"
-                  required
-                />
+    
+              <hr>
+    
+              <!-- Sección 2: Dirección -->
+              <h5 class="mb-3">Dirección</h5>
+              <div class="mb-3">
+                <label for="signup-municipio" class="form-label">Municipio/Alcaldía</label>
+                <input type="text" id="signup-municipio" class="form-control" placeholder="Ej. Cuauhtémoc" required>
               </div>
-
-              <!-- Colonia -->
-              <div>
-                <label for="signup-colonia">Colonia:</label>
-                <input
-                  type="text"
-                  id="signup-colonia"
-                  class="form-control"
-                  placeholder="Ej. Centro"
-                  required
-                />
+              <div class="mb-3">
+                <label for="signup-colonia" class="form-label">Colonia</label>
+                <input type="text" id="signup-colonia" class="form-control" placeholder="Ej. Centro" required>
               </div>
-
-              <!-- Código Postal -->
-              <div>
-                <label for="signup-codigo-postal">Código Postal:</label>
-                <input
-                  type="number"
-                  id="signup-codigo-postal"
-                  class="form-control"
-                  placeholder="Ej. 06000"
-                  required
-                />
+              <div class="mb-3">
+                <label for="signup-codigo-postal" class="form-label">Código Postal</label>
+                <input type="number" id="signup-codigo-postal" class="form-control" placeholder="Ej. 06000" required>
               </div>
-
-              <!-- Correo Electrónico -->
-              <div>
-                <label for="signup-email">Correo Electrónico:</label>
-                <input
-                  type="email"
-                  id="signup-email"
-                  class="form-control"
-                  placeholder="Ingresa tu correo"
-                  required
-                />
+              <div class="mb-3">
+                <label for="signup-address" class="form-label">Dirección Completa</label>
+                <input type="text" id="signup-address" class="form-control" placeholder="Ej. Calle 123, Ciudad" required>
               </div>
-
-              <!-- Teléfono -->
-              <div>
-                <label for="signup-phone">Teléfono:</label>
-                <input
-                  type="tel"
-                  id="signup-phone"
-                  class="form-control"
-                  placeholder="Ej. 5555555555"
-                  required
-                />
+    
+              <hr>
+    
+              <!-- Sección 3: Datos de Cuenta -->
+              <h5 class="mb-3">Datos de Cuenta</h5>
+              <div class="mb-3">
+                <label for="signup-email" class="form-label">Correo Electrónico</label>
+                <input type="email" id="signup-email" class="form-control" placeholder="Ingresa tu correo" required>
               </div>
-
-              <!-- Dirección -->
-              <div>
-                <label for="signup-address">Dirección:</label>
-                <input
-                  type="text"
-                  id="signup-address"
-                  class="form-control"
-                  placeholder="Ej. Calle 123, Ciudad"
-                  required
-                />
+              <div class="mb-3">
+                <label for="signup-phone" class="form-label">Teléfono</label>
+                <input type="tel" id="signup-phone" class="form-control" placeholder="Ej. 5555555555" required>
               </div>
-
-              <!-- Contraseña -->
-              <div>
-                <label for="signup-password">Contraseña:</label>
-                <input
-                  type="password"
-                  id="signup-password"
-                  class="form-control"
-                  placeholder="Crea una contraseña"
-                  required
-                />
+              <div class="mb-3">
+                <label for="signup-password" class="form-label">Contraseña</label>
+                <input type="password" id="signup-password" class="form-control" placeholder="Crea una contraseña" required>
               </div>
-
-              <!-- Confirmar Contraseña -->
-              <div>
-                <label for="signup-password-confirm"
-                  >Confirmar Contraseña:</label
-                >
-                <input
-                  type="password"
-                  id="signup-password-confirm"
-                  class="form-control"
-                  placeholder="Confirma tu contraseña"
-                  required
-                />
+              <div class="mb-3">
+                <label for="signup-password-confirm" class="form-label">Confirmar Contraseña</label>
+                <input type="password" id="signup-password-confirm" class="form-control" placeholder="Confirma tu contraseña" required>
               </div>
-
-              <!-- Botón de Registro -->
-              <div class="button-container">
-                <button type="submit" class="btn btn-primary w-100">
-                  Registrarse
+    
+              <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-user-plus me-2"></i> Registrarse
                 </button>
               </div>
+    
             </form>
           </div>
         </div>
