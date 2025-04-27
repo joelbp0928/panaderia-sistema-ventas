@@ -659,17 +659,7 @@ body.bloquear-scroll {
   border-radius: 8px;
 }
 
-.stat-card {
-  background-color: #ffffff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
 
-#sales-chart {
-  margin-top: 20px;
-}
 
 .filters {
   margin-bottom: 20px;
@@ -698,3 +688,121 @@ table {
 table th, table td {
   padding: 0.5rem;
 }
+
+/*   EStadisticas */
+/* Reducir el tamaño de la gráfica principal */
+#sales-chart {
+  max-width: 100%;
+  height: 235px !important ; /* Gráfico más pequeño */
+    margin-top: 20px;
+
+  
+}
+
+/* Estilo para las tarjetas de estadísticas */
+.stat-card {
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card:hover {
+  transform: scale(1.03);
+}
+
+.filters label {
+  font-weight: bold;
+}
+
+canvas {
+  width: 50% !important;
+  height: 90px !important;
+}
+
+#loader {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: #121212;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: white;
+}
+
+#loader img {
+  width: 100px;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.stat-card p {
+  font-size: 1.3rem;
+  margin-bottom: 0;
+}
+
+.dashboard-card {
+  background: #ffffff;
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 20px var(--primary-color-obscuro);
+ /* transition: transform 0.2s ease, box-shadow 0.2s ease;*/
+  color: 212529;
+}
+
+/*.dashboard-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 255, 255, 0.25);
+}*/
+.dashboard-card .card-title i {
+  font-size: 1.3rem;
+}
+.dashboard-card p {
+  margin-bottom: 0;
+  letter-spacing: 0.5px;
+}
+
+#top-products-list {
+  border: 1px solid #dee2e6;
+}
+#top-products-list .list-group-item {
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+}
+#top-products-list tr td:first-child {
+  font-weight: bold;
+}
+
+#top-products-chart {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#sales-by-category-chart {
+  width: 100% !important;
+  height: 100% !important;
+}
+#top-product-resume,
+#top-category {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+
+/* Ajustar el tamaño de las gráficas de productos y categorías 
+#top-products-chart, #sales-by-category-chart {
+  max-width: 100%;
+  height: 300px !important; /* Tamaño adecuado para estas gráficas 
+}
+
+Mejorar el espaciado entre las secciones 
+#period-details .col-md-6 {
+  margin-bottom: 20px;
+}*/

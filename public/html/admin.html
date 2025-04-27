@@ -2761,53 +2761,243 @@
         </div>
 
         <!-- Estadísticas de Ventas -->
+        <!-- ANIMACIÓN DE CARGA CON LOGO + SPINNER SVG -->
+        <!--<div id="loader">
+   Tu logo al centro 
+  <img src="../img/logo_empresa.jpg" alt="Logo" class="mb-4" style="width: 80px;">
+
+   Spinner SVG animado 
+  <svg width="64" height="64" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg" stroke="#00eaff">
+    <g fill="none" fill-rule="evenodd" stroke-width="2">
+      <circle cx="22" cy="22" r="1">
+        <animate attributeName="r"
+          begin="0s" dur="1.8s"
+          values="1; 20"
+          calcMode="spline"
+          keySplines="0.165, 0.84, 0.44, 1"
+          keyTimes="0; 1"
+          repeatCount="indefinite" />
+        <animate attributeName="stroke-opacity"
+          begin="0s" dur="1.8s"
+          values="1; 0"
+          calcMode="spline"
+          keySplines="0.3, 0.61, 0.355, 1"
+          keyTimes="0; 1"
+          repeatCount="indefinite" />
+      </circle>
+      <circle cx="22" cy="22" r="1">
+        <animate attributeName="r"
+          begin="-0.9s" dur="1.8s"
+          values="1; 20"
+          calcMode="spline"
+          keySplines="0.165, 0.84, 0.44, 1"
+          keyTimes="0; 1"
+          repeatCount="indefinite" />
+        <animate attributeName="stroke-opacity"
+          begin="-0.9s" dur="1.8s"
+          values="1; 0"
+          calcMode="spline"
+          keySplines="0.3, 0.61, 0.355, 1"
+          keyTimes="0; 1"
+          repeatCount="indefinite" />
+      </circle>
+    </g>
+  </svg>
+
+  <p class="mt-4 text-info">Cargando estadísticas...</p>
+</div>-->
+
         <div
-          class="tab-pane fade"
           id="sales-stats-content"
           role="tabpanel"
           aria-labelledby="sales-stats-tab"
+          class="tab-pane fade animate__animated animate__fadeInUp"
         >
-          <h2>Estadísticas de Ventas</h2>
-          <div class="row">
-            <!-- Filtros -->
+        <h2>Estamos trabajando 🏗🚧👷‍♂️ Ya Casi queda fino</h2>
+          <h2 class="text-center mb-4">
+            <i class="fas fa-chart-line"></i> Estadísticas de Ventas
+          </h2>
+          <div class="row mb-4">
             <div class="col-md-4 mb-3">
               <div class="filters">
                 <label for="stats-period">Periodo:</label>
-                <select id="stats-period" class="form-control">
+                <select id="stats-period" class="form-select">
                   <option value="daily">Diario</option>
                   <option value="weekly">Semanal</option>
                   <option value="monthly">Mensual</option>
                 </select>
               </div>
             </div>
+            <div class="container-fluid mt-5">
+              <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                <!-- Tarjeta de Total Ventas -->
+                <div class="col">
+                  <div class="card dashboard-card h-100 text-center">
+                    <div class="card-body">
+                      <h5 class="card-title">
+                        <i class="fas fa-dollar-sign text-success me-2"></i
+                        >Total Ventas
+                      </h5>
+                      <p id="total-sales" class="card-text fs-4 fw-bold">$0</p>
+                    </div>
+                  </div>
+                </div>
 
-            <!-- Resúmenes Rápidos -->
-            <div class="col-md-8 mb-3">
-              <div class="row">
-                <div class="col-sm-4">
-                  <div class="stat-card">
-                    <h5>Total Ventas</h5>
-                    <p id="total-sales">$0</p>
+                <!-- Tarjeta de Ventas Promedio -->
+                <div class="col">
+                  <div class="card dashboard-card h-100 text-center">
+                    <div class="card-body">
+                      <h5 class="card-title">
+                        <i class="fas fa-chart-bar text-info me-2"></i>Ventas
+                        Promedio
+                      </h5>
+                      <p id="avg-sales" class="card-text fs-4 fw-bold">$0</p>
+                    </div>
                   </div>
                 </div>
-                <div class="col-sm-4">
-                  <div class="stat-card">
-                    <h5>Ventas Promedio</h5>
-                    <p id="avg-sales">$0</p>
+
+                <!-- Tarjeta de Cambio Porcentual -->
+                <div class="col">
+                  <div class="card dashboard-card h-100 text-center">
+                    <div class="card-body">
+                      <h5 class="card-title">
+                        <i class="fas fa-arrow-up text-warning me-2"></i>Cambio
+                        %
+                      </h5>
+                      <p id="sales-change" class="card-text fs-4 fw-bold">
+                        +0%
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div class="col-sm-4">
-                  <div class="stat-card">
-                    <h5>Cambio % Ventas</h5>
-                    <p id="sales-change">+0%</p>
+
+                <!-- Puedes seguir con: Total Pedidos, Top Producto, Hora, Fecha, etc -->
+              </div>
+            </div>
+          </div>
+          <div class="d-flex justify-content-center mb-4">
+            <canvas id="sales-chart"></canvas>
+          </div>
+          <!-- 🔁 Fila de resúmenes adicionales -->
+          <!-- Grid para Total Pedidos y Top Producto -->
+          <div class="row row-cols-1 row-cols-md-2 g-4 mt-3">
+            <!-- Total Pedidos -->
+            <div class="col">
+              <div class="card dashboard-card h-100 text-center">
+                <div class="card-body">
+                  <h5 class="card-title">
+                    <i class="fas fa-receipt text-primary me-2"></i>Total
+                    Pedidos
+                  </h5>
+                  <p id="total-orders" class="card-text fs-4 fw-bold">0</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Top Producto -->
+            <div class="col">
+              <div class="card dashboard-card h-100 text-center">
+                <div class="card-body">
+                  <h5 class="card-title">
+                    <i class="fas fa-award text-warning me-2"></i>Top Producto
+                  </h5>
+                  <p id="top-product" class="card-text fs-4 fw-bold"></p>
+                  <p id="top-product-sales" class="text-muted mt-1"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 📊 Gráficas secundarias -->
+          <!-- 📊 Gráficas secundarias -->
+          <div class="row row-cols-1 row-cols-md-2 g-4 mt-4">
+            <!-- Top Productos Vendidos -->
+            <div class="col">
+              <div class="card dashboard-card h-100">
+                <div class="card-body">
+                  <h4 class="text-center">
+                    <i class="fas fa-boxes"></i> Top Productos Vendidos
+                  </h4>
+                  <div class="d-flex justify-content-center">
+                    <div style="width: 300px; height: 300px">
+                      <canvas id="top-products-chart"></canvas>
+                    </div>
+                    <div class="text-center mt-3">
+                      <p id="top-product-resume" class="fs-6"></p>
+                    </div>
+                    
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Top 5 Productos Más Vendidos -->
+            <div class="col">
+              <div class="card dashboard-card h-100">
+                <div class="card-body">
+                  <h4 class="text-center">
+                    <i class="fas fa-box-open"></i> Top 5 Productos Más Vendidos
+                  </h4>
+                  <table class="table table-hover mt-3">
+                    <thead>
+                      <tr>
+                        <th>Producto</th>
+                        <th class="text-end">Cantidad</th>
+                      </tr>
+                    </thead>
+                    <tbody
+                      id="top-products-list"
+                      class="table-group-divider"
+                    ></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ventas por Categoría -->
+            <div class="col">
+              <div class="card dashboard-card h-100">
+                <div class="card-body">
+                  <h4 class="text-center">
+                    <i class="fas fa-layer-group"></i> Ventas por Categoría
+                  </h4>
+                  <div class="d-flex justify-content-center">
+                    <div style="width: 300px; height: 300px">
+                      <canvas id="sales-by-category-chart"></canvas>
+                    </div>
+                    <div class="text-center mt-3">
+                      <p id="top-category" class="fs-6"></p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Gráfico de Ventas -->
-          <canvas id="sales-chart" width="400" height="200"></canvas>
+          <!-- 🧠 Insights específicos -->
+          <!-- Tarjeta flotante horizontal para insights -->
+          <div class="row justify-content-center mt-4">
+            <div class="col-md-8">
+              <div class="card dashboard-card text-center">
+                <div class="card-body row">
+                  <div class="col-md-6 border-end">
+                    <h5>
+                      <i class="fas fa-clock text-info me-2"></i>Hora de mayor
+                      venta
+                    </h5>
+                    <p id="top-sales-time" class="fs-5">10:00 AM</p>
+                  </div>
+                  <div class="col-md-6">
+                    <h5>
+                      <i class="fas fa-calendar-alt text-danger me-2"></i>Fecha
+                      con más ventas
+                    </h5>
+                    <p id="top-sales-date" class="fs-5">14/04/2025</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Configuraciones -->
