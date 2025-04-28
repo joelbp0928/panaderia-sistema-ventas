@@ -9,6 +9,8 @@ import { cargarConfiguracion } from "./admin/configAdmin.js";
 import { showLoading, hideLoading } from "./manageError.js";
 import { cargarCategorias } from './categorias.js';
 import { cargarEstadisticas } from './estadisticas.js';
+import { cargarClientes } from "./clientes-admin.js";
+
 
 window.onload = async function () {
   try {
@@ -18,7 +20,7 @@ window.onload = async function () {
     await verificarAccesoAdmin();
     await verificarSesion();
     hideLoading();
-
+    cargarClientes();
     // 🔹 Event listeners después de cargar el DOM
     document.getElementById("btn-agregar-empleado").addEventListener("click", mostrarFormularioEmpleado);
     document.getElementById("form-empleado").addEventListener("submit", gestionarEmpleado);
@@ -49,6 +51,7 @@ document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
   tab.addEventListener('shown.bs.tab', function (event) {
     switch (event.target.id) {
       case "clients-tab":
+        cargarClientes();
         break;
       case "employees-tab":
         cargarEmpleados();
