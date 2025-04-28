@@ -378,3 +378,16 @@ color: var(--primary-color)
   background-color: black;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Sombra sutil para resaltar */
 }
+
+#client-name {
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: fadeInClient 1s ease forwards;
+}
+
+@keyframes fadeInClient {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

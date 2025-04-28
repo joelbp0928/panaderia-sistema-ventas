@@ -272,3 +272,15 @@ async function registrarAuditoria(idProducto, accion, usuarioId, detalle) {
 - **Auditoría**: Guarda registros de auditoría para todas las acciones importantes sobre los productos, como eliminaciones o desactivaciones.
 
 De esta manera, podrás tener un control total de las eliminaciones y mantener la trazabilidad de tus productos de manera sencilla y eficiente. 😊
+
+
+
+
+/////////////////////INIcio de cliente
+Módulo | Descripción | Prioridad
+Formulario de registro de cliente | Nombre, Email, Teléfono, Dirección, Fecha de nacimiento, Género, etc. | 🥇 Primero
+Inicio de sesión | Para que puedan entrar y ver sus pedidos | 🥈 Segundo
+Perfil del cliente | Visualizar sus datos y editarlos | 🥉 Tercero
+Historial de pedidos | Para ver sus compras pasadas | 🥉 Tercero
+Sistema de recomendaciones | (Más adelante) Usando la tabla recomendaciones | 🚀 Fase extra
+Sistema de puntos | (Futuro, con badges/recompensas) | 🚀 Fase bonus

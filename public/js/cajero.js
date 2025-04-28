@@ -425,8 +425,7 @@ function generarTicketHTML(ticket, productos, pagado, cambio) {
           <canvas id="qrcode"></canvas>
   
           <div class="linea"></div>
-          <p style="text-align:center;">¡Gracias por tu compra!</p>
-          <p style="text-align:center;">K3DS powered POS 🍩</p>
+          <p style="text-align:center;">¡Gracias por tu compra! <i class="fa-solid fa-heart"></i></p>
            <script>
             // Generar el QR inmediatamente después de cargar la página
             (function() {
