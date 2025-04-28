@@ -94,6 +94,26 @@ header {
   object-fit: cover;
 }
 
+.tarjeta-sugerencia {
+  margin: 30px auto 20px auto;
+  padding: 20px 30px;
+  width: 80%;
+  max-width: 600px;
+  background-color: #fff8e1; /* Color suave tipo pan 🍞 */
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: #6d4c41; /* Color café suave */
+  transition: transform 0.3s ease;
+}
+
+.tarjeta-sugerencia:hover {
+  transform: scale(1.02);
+}
+
+
 /* 📂 Categorías */
 #categories {
   padding: 2rem;
