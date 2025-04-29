@@ -192,20 +192,42 @@
           <h2>Gestión de Clientes</h2>
           <h2>Estamos trabajando 🏗🚧👷‍♂️</h2>
           <button class="btn btn-primary mb-3">Agregar Cliente</button>
+
+          <!-- 🔘 Botones ocultos -->
+          <div
+            id="acciones-clientes"
+            class="mb-3"
+            style="display: flex; gap: 10px; margin-top: 10px"
+          >
+            <button
+              id="edit-client-btn"
+              class="btn btn-warning btn-sm"
+              style="display: none"
+            >
+              <i class="fas fa-edit"></i> Editar Cliente
+            </button>
+            <button
+              id="delete-client-btn"
+              class="btn btn-danger btn-sm"
+              style="display: none"
+            >
+              <i class="fas fa-trash"></i> Eliminar Cliente
+            </button>
+          </div>
           <span class="text-muted small"
             >Selecciona un cliente para ver acciones</span
           >
-          <table class="table">
+
+          <table class="table" id="tabla-clientes">
             <thead>
               <tr>
                 <th>Nombre</th>
                 <th>Email</th>
                 <th>Teléfono</th>
-                <th>Acciones</th>
               </tr>
             </thead>
             <tbody id="clientes-tbody">
-            <!--  <tr>
+              <!--  <tr>
                 <td>Juan Pérez</td>
                 <td>juan@example.com</td>
                 <td>555-1234</td>
@@ -2813,7 +2835,7 @@
           aria-labelledby="sales-stats-tab"
           class="tab-pane fade animate__animated animate__fadeInUp"
         >
-        <h2>Estamos trabajando 🏗🚧👷‍♂️ Ya Casi queda fino</h2>
+          <h2>Estamos trabajando 🏗🚧👷‍♂️ Ya Casi queda fino</h2>
           <h2 class="text-center mb-4">
             <i class="fas fa-chart-line"></i> Estadísticas de Ventas
           </h2>
@@ -2925,7 +2947,6 @@
                     <div class="text-center mt-3">
                       <p id="top-product-resume" class="fs-6"></p>
                     </div>
-                    
                   </div>
                 </div>
               </div>
@@ -3045,6 +3066,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Importa tinycolor2 desde un CDN -->
     <script src="https://cdn.jsdelivr.net/npm/tinycolor2@1.4.2/dist/tinycolor-min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
     <script type="module" src="../js/admin.js"></script>
   </body>

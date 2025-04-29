@@ -92,3 +92,37 @@ probarConexion();
 
 // Exportar la API de Firebase Functions
 exports.api = functions.https.onRequest(app);
+
+// 🔹 Endpoint para eliminar clientes completamente
+app.delete("/eliminar-cliente/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    console.log(`🗑 Intentando eliminar cliente con ID: ${id}`);
+
+    // 🔹 Eliminar de la tabla `clientes`
+    let { error: errorCliente } = await pool.query(
+      "DELETE FROM clientes WHERE usuario_id = $1",
+      [id]
+    );
+    if (errorCliente) throw errorCliente;
+
+    // 🔹 Luego eliminar de la tabla `usuarios`
+    let { error: errorUsuario } = await pool.query(
+      "DELETE FROM usuarios WHERE id = $1",
+      [id]
+    );
+    if (errorUsuario) throw errorUsuario;
+
+    // 🔹 Finalmente, eliminar de la autenticación de Supabase
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(id);
+    if (authError) {
+      console.warn(`⚠️ Advertencia: No se pudo eliminar el usuario de autenticación: ${authError.message}`);
+    }
+
+    res.status(200).json({ message: "Cliente eliminado correctamente" });
+  } catch (error) {
+    console.error("❌ Error al eliminar cliente:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
