@@ -16,7 +16,5 @@ function obtenerSugerencia() {
   }
   
   // Ejecutar la función cuando cargue la página
-  window.onload = function() {
-    obtenerSugerencia();
-  };
+obtenerSugerencia();
   
