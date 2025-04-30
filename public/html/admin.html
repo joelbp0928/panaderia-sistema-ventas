@@ -191,7 +191,7 @@
         >
           <h2>Gestión de Clientes</h2>
           <h2>Estamos trabajando 🏗🚧👷‍♂️</h2>
-          <button class="btn btn-primary mb-3">Agregar Cliente</button>
+          <!--<button class="btn btn-primary mb-3">Agregar Cliente</button>-->
 
           <!-- 🔘 Botones ocultos -->
           <div
@@ -214,30 +214,297 @@
               <i class="fas fa-trash"></i> Eliminar Cliente
             </button>
           </div>
+          <!-- 🎛 Filtros de Clientes -->
+          <div
+            class="d-flex flex-wrap align-items-end gap-3 mb-3"
+            id="filtros-clientes"
+          >
+            <!-- Nombre -->
+            <div class="flex-fill">
+              <label for="filtroClienteNombre" class="form-label">
+                <i class="fas fa-user me-1"></i>Nombre
+              </label>
+              <input
+                type="text"
+                id="filtroClienteNombre"
+                class="form-control"
+                placeholder="Buscar nombre..."
+              />
+            </div>
+
+            <!-- Correo -->
+            <div class="flex-fill">
+              <label for="filtroClienteCorreo" class="form-label">
+                <i class="fas fa-envelope me-1"></i>Correo
+              </label>
+              <input
+                type="text"
+                id="filtroClienteCorreo"
+                class="form-control"
+                placeholder="Buscar correo..."
+              />
+            </div>
+
+            <!-- Teléfono -->
+            <div class="flex-fill">
+              <label for="filtroClienteTelefono" class="form-label">
+                <i class="fas fa-phone-alt me-1"></i>Teléfono
+              </label>
+              <input
+                type="text"
+                id="filtroClienteTelefono"
+                class="form-control"
+                placeholder="Buscar teléfono..."
+              />
+            </div>
+
+            <!-- Fecha de Registro -->
+            <div class="flex-fill">
+              <label for="filtroClienteFecha" class="form-label">
+                <i class="fas fa-calendar-alt me-1"></i>Fecha de Registro
+              </label>
+              <input type="date" id="filtroClienteFecha" class="form-control" />
+            </div>
+
+            <!-- Ordenar por Nombre -->
+            <div class="flex-fill">
+              <label for="ordenarNombreCliente" class="form-label">
+                <i class="fas fa-sort-alpha-down me-1"></i>Ordenar por Nombre
+              </label>
+              <select id="ordenarNombreCliente" class="form-select">
+                <option value="az">A - Z</option>
+                <option value="za">Z - A</option>
+              </select>
+            </div>
+
+            <!-- Botón Limpiar Filtros -->
+            <div class="flex-fill">
+              <label class="form-label text-white d-block">‎</label>
+              <button
+                id="btn-limpiar-filtros-clientes"
+                class="btn btn-outline-secondary w-100 disabled"
+                disabled
+              >
+                <i class="fas fa-broom me-2"></i>Limpiar Filtros
+              </button>
+            </div>
+          </div>
+
+          <!-- 🏷️ Badges de Filtros Activos -->
+          <div id="filtros-activos-clientes" class="d-none mb-3">
+            <span
+              class="badge bg-primary rounded-pill me-1 d-none"
+              id="badge-nombre-clientes"
+            >
+              <i class="fas fa-user me-1"></i>Nombre: <span></span>
+            </span>
+            <span
+              class="badge bg-success rounded-pill me-1 d-none"
+              id="badge-correo-clientes"
+            >
+              <i class="fas fa-envelope me-1"></i>Correo: <span></span>
+            </span>
+            <span
+              class="badge bg-info text-dark rounded-pill me-1 d-none"
+              id="badge-telefono-clientes"
+            >
+              <i class="fas fa-phone-alt me-1"></i>Teléfono: <span></span>
+            </span>
+            <span
+              class="badge bg-warning text-dark rounded-pill me-1 d-none"
+              id="badge-fecha-clientes"
+            >
+              <i class="fas fa-calendar-alt me-1"></i>Fecha: <span></span>
+            </span>
+            <span
+              class="badge bg-dark rounded-pill me-1 d-none"
+              id="badge-orden-clientes"
+            >
+              <i class="fas fa-sort-alpha-down me-1"></i>Orden: <span></span>
+            </span>
+          </div>
+
           <span class="text-muted small"
             >Selecciona un cliente para ver acciones</span
           >
+          <div class="table-responsive">
+            <table
+              class="table table-hover table-borderless align-middle text-center mb-0"
+              id="tabla-clientes"
+            >
+              <thead class="table-card-title">
+                <tr>
+                  <th><i class="fas fa-user me-1"></i>Nombre</th>
+                  <th><i class="fas fa-venus-mars me-1"></i>Género</th>
+                  <th><i class="fas fa-envelope me-1"></i>Email</th>
+                  <th><i class="fas fa-phone-alt me-1"></i>Teléfono</th>
+                  <th><i class="fas fa-birthday-cake me-1"></i>Nacimiento</th>
+                  <th><i class="fas fa-home me-1"></i>Dirección</th>
+                  <th><i class="fas fa-map-marker-alt me-1"></i>Municipio</th>
+                  <th><i class="fas fa-city me-1"></i>Colonia</th>
+                  <th><i class="fas fa-calendar-plus me-1"></i>Registro</th>
+                </tr>
+              </thead>
+              <tbody id="clientes-tbody"></tbody>
+            </table>
+          </div>
+          <!-- Modal Editar Cliente -->
+          <div
+            class="modal fade"
+            id="modalEditarCliente"
+            tabindex="-1"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog modal-lg">
+              <form id="form-editar-cliente" class="modal-content">
+                <div class="modal-header text-white">
+                  <h5 class="modal-title">
+                    <i class="fas fa-user-edit me-2"></i>Editar Cliente
+                  </h5>
+                  <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"
+                  ></button>
+                </div>
+                <div class="modal-body">
+                  <input type="hidden" id="editar-id-cliente" />
 
-          <table class="table" id="tabla-clientes">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Email</th>
-                <th>Teléfono</th>
-              </tr>
-            </thead>
-            <tbody id="clientes-tbody">
-              <!--  <tr>
-                <td>Juan Pérez</td>
-                <td>juan@example.com</td>
-                <td>555-1234</td>
-                <td>
-                  <button class="btn btn-sm btn-warning">Editar</button>
-                  <button class="btn btn-sm btn-danger">Eliminar</button>
-                </td>
-              </tr>-->
-            </tbody>
-          </table>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <h5 class="mb-3">Información Personal</h5>
+
+                      <div class="mb-3">
+                        <label for="editar-nombre" class="form-label"
+                          >Nombre Completo</label
+                        >
+                        <input
+                          type="text"
+                          class="form-control"
+                          id="editar-nombre"
+                          required
+                        />
+                      </div>
+
+                      <div class="mb-3">
+                        <label for="editar-email" class="form-label"
+                          >Correo Electrónico</label
+                        >
+                        <input
+                          type="email"
+                          class="form-control"
+                          id="editar-email"
+                          required
+                          readonly
+                        />
+                      </div>
+
+                      <div class="mb-3">
+                        <label for="editar-telefono" class="form-label"
+                          >Teléfono</label
+                        >
+                        <input
+                          type="tel"
+                          class="form-control"
+                          id="editar-telefono"
+                        />
+                      </div>
+
+                      <div class="mb-3">
+                        <label for="editar-fecha-nacimiento" class="form-label"
+                          >Fecha de Nacimiento</label
+                        >
+                        <input
+                          type="date"
+                          class="form-control"
+                          id="editar-fecha-nacimiento"
+                        />
+                      </div>
+
+                      <div class="mb-3">
+                        <label for="editar-genero" class="form-label"
+                          >Género</label
+                        >
+                        <select class="form-select" id="editar-genero">
+                          <option value="masculino">Masculino</option>
+                          <option value="femenino">Femenino</option>
+                          <option value="otro">Otro</option>
+                          <option value="no_especificado">
+                            Prefiero no decir
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="col-md-6">
+                      <h5 class="mb-3">Dirección</h5>
+
+                      <div class="mb-3">
+                        <label for="editar-direccion" class="form-label"
+                          >Calle y Número</label
+                        >
+                        <input
+                          type="text"
+                          class="form-control"
+                          id="editar-direccion"
+                        />
+                      </div>
+
+                      <div class="mb-3">
+                        <label for="editar-colonia" class="form-label"
+                          >Colonia</label
+                        >
+                        <input
+                          type="text"
+                          class="form-control"
+                          id="editar-colonia"
+                        />
+                      </div>
+
+                      <div class="mb-3">
+                        <label for="editar-municipio" class="form-label"
+                          >Municipio</label
+                        >
+                        <input
+                          type="text"
+                          class="form-control"
+                          id="editar-municipio"
+                        />
+                      </div>
+
+                      <div class="mb-3">
+                        <label for="editar-codigo-postal" class="form-label"
+                          >Código Postal</label
+                        >
+                        <input
+                          type="number"
+                          class="form-control"
+                          id="editar-codigo-postal"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                  >
+                    Cancelar
+                  </button>
+                  <button type="submit" class="btn btn-primary">
+                    <span
+                      id="spinner-editar"
+                      class="spinner-border spinner-border-sm d-none"
+                      role="status"
+                    ></span>
+                    Guardar Cambios
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
 
         <!-- Empleados -->
@@ -3067,7 +3334,6 @@
     <!-- Importa tinycolor2 desde un CDN -->
     <script src="https://cdn.jsdelivr.net/npm/tinycolor2@1.4.2/dist/tinycolor-min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 
     <script type="module" src="../js/admin.js"></script>
   </body>

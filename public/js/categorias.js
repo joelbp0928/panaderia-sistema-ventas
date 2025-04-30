@@ -101,9 +101,6 @@ export async function cargarCategorias() {
 
         if (error) throw error;
 
-        categoriasOrdenadas = data;
-        console.log("Categorias cargadas:", categoriasOrdenadas); // Log para revisar los datos
-
         renderizarCategorias();
 
     } catch (error) {

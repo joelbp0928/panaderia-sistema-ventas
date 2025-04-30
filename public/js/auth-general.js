@@ -7,11 +7,11 @@ let nyancat;
 
 // Precarga el audio después de interacción del usuario
 document.addEventListener('click', () => {
-    if (!nyancat) {
-        nyancat = new Audio("./sounds/nycat.mp3");
-        nyancat.preload = 'auto';
-        nyancat.load();
-    }
+  if (!nyancat) {
+    nyancat = new Audio("./sounds/nycat.mp3");
+    nyancat.preload = 'auto';
+    nyancat.load();
+  }
 }, { once: true }); // Solo se ejecuta una vez
 
 export async function iniciarSesionGeneral(event) {
@@ -34,9 +34,11 @@ export async function iniciarSesionGeneral(event) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      const modalLogin = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
-      modalLogin?.hide(); // 🔥 Cierra automáticamente el modal de login
+
+
       if (error.message.includes("Email not confirmed")) {
+        const modalLogin = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+        modalLogin?.hide(); // 🔥 Cierra automáticamente el modal de login
         // Solución para autoplay bloqueado
         const playSound = async () => {
           try {
@@ -97,6 +99,19 @@ export async function iniciarSesionGeneral(event) {
         restoreButton();
         await nyancat.pause();
         return; // No permitir login
+      } else if (error.message.includes("Invalid login credentials")) {
+        // Verificamos si el correo existe en la base de datos
+        const { data: userExists, error: userCheckError } = await supabase
+          .from('usuarios')
+          .select('id')
+          .eq('email', email)
+          .single();
+
+        if (userCheckError || !userExists) {
+          mostrarToast("❌ No existe ningún usuario con este correo electrónico.", "error");
+        } else {
+          mostrarToast("❌ Contraseña incorrecta.", "error");
+        }
       } else {
         mostrarToast(`❌ Error: ${error.message}`, "error");
       }
