@@ -73,8 +73,8 @@ export async function registrarCliente(event) {
 
     // Validación de edad (mayor de 18)
     if (!validarFechaNacimiento(fechaNacimiento)) {
-      mostrarToast("⚠️ Debes ser mayor de 18 años para registrarte.", "warning");
-      marcarErrorCampo("signup-birthdate", "Debes ser mayor de edad");
+      mostrarToast("⚠️ Debes ser mayor de 16 años para registrarte.", "warning");
+      marcarErrorCampo("signup-birthdate", "Debes ser mayor de 16 años.");
       restoreButton();
       return;
     }
@@ -118,19 +118,6 @@ export async function registrarCliente(event) {
     if (phoneExists) {
       mostrarToast("⚠️ Este teléfono ya está registrado.", "warning");
       marcarErrorCampo("signup-phone", "Teléfono ya registrado");
-      restoreButton();
-      return;
-    }
-    if (password.length < 6) {
-      mostrarToast("⚠️ La contraseña debe tener al menos 6 caracteres.", "warning");
-      marcarErrorCampo("signup-password", "⚠️ La contraseña debe tener al menos 6 caracteres.")
-      restoreButton();
-      return;
-    }
-    if (password !== confirmPassword) {
-      mostrarToast("⚠️ Las contraseñas no coinciden.", "warning");
-      marcarErrorCampo("signup-password", "⚠️");
-      marcarErrorCampo("signup-password-confirm", "⚠️ Las contraseñas no coinciden.")
       restoreButton();
       return;
     }
@@ -314,13 +301,15 @@ function validarCodigoPostal(codigoPostal) {
 function validarFechaNacimiento(fecha) {
   const hoy = new Date();
   const fechaNac = new Date(fecha);
-  const edad = hoy.getFullYear() - fechaNac.getFullYear();
+  
+  // Calcular edad de forma precisa
+  let edad = hoy.getFullYear() - fechaNac.getFullYear();
   const mes = hoy.getMonth() - fechaNac.getMonth();
-
+  
   if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
     edad--;
   }
-
+  
   return edad >= 18;
 }
 function validarNombre(nombre) {
