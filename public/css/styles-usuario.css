@@ -94,25 +94,80 @@ header {
   object-fit: cover;
 }
 
-.tarjeta-sugerencia {
-  margin: 30px auto 20px auto;
-  padding: 20px 30px;
-  width: 80%;
-  max-width: 600px;
-  background-color: #fff8e1; /* Color suave tipo pan 🍞 */
-  border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+/* texto sugerencia */
+#titulo-recomendacion {
   text-align: center;
-  font-size: 24px;
-  font-weight: bold;
-  color: #6d4c41; /* Color café suave */
+  margin-top: 40px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+#titulo-recomendacion h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #6d4c41;
+  background: linear-gradient(90deg, #fff3e0, #ffe0b2);
+  display: inline-block;
+  padding: 10px 24px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* sugerencia */
+.tarjeta-horizontal {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: #fff8e1;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  max-width: 600px;
+  margin: 30px auto;
+  padding: 10px;
+  font-family: 'Segoe UI', sans-serif;
   transition: transform 0.3s ease;
 }
 
-.tarjeta-sugerencia:hover {
-  transform: scale(1.02);
+.tarjeta-horizontal:hover {
+  transform: scale(1.01);
 }
 
+.tarjeta-horizontal img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.contenido-pan {
+  flex: 1;
+}
+
+.contenido-pan h3 {
+  margin: 0 0 6px;
+  color: #4e342e;
+  font-size: 1.2rem;
+}
+
+.contenido-pan p {
+  margin: 0 0 12px;
+  color: #6d4c41;
+  font-size: 0.95rem;
+}
+
+#btn-carrito {
+  padding: 8px 14px;
+  background-color: #8e44ad;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+#btn-carrito:hover {
+  background-color: #732d91;
+}
 
 /* 📂 Categorías */
 #categories {
