@@ -1,20 +1,27 @@
 // Código Fetch para traer la sugerencia de pan
 function obtenerSugerencia() {
-    fetch('https://sarimax-panaderia-v2-dyfwgmb5ecb5gnb4.eastus-01.azurewebsites.net')  // Recuerda: ahorita es LOCALHOST
-      .then(response => response.json())
-      .then(data => {
-        console.log(data); // Aquí ves qué te regresó Flask
-        const sugerencia = data.sugerencia;
-  
-        // Mostrar la sugerencia en el HTML
-        const contenedor = document.getElementById('sugerencia-pan');
-        contenedor.textContent = "Hoy te sugerimos: " + sugerencia;
-      })
-      .catch(error => {
-        console.error('Error al obtener sugerencia:', error);
-      });
+  console.log("Entró a la función");
+  fetch('https://sarimax-panaderia-v2-dyfwgmb5ecb5gnb4.eastus-01.azurewebsites.net/')
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById("tarjeta-sugerencia").style.display = "flex";
+    document.getElementById('imagen-pan').src = data.imagen_url;
+    document.getElementById('nombre-pan').textContent = data.nombre;
+    document.getElementById('descripcion-pan').textContent = data.descripcion || "Sin descripción disponible";
+
+    tarjeta.style.display = "block";
+
+    // Añadir evento al botón
+    const btn = document.getElementById('btn-carrito');
+    btn.onclick = () => {
+      console.log("Producto añadido al carrito:", data.nombre);
+      alert(`✅ "${data.nombre}" añadido al carrito`);
+    };
+  });
+
+
+
   }
-  
-  // Ejecutar la función cuando cargue la página
+
+ 
 obtenerSugerencia();
-  
