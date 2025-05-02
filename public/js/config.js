@@ -1,26 +1,18 @@
 import { supabase } from './supabase-config.js'; // Importa la configuración de Supabase
 
-// 🔹 Cargar promociones desde Firebase
-/*export function cargarPromociones() {
-    fetch("https://us-central1-gestor-panaderia.cloudfunctions.net/api/config/promociones")
-        .then(response => response.json())
-        .then(data => {
-            const promoContainer = document.getElementById("promotions");
-            promoContainer.innerHTML = "";
-            data.forEach(promo => {
-                const promoElement = document.createElement("div");
-                promoElement.classList.add("promo-slider");
-                promoElement.innerHTML = `<img src="${promo.imagen_url}" alt="${promo.nombre}" class="promo-img"/>
-               `;
-                promoContainer.appendChild(promoElement);
-            });
-        })
-        .catch(error => console.error("❌ Error cargando promociones:", error));
-}
-*/
+// 🔹 Variable global para la categoría seleccionada
+let categoriaSeleccionada = null;
+export let configuracionGlobal = {};
+
 window.onload = async function () {
     cargarPromociones();
 }
+
+// Por esto:
+document.addEventListener('DOMContentLoaded', function() {
+    cargarPromociones();
+    cargarCategorias();
+});
 async function cargarPromociones() {
     try {
         // Verificar si el elemento existe antes de continuar
@@ -37,7 +29,7 @@ async function cargarPromociones() {
             .order('fecha_inicio', { ascending: false }); // Ordenar por fecha de inicio
 
         if (error) throw error;
-        
+
         promoSlider.innerHTML = ''; // Limpiar el carrusel antes de cargar las nuevas promociones
 
         if (data.length === 0) {
@@ -66,11 +58,6 @@ async function cargarPromociones() {
     }
 }
 
-// Cargar promociones cuando la página cargue
-document.addEventListener('DOMContentLoaded', cargarPromociones);
-
-
-
 // 🔹 Cargar productos dinámicamente
 export async function cargarProductos() {
     try {
@@ -90,7 +77,7 @@ export async function cargarProductos() {
         data.forEach((producto) => {
             // Crear el elemento HTML para cada producto
             const productCard = document.createElement('div');
-            productCard.classList.add('col-12', 'col-md-6', 'col-lg-4', 'mb-4'); // Usando clases de Bootstrap para la responsividad
+            productCard.classList.add('col-6', 'col-md-4', 'col-lg-2', 'mb-4'); // Muestra hasta 6 por fila en pantallas grandes
 
             productCard.innerHTML = `
             <div class="product-card">
@@ -111,7 +98,8 @@ export async function cargarProductos() {
         console.error('Error al cargar los productos:', error);
     }
 }
-export let configuracionGlobal = {};
+
+
 export async function cargarConfiguracion() {
     try {
         // Obtenemos la configuración de la base de datos
@@ -147,6 +135,7 @@ export async function cargarConfiguracion() {
         console.error('Error al cargar la configuración:', error);
     }
 }
+
 // Función para aplicar el color primario al sitio
 function aplicarColorPrimario(color) {
     // Crear un color más oscuro para el hover
@@ -179,19 +168,34 @@ async function cargarCategorias() {
             throw error;
         }
 
-        
-
         // Limpiar cualquier contenido anterior
         categoryButtonsContainer.innerHTML = "";
 
-        // Crear un botón para cada categoría obtenida
+        // Botón "Todas"
+        const allButton = document.createElement("button");
+        allButton.classList.add("category-btn", "active"); // Activo por defecto
+        allButton.textContent = "Todas";
+        allButton.onclick = (event) => {
+            // Remover active de todos los botones
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+            // Agregar active al botón clickeado
+            event.target.classList.add('active');
+            cargarProductos();
+        };
+        categoryButtonsContainer.appendChild(allButton);
+
+        // Botones de categorías
         data.forEach((categoria) => {
             const categoryButton = document.createElement("button");
             categoryButton.classList.add("category-btn");
             categoryButton.textContent = categoria.nombre;
 
-            // Agregar un event listener para cada botón
-            categoryButton.onclick = () => {
+            categoryButton.onclick = (event) => {
+                // Remover active de todos los botones
+                document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+                // Agregar active al botón clickeado
+                event.target.classList.add('active');
+                // Cargar productos de la categoría
                 toggleCategory(categoria.id);
             };
 
@@ -205,28 +209,53 @@ async function cargarCategorias() {
 // Función que se llama cuando se hace clic en una categoría
 async function toggleCategory(categoryId) {
     console.log("Categoría seleccionada:", categoryId);
+    document.getElementById('loader-categorias').classList.remove('d-none');
 
-    try {
-        // Obtener los productos que pertenecen a la categoría seleccionada
+    setTimeout(async () => {
+      try {
         const { data: productos, error } = await supabase
-            .from("productos")
-            .select("id, nombre, precio, imagen_url")
-            .eq("categoria_id", categoryId); // Filtrar por la categoría seleccionada
-
-        if (error) {
-            throw error;
-        }
-
-        // Mostrar los productos en la consola
-        console.log("Productos de la categoría:", productos);
-
-        // Aquí puedes agregar más código para mostrar los productos en el frontend si lo deseas
-        // Ejemplo:
-        // mostrarProductosEnElFrontend(productos);
-    } catch (error) {
+          .from("productos")
+          .select("id, nombre, precio, imagen_url")
+          .eq("categoria_id", categoryId);
+    
+        if (error) throw error;
+    
+        renderizarProductos(productos);
+      } catch (error) {
         console.error("Error al cargar los productos:", error.message);
-    }
+      } finally {
+        console.log("Aquiii")
+        document.getElementById('loader-categorias').classList.add('d-none');
+      }
+    }, 2000); // Simula un mini retardo para UX
+    
 }
 
-// Cargar categorías cuando se carga la página
-document.addEventListener("DOMContentLoaded", cargarCategorias);
+
+function renderizarProductos(productos) {
+    const productsList = document.getElementById('products-list');
+    productsList.innerHTML = ''; // Limpiar lista actual
+
+    if (!productos || productos.length === 0) {
+        productsList.innerHTML = "<p>No hay productos en esta categoría.</p>";
+        return;
+    }
+
+    productos.forEach((producto) => {
+        const productCard = document.createElement('div');
+        productCard.classList.add('col-12', 'col-sm-6', 'col-md-4', 'col-lg-3', 'col-xl-2-4', 'mb-4');
+
+        productCard.innerHTML = `
+        <div class="product-card">
+          <img src="${producto.imagen_url}" alt="${producto.nombre}" class="card-img-top img-fluid" />
+          <div class="card-body">
+            <h5 class="card-title">${producto.nombre}</h5>
+            <p class="card-text">$${producto.precio}</p>
+            <button class="btn btn-primary">Agregar al Carrito</button>
+          </div>
+        </div>
+      `;
+
+        productsList.appendChild(productCard);
+    });
+}

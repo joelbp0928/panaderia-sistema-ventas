@@ -100,6 +100,7 @@ export async function cargarCategorias() {
             .order('orden', { ascending: true });
 
         if (error) throw error;
+        categoriasOrdenadas = data;
 
         renderizarCategorias();
 

@@ -16,43 +16,62 @@
   </head>
   <body>
     <!-- 🔹 Encabezado -->
-<!-- --------------------------- HEADER ACTUALIZADO --------------------------- -->
-<header class="bg-vino text-white py-3">
-  <div class="container d-flex flex-wrap justify-content-between align-items-center">
+    <!-- --------------------------- HEADER ACTUALIZADO --------------------------- -->
+    <header class="bg-vino text-white py-3">
+      <div
+        class="container d-flex flex-wrap justify-content-between align-items-center"
+      >
+        <div class="logo">
+          <img
+            id="logo-image"
+            src="./img/logo_empresa.jpg"
+            alt="Logo Empresa"
+            class="img-fluid"
+            style="max-height: 60px"
+          />
+        </div>
 
-    <div class="logo">
-      <img id="logo-image" src="./img/logo_empresa.jpg" alt="Logo Empresa" class="img-fluid" style="max-height: 60px;">
-    </div>
+        <div class="search-bar d-flex flex-grow-1 mx-3">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Buscar productos..."
+          />
+          <button class="btn btn-light ms-2">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
 
-    <div class="search-bar d-flex flex-grow-1 mx-3">
-      <input type="text" class="form-control" placeholder="Buscar productos...">
-      <button class="btn btn-light ms-2"><i class="fas fa-search"></i></button>
-    </div>
+        <!-- BOTONES DE USUARIO NO LOGUEADO -->
+        <div id="guest-buttons" class="d-flex">
+          <button
+            class="btn btn-light me-2"
+            data-bs-toggle="modal"
+            data-bs-target="#loginModal"
+          >
+            <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+          </button>
+          <button
+            class="btn btn-light"
+            data-bs-toggle="modal"
+            data-bs-target="#signupModal"
+          >
+            <i class="fas fa-user-plus"></i> Registrarse
+          </button>
+        </div>
 
-    <!-- BOTONES DE USUARIO NO LOGUEADO -->
-    <div id="guest-buttons" class="d-flex">
-      <button class="btn btn-light me-2" data-bs-toggle="modal" data-bs-target="#loginModal">
-        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
-      </button>
-      <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#signupModal">
-        <i class="fas fa-user-plus"></i> Registrarse
-      </button>
-    </div>
-
-    <!-- BOTONES DE USUARIO LOGUEADO -->
-    <div id="user-buttons" class="d-none align-items-center">
-      <span class="me-3">
-        <i class="fas fa-user-circle"></i>
-        <span id="client-name">Cliente</span>
-      </span>
-      <button id="logout-cliente-btn" class="btn btn-outline-light">
-        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-      </button>
-    </div>
-
-  </div>
-</header>
-
+        <!-- BOTONES DE USUARIO LOGUEADO -->
+        <div id="user-buttons" class="d-none align-items-center">
+          <span class="me-3">
+            <i class="fas fa-user-circle"></i>
+            <span id="client-name">Cliente</span>
+          </span>
+          <button id="logout-cliente-btn" class="btn btn-outline-light">
+            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    </header>
 
     <!-- Promociones -->
     <section id="promotions">
@@ -82,20 +101,20 @@
     </section>
 
     <!--Sugerencias-->
-<!--Sugerencias-->
+    <!--Sugerencias-->
     <div id="titulo-recomendacion">
       <h2>✨ Nuestra recomendación del día para ti ✨</h2>
     </div>
-    
+
     <div id="tarjeta-sugerencia" class="tarjeta-horizontal">
-      <img id="imagen-pan" src="" alt="Pan recomendado">
+      <img id="imagen-pan" src="" alt="Pan recomendado" />
       <div class="contenido-pan">
         <h3 id="nombre-pan">Nombre del pan</h3>
         <p id="descripcion-pan">Descripción del pan</p>
         <button id="btn-carrito">Añadir al carrito</button>
       </div>
     </div>
-  
+
     <!-- Categorías -->
     <section id="categories">
       <h2>Categorías</h2>
@@ -363,7 +382,12 @@
         </div>
       </div>
     </div>
-
+    <div id="loader-categorias" class="text-center d-none my-4">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+    </div>
+    
     <!-- Footer -->
     <footer>
       <p id="footer-company-name"></p>

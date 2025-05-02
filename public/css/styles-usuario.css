@@ -193,11 +193,30 @@ header {
   width: 100%;
   max-width: 200px;
   font-weight: bold;
+  transition: background-color 0.2s ease, transform 0.1s ease!important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1)!important;
 }
 
 .category-btn:hover {
   background-color: var(--primary-color-obscuro);
   border-color: var(--primary-color-obscuro);
+  transform: translateY(-2px)!important;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15)!important;
+}
+
+/* 💥 Active: animación de clic */
+.category-btn:active {
+  transform: scale(0.96)!important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2)!important;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.category-btn.active {
+  background-color: var(--primary-color-obscuro);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+  border: 2px solid white; /* O algún otro estilo distintivo */
 }
 
 /* 🛍️ Productos */
@@ -213,8 +232,8 @@ header {
 .product-card {
   text-align: center;
   background-color: var(--blanco);
-  border: 1px solid var(--gris-oscuro);
-  padding: 1rem;
+  border: 2px solid var(--gris-oscuro);
+  padding: 0.5rem;
   width: 100%;
   height: 100%;
   max-width: 250px;
@@ -224,7 +243,8 @@ header {
   justify-content: space-between;
   padding: 10px;
   border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  animation: fadeInUp 0.4s ease;
+  transition: transform 0.2s;
 }
 
 .product-card img {
@@ -259,12 +279,14 @@ header {
   font-weight: bold;
 }
 
-.product-card .add-to-cart-btn:hover {
-  background-color: #0056b3;
-}
-
-.product-card .add-to-cart-btn:hover {
+.product-card .add-to-cart-btn:hover{
+  animation: fadeInUp 0.4s ease;
+  transition: transform 0.2s;
   background-color: var(--primary-claro-obscuro);
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Hacer que las tarjetas sean responsivas y ajusten el espacio según el tamaño de pantalla */
@@ -465,4 +487,33 @@ color: var(--primary-color)
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* 5 columnas en pantallas extra grandes */
+@media (min-width: 1200px) {
+  .col-xl-2-4 {
+    flex: 0 0 auto;
+    width: 20%;
+  }
+}
+
+/* 🌈 Estilo del botón con color primario */
+.product-card .btn-primary {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  transition: background-color 0.2s ease, transform 0.1s ease!important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1)!important;
+}
+
+/* 🌟 Hover: tono más claro */
+.product-card .btn-primary:hover  {
+  background-color: var(--primary-color-obscuro) !important; /* puedes usar tinycolor para aclarar dinámicamente si quieres */
+  transform: translateY(-2px)!important;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15)!important;
+}
+
+/* 💥 Active: animación de clic */
+.product-card .btn-primary:active {
+  transform: scale(0.96)!important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2)!important;
 }
