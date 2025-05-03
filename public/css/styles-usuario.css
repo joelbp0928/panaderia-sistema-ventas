@@ -14,7 +14,7 @@
 
 /* 🌍 Estilos generales */
 body {
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
   margin: 0;
   padding: 0;
   background-color: var(--gris-claro);
@@ -98,7 +98,7 @@ header {
 #titulo-recomendacion {
   text-align: center;
   margin-top: 40px;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: "Segoe UI", sans-serif;
 }
 
 #titulo-recomendacion h2 {
@@ -109,7 +109,7 @@ header {
   display: inline-block;
   padding: 10px 24px;
   border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 /* sugerencia */
@@ -123,7 +123,7 @@ header {
   max-width: 600px;
   margin: 30px auto;
   padding: 10px;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: "Segoe UI", sans-serif;
   transition: transform 0.3s ease;
 }
 
@@ -182,7 +182,7 @@ header {
   justify-items: center;
 }
 
-.category-btn{
+.category-btn {
   padding: 1rem;
   background-color: var(--primary-color);
   color: var(--blanco);
@@ -193,21 +193,21 @@ header {
   width: 100%;
   max-width: 200px;
   font-weight: bold;
-  transition: background-color 0.2s ease, transform 0.1s ease!important;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1)!important;
+  transition: background-color 0.2s ease, transform 0.1s ease !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }
 
 .category-btn:hover {
   background-color: var(--primary-color-obscuro);
   border-color: var(--primary-color-obscuro);
-  transform: translateY(-2px)!important;
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15)!important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15) !important;
 }
 
 /* 💥 Active: animación de clic */
 .category-btn:active {
-  transform: scale(0.96)!important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2)!important;
+  transform: scale(0.96) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
   background-color: var(--primary-color);
   color: white;
 }
@@ -216,7 +216,7 @@ header {
   background-color: var(--primary-color-obscuro);
   transform: translateY(-2px);
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
-  border: 2px solid white; /* O algún otro estilo distintivo */
+  border: 2px solid var(--primary-color); /* O algún otro estilo distintivo */
 }
 
 /* 🛍️ Productos */
@@ -224,12 +224,16 @@ header {
   padding: 2rem;
   text-align: center;
   align-items: center;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Máximo 5 productos por fila */
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(200px, 1fr)
+  ); /* Máximo 5 productos por fila */
   gap: 10px; /* Reducir el espacio entre las tarjetas */
   margin-top: 20px; /* Espacio superior */
 }
 
 .product-card {
+  overflow: hidden;
   text-align: center;
   background-color: var(--blanco);
   border: 2px solid var(--gris-oscuro);
@@ -237,14 +241,15 @@ header {
   width: 100%;
   height: 100%;
   max-width: 250px;
+  min-height: 410px; /* Ajusta según tu diseño */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
   padding: 10px;
-  border-radius: 8px;
+  border-radius: 12px;
   animation: fadeInUp 0.4s ease;
-  transition: transform 0.2s;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .product-card img {
@@ -279,31 +284,45 @@ header {
   font-weight: bold;
 }
 
-.product-card .add-to-cart-btn:hover{
+.product-card .add-to-cart-btn:hover {
+  transform: translateY(-4px);
   animation: fadeInUp 0.4s ease;
   transition: transform 0.2s;
   background-color: var(--primary-claro-obscuro);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
+
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Hacer que las tarjetas sean responsivas y ajusten el espacio según el tamaño de pantalla */
 @media (max-width: 768px) {
   #products .product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Menos espacio entre productos en pantallas pequeñas */
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(150px, 1fr)
+    ); /* Menos espacio entre productos en pantallas pequeñas */
     gap: 5px;
   }
 }
 
 @media (max-width: 480px) {
   #products .product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* En pantallas muy pequeñas, más compactas */
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(120px, 1fr)
+    ); /* En pantallas muy pequeñas, más compactas */
     gap: 5px;
   }
 }
-
 
 /* 🔹 Footer */
 footer {
@@ -338,11 +357,11 @@ footer {
 }
 
 .modal-content a {
-color: var(--primary-color)
+  color: var(--primary-color);
 }
 .modal-content a:hover {
-  color: var(--primary-claro-obscuro)
-  }
+  color: var(--primary-claro-obscuro);
+}
 
 /* 🔹 Cuerpo del modal */
 .modal-body {
@@ -435,7 +454,6 @@ color: var(--primary-color)
   transition: transform 0.5s ease;
 }
 
-
 #promo-carousel .carousel-item img {
   object-fit: contain; /* Ajusta las imágenes para que no se deformen */
   height: 100%; /* Asegura que las imágenes no sobrepasen el tamaño del contenedor */
@@ -501,19 +519,62 @@ color: var(--primary-color)
 .product-card .btn-primary {
   background-color: var(--primary-color) !important;
   border-color: var(--primary-color) !important;
-  transition: background-color 0.2s ease, transform 0.1s ease!important;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1)!important;
+  transition: background-color 0.2s ease, transform 0.1s ease !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* 🌟 Hover: tono más claro */
-.product-card .btn-primary:hover  {
-  background-color: var(--primary-color-obscuro) !important; /* puedes usar tinycolor para aclarar dinámicamente si quieres */
-  transform: translateY(-2px)!important;
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15)!important;
+.product-card .btn-primary:hover {
+  background-color: var(
+    --primary-color-obscuro
+  ) !important; /* puedes usar tinycolor para aclarar dinámicamente si quieres */
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15) !important;
 }
 
 /* 💥 Active: animación de clic */
 .product-card .btn-primary:active {
-  transform: scale(0.96)!important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2)!important;
+  transform: scale(0.96) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+.card-body {
+  font-family: "Segoe UI", sans-serif;
+}
+
+.ver-ingredientes {
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.ver-ingredientes:hover {
+  color: var(--primary-color-obscuro);
+}
+
+.list-group-item {
+  background-color: #f9f9f9;
+  border: none;
+}
+.nombre-producto {
+  font-size: 1rem;
+  font-weight: 600;
+  max-height: 2.4em; /* Equivale a 2 líneas aprox */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.acciones-producto {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.badge {
+  font-size: 0.8rem;
+  padding: 0.4em 0.6em;
 }

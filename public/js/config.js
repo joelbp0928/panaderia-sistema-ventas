@@ -1,18 +1,29 @@
 import { supabase } from './supabase-config.js'; // Importa la configuración de Supabase
+import { getClienteActivo } from './estado.js';
 
 // 🔹 Variable global para la categoría seleccionada
 let categoriaSeleccionada = null;
 export let configuracionGlobal = {};
+// Variable global para saber si hay cliente logueado
 
 window.onload = async function () {
+    await verificarSesionCliente();  // primero verificar si hay cliente
     cargarPromociones();
 }
 
 // Por esto:
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     cargarPromociones();
     cargarCategorias();
+
+    // Escuchar cambios en tiempo real del input
+    const inputBusqueda = document.getElementById("busqueda-productos");
+    inputBusqueda.addEventListener("input", async function () {
+        const termino = inputBusqueda.value.trim().toLowerCase();
+        buscarProductos(termino);
+    });
 });
+
 async function cargarPromociones() {
     try {
         // Verificar si el elemento existe antes de continuar
@@ -61,41 +72,32 @@ async function cargarPromociones() {
 // 🔹 Cargar productos dinámicamente
 export async function cargarProductos() {
     try {
-        // Obtener productos desde la base de datos
         const { data, error } = await supabase
-            .from('productos') // Asegúrate de que la tabla se llama 'productos'
-            .select('id, nombre, precio, imagen_url') // Los campos que deseas obtener
-            .order('id', { ascending: true });
+            .from("productos")
+            .select(`
+          id,
+          nombre,
+          precio,
+          imagen_url,
+          productos_ingredientes (
+            cantidad_usada,
+            ingrediente_id,
+            ingredientes:ingrediente_id (
+              nombre,
+              medida
+            )
+          ),
+          inventario_productos (
+            stock_actual
+          )
+        `)
+            .order("id", { ascending: true });
 
         if (error) throw error;
 
-        // Obtener el contenedor donde se mostrarán los productos
-        const productsList = document.getElementById('products-list');
-        productsList.innerHTML = ''; // Limpiar el contenido existente
-
-        // Iterar sobre los productos obtenidos y agregarlos al DOM
-        data.forEach((producto) => {
-            // Crear el elemento HTML para cada producto
-            const productCard = document.createElement('div');
-            productCard.classList.add('col-6', 'col-md-4', 'col-lg-2', 'mb-4'); // Muestra hasta 6 por fila en pantallas grandes
-
-            productCard.innerHTML = `
-            <div class="product-card">
-              <img src="${producto.imagen_url}" alt="${producto.nombre}" class="card-img-top img-fluid" />
-              <div class="card-body">
-                <h5 class="card-title">${producto.nombre}</h5>
-                <p class="card-text">$${producto.precio}</p>
-                <button class="btn btn-primary">Agregar al Carrito</button>
-              </div>
-            </div>
-          `;
-
-            // Añadir el producto a la lista
-            productsList.appendChild(productCard);
-        });
-
+        renderizarProductos(data);
     } catch (error) {
-        console.error('Error al cargar los productos:', error);
+        console.error("Error al cargar los productos:", error);
     }
 }
 
@@ -208,54 +210,206 @@ async function cargarCategorias() {
 
 // Función que se llama cuando se hace clic en una categoría
 async function toggleCategory(categoryId) {
-    console.log("Categoría seleccionada:", categoryId);
-    document.getElementById('loader-categorias').classList.remove('d-none');
-
-    setTimeout(async () => {
-      try {
+    try {
         const { data: productos, error } = await supabase
-          .from("productos")
-          .select("id, nombre, precio, imagen_url")
-          .eq("categoria_id", categoryId);
-    
+            .from("productos")
+            .select(`
+              id,
+              nombre,
+              precio,
+              imagen_url,
+              productos_ingredientes (
+                cantidad_usada,
+                ingrediente_id,
+                ingredientes:ingrediente_id (
+                  nombre,
+                  medida
+                )
+              ),
+              inventario_productos (
+                stock_actual
+              )
+            `)
+            .eq("categoria_id", categoryId); // Aquí ya filtras por categoría
+
         if (error) throw error;
-    
+
         renderizarProductos(productos);
-      } catch (error) {
+    } catch (error) {
         console.error("Error al cargar los productos:", error.message);
-      } finally {
-        console.log("Aquiii")
-        document.getElementById('loader-categorias').classList.add('d-none');
-      }
-    }, 2000); // Simula un mini retardo para UX
-    
+    }
 }
+
 
 
 function renderizarProductos(productos) {
     const productsList = document.getElementById('products-list');
-    productsList.innerHTML = ''; // Limpiar lista actual
+    productsList.innerHTML = '';
 
     if (!productos || productos.length === 0) {
         productsList.innerHTML = "<p>No hay productos en esta categoría.</p>";
         return;
     }
 
-    productos.forEach((producto) => {
+    productos.forEach((producto, index) => {
+        const stock = producto.inventario_productos?.[0]?.stock_actual ?? 0;
+        let badgeStock = '';
+        if (stock > 7) {
+            badgeStock = `<span class="badge bg-success mb-2"><i class="fas fa-check-circle me-1"></i> Disponible: ${stock}</span>`;
+        } else if (stock > 0) {
+            badgeStock = `<span class="badge bg-warning text-dark mb-2"><i class="fas fa-exclamation-circle me-1"></i> Bajo stock: ${stock}</span>`;
+        } else {
+            badgeStock = `<span class="badge bg-danger mb-2"><i class="fas fa-times-circle me-1"></i> Agotado</span>`;
+        }
+
+        const agregarDisabled = stock <= 0 ? 'disabled' : '';
+
+        const activo = getClienteActivo();
+        const mostrarCantidad = activo && stock > 0 ? '' : 'd-none';
+        const mostrarAgregar = activo && stock > 0 ? '' : 'd-none';
+        const mostrarMensajeLogin = !activo ? '' : 'd-none';
+        const mostrarStock = activo ? badgeStock : '';
+        document.getElementById("seccion-sugerencias")?.classList.toggle("d-none", !activo);
+
+
+
         const productCard = document.createElement('div');
-        productCard.classList.add('col-12', 'col-sm-6', 'col-md-4', 'col-lg-3', 'col-xl-2-4', 'mb-4');
+        productCard.classList.add('col-6', 'col-md-4', 'col-lg-2', 'mb-4');
 
         productCard.innerHTML = `
-        <div class="product-card">
-          <img src="${producto.imagen_url}" alt="${producto.nombre}" class="card-img-top img-fluid" />
-          <div class="card-body">
-            <h5 class="card-title">${producto.nombre}</h5>
-            <p class="card-text">$${producto.precio}</p>
-            <button class="btn btn-primary">Agregar al Carrito</button>
-          </div>
+        <div class="card product-card shadow-sm h-100">
+            <img src="${producto.imagen_url}" class="card-img-top img-fluid rounded-top" alt="${producto.nombre}" loading="lazy">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <h5 class="card-title nombre-producto nombre-producto" title="${producto.nombre}">${producto.nombre}</h5>
+               <p class="card-text fw-bold text-success">$${producto.precio}</p>
+${mostrarStock}
+
+<div class="d-flex align-items-center justify-content-center mb-2 ${mostrarCantidad}">
+  <button class="btn btn-outline-secondary btn-sm me-2 cantidad-btn" data-index="${index}" data-action="restar">
+    <i class="fas fa-minus"></i>
+  </button>
+  <span id="cantidad-${index}" class="mx-2">1</span>
+  <button class="btn btn-outline-secondary btn-sm ms-2 cantidad-btn" data-index="${index}" data-action="sumar">
+    <i class="fas fa-plus"></i>
+  </button>
+</div>
+
+<div class="acciones-producto mt-auto">
+  <button class="btn btn-primary w-100 mb-2 ${mostrarAgregar}" ${agregarDisabled}>
+    <i class="fas fa-cart-plus me-2"></i>Agregar
+  </button>
+  <div class="alert alert-warning text-center py-1 mb-2 ${mostrarMensajeLogin}" style="font-size: 0.85rem;">
+    Inicia sesión para comprar
+  </div>
+  <button class="btn btn-outline-secondary btn-sm ver-detalles" data-index="${index}">
+    <i class="fas fa-eye me-1"></i> Ver detalles
+  </button>
+</div>
+            </div>
         </div>
-      `;
+        `;
 
         productsList.appendChild(productCard);
     });
+
+    document.querySelectorAll('.cantidad-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = e.currentTarget.dataset.index;
+            const spanCantidad = document.getElementById(`cantidad-${index}`);
+            let cantidad = parseInt(spanCantidad.textContent);
+
+            if (e.currentTarget.dataset.action === 'sumar') {
+                cantidad++;
+            } else if (cantidad > 1) {
+                cantidad--;
+            }
+
+            spanCantidad.textContent = cantidad;
+        });
+    });
+
+    document.querySelectorAll('.ver-detalles').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = e.currentTarget.dataset.index;
+            const producto = productos[index];
+
+            document.getElementById("modalNombreProducto").textContent = producto.nombre;
+            document.getElementById("modalImagenProducto").src = producto.imagen_url;
+            document.getElementById("modalPrecioProducto").textContent = `$${producto.precio}`;
+
+            const ulIngredientes = document.getElementById("modalIngredientes");
+            ulIngredientes.innerHTML = producto.productos_ingredientes?.map(pi => {
+                const ing = pi.ingredientes;
+                return `<li class="list-group-item">${ing.nombre}</li>`;
+            }).join('') || '<li class="list-group-item">Sin ingredientes</li>';
+
+            const modal = new bootstrap.Modal(document.getElementById('modalDetallesProducto'));
+            modal.show();
+        });
+    });
 }
+
+async function buscarProductos(termino) {
+    try {
+        const { data, error } = await supabase
+            .from("productos")
+            .select(`
+              id,
+              nombre,
+              precio,
+              imagen_url,
+              productos_ingredientes (
+                cantidad_usada,
+                ingrediente_id,
+                ingredientes:ingrediente_id (
+                  nombre,
+                  medida
+                )
+              ),
+              inventario_productos (
+                stock_actual
+              )
+            `);
+
+        if (error) throw error;
+
+        const resultados = data.filter(producto => {
+            const nombreProducto = producto.nombre.toLowerCase();
+            const matchNombre = nombreProducto.includes(termino);
+
+            const matchIngrediente = producto.productos_ingredientes?.some(pi =>
+                pi.ingredientes?.nombre?.toLowerCase().includes(termino)
+            );
+
+            return matchNombre || matchIngrediente;
+        });
+
+        // 🔹 Ocultar promociones y sugerencias al buscar
+        const seccionesOcultar = ["promotions", "titulo-recomendacion", "tarjeta-sugerencia"];
+        seccionesOcultar.forEach(id => document.getElementById(id)?.classList.add("d-none"));
+
+        // 🔹 Mostrar mensaje si no hay coincidencias
+        const productsList = document.getElementById("products-list");
+        if (resultados.length === 0) {
+            productsList.innerHTML = `
+              <div class="col-12 text-center animate__animated animate__fadeIn">
+                <p class="text-muted fs-5 mt-4"><i class="fas fa-search-minus me-2"></i>No hay coincidencias con "<strong>${termino}</strong>"</p>
+              </div>`;
+            return;
+        }
+
+        // 🔹 Resaltado visual del término buscado en el nombre del producto
+        resultados.forEach(producto => {
+            const regex = new RegExp(`(${termino})`, 'gi');
+            producto.nombre = producto.nombre.replace(regex, '<mark>$1</mark>');
+        });
+
+        renderizarProductos(resultados);
+
+        // 🔹 Scroll suave a productos
+        document.getElementById("products").scrollIntoView({ behavior: "smooth" });
+    } catch (error) {
+        console.error("Error al buscar productos:", error.message);
+    }
+}
+

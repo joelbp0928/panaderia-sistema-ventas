@@ -1,6 +1,7 @@
 // 📦 auth-cliente.js
 import { supabase } from "./supabase-config.js";
 import { mostrarToast } from "./manageError.js";
+import { setClienteActivo } from './estado.js';
 
 // 🔥 Iniciar sesión cliente
 export async function iniciarSesionCliente(event) {
@@ -142,9 +143,12 @@ export async function verificarSesionCliente() {
         }
 
         actualizarHeaderCliente(userData.nombre);
+        setClienteActivo(true); // ✅ ACTUALIZA GLOBALMENTE
 
     } catch (error) {
         console.error("❌ Error verificando sesión cliente:", error);
+        setClienteActivo(false);
+
     }
 }
 
