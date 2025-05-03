@@ -13,7 +13,10 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
   </head>
   <body>
     <!-- 🔹 Encabezado -->
@@ -22,17 +25,17 @@
       <div
         class="container d-flex flex-wrap justify-content-between align-items-center"
       >
-      <div class="logo">
-        <a href="javascript:location.reload()">
-          <img
-            id="logo-image"
-            src="./img/logo_empresa.jpg"
-            alt="Logo Empresa"
-            class="img-fluid"
-            style="max-height: 60px"
-          />
-        </a>
-      </div>
+        <div class="logo">
+          <a href="javascript:location.reload()">
+            <img
+              id="logo-image"
+              src="./img/logo_empresa.jpg"
+              alt="Logo Empresa"
+              class="img-fluid"
+              style="max-height: 60px"
+            />
+          </a>
+        </div>
 
         <div class="search-bar d-flex flex-grow-1 mx-3">
           <input
@@ -44,7 +47,6 @@
           <button class="btn btn-light ms-2">
             <i class="fas fa-search"></i>
           </button>
-          
         </div>
 
         <!-- BOTONES DE USUARIO NO LOGUEADO -->
@@ -106,22 +108,21 @@
     </section>
 
     <!--Sugerencias-->
-<!-- 🔸 SUGERENCIAS - SOLO SI EL CLIENTE ESTÁ ACTIVO -->
-<div id="seccion-sugerencias" class="d-none">
-  <div id="titulo-recomendacion">
-    <h2>✨ Nuestra recomendación del día para ti ✨</h2>
-  </div>
+    <!-- 🔸 SUGERENCIAS - SOLO SI EL CLIENTE ESTÁ ACTIVO -->
+    <div id="seccion-sugerencias" class="d-none">
+      <div id="titulo-recomendacion">
+        <h2>✨ Nuestra recomendación del día para ti ✨</h2>
+      </div>
 
-  <div id="tarjeta-sugerencia" class="tarjeta-horizontal">
-    <img id="imagen-pan" src="" alt="Pan recomendado" />
-    <div class="contenido-pan">
-      <h3 id="nombre-pan">Nombre del pan</h3>
-      <p id="descripcion-pan">Descripción del pan</p>
-      <button id="btn-carrito">Añadir al carrito</button>
+      <div id="tarjeta-sugerencia" class="tarjeta-horizontal">
+        <img id="imagen-pan" src="" alt="Pan recomendado" />
+        <div class="contenido-pan">
+          <h3 id="nombre-pan">Nombre del pan</h3>
+          <p id="descripcion-pan">Descripción del pan</p>
+          <button id="btn-carrito">Añadir al carrito</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-
 
     <!-- Categorías -->
     <section id="categories">
@@ -130,15 +131,31 @@
       <div class="category-grid" id="category-buttons">
         <!-- Las categorías se cargarán dinámicamente aquí -->
       </div>
-      <div class="modal fade" id="modalDetallesProducto" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg animate__animated animate__fadeInUp">
+      <div
+        class="modal fade"
+        id="modalDetallesProducto"
+        tabindex="-1"
+        aria-hidden="true"
+      >
+        <div
+          class="modal-dialog modal-dialog-centered modal-lg animate__animated animate__fadeInUp"
+        >
           <div class="modal-content rounded-4 shadow">
             <div class="modal-header bg-vino text-white">
               <h5 class="modal-title" id="modalNombreProducto"></h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+              ></button>
             </div>
             <div class="modal-body p-4">
-              <img id="modalImagenProducto" class="img-fluid mb-3 rounded shadow-sm" alt="" style="max-height: 300px; object-fit: cover;">
+              <img
+                id="modalImagenProducto"
+                class="img-fluid mb-3 rounded shadow-sm"
+                alt=""
+                style="max-height: 300px; object-fit: cover"
+              />
               <p id="modalPrecioProducto" class="fw-bold fs-5 text-success"></p>
               <h6 class="mb-2">Ingredientes:</h6>
               <ul id="modalIngredientes" class="list-group small"></ul>
@@ -148,7 +165,6 @@
       </div>
     </section>
 
-    
     <!-- Productos -->
     <section id="products">
       <h2>Productos</h2>
@@ -407,7 +423,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Footer -->
     <footer>
       <p id="footer-company-name"></p>

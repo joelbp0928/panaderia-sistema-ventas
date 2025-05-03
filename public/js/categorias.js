@@ -15,7 +15,7 @@ window.eliminarCategoria = eliminarCategoria;
 // 🚀 INICIALIZACIÓN AL CARGAR LA PÁGINA
 document.addEventListener("DOMContentLoaded", function () {
     setupCategoryRowSelection();
-    
+
     // Evento para agregar categoría
     document.getElementById("btn-agregar-categoria").addEventListener("click", () => {
         clearCategorySelection();
@@ -55,6 +55,7 @@ async function gestionarCategoria() {
     botonGuardar.disabled = true;
 
     const nombre = document.getElementById("categoria-nombre").value.trim();
+    const visible = document.getElementById("categoria-visible").checked;
     if (!nombre) {
         mostrarToast("El nombre de la categoría es obligatorio", "warning");
         botonGuardar.disabled = false;
@@ -70,10 +71,10 @@ async function gestionarCategoria() {
             const ordenActual = document.getElementById("form-categoria").dataset.ordenActual ||
                 categoriasOrdenadas.find(c => c.id === idCategoria)?.orden ||
                 categoriasOrdenadas.length + 1;
-            await actualizarCategoria(idCategoria, nombre, ordenActual);
+            await actualizarCategoria(idCategoria, nombre, ordenActual, visible);
         } else {
             // ➕ Registrar nueva categoría
-            await registrarNuevaCategoria(nombre);
+            await registrarNuevaCategoria(nombre, visible);
         }
 
 
@@ -85,7 +86,7 @@ async function gestionarCategoria() {
         console.error("❌ Error al guardar categoría:", error);
         mostrarToast("❌ Error al guardar categoría.", "error");
     } finally {
-        bootstrap.Modal.getInstance(document.getElementById("ingredientModal")).hide();
+        bootstrap.Modal.getInstance(document.getElementById("categoriaModal")).hide();
         botonGuardar.disabled = false;
     }
 }
@@ -128,6 +129,7 @@ export async function editarCategoria(idCategoria) {
 
         // 🔹 Llenar el formulario con los datos
         document.getElementById("categoria-nombre").value = categoria.nombre;
+        document.getElementById("categoria-visible").checked = !!categoria.visible_cliente;
 
         // 🔹 Configurar el formulario para edición
         const formulario = document.getElementById("form-categoria");
@@ -135,7 +137,7 @@ export async function editarCategoria(idCategoria) {
         document.getElementById("categoriaModalLabel").textContent = "Editar Categoría";
         document.querySelector("#form-categoria button[type='submit']").textContent = "Actualizar Categoría";
 
- 
+
 
         // Seleccionar fila
         selectCategoryRow(idCategoria);
@@ -264,15 +266,18 @@ function clearCategorySelection() {
 
 // 📌 FUNCIONES DE DATOS
 
-async function actualizarCategoria(idCategoria, nombre, orden) {
+async function actualizarCategoria(idCategoria, nombre, orden, visible) {
     const { error } = await supabase
         .from("categorias")
-        .update({ nombre, orden })
+        .update({ nombre, orden, visible_cliente: visible })
         .eq("id", idCategoria);
 
     if (error) throw error;
-    const modal = new bootstrap.Modal(document.getElementById('categoriaModal'));
-    modal.hide();
+    const modalElement = document.getElementById('categoriaModal');
+    const modalInstance = bootstrap.Modal.getInstance(modalElement);
+    if (modalInstance) {
+        modalInstance.hide();
+    }
 
     // Eliminar el backdrop manualmente si no se elimina automáticamente
     const backdrop = document.querySelector('.modal-backdrop');
@@ -282,14 +287,14 @@ async function actualizarCategoria(idCategoria, nombre, orden) {
     mostrarToast("✅ Categoría actualizada correctamente", "success");
 }
 
-async function registrarNuevaCategoria(nombre) {
+async function registrarNuevaCategoria(nombre, visible) {
     try {
         const orden = categoriasOrdenadas.length > 0 ?
             Math.max(...categoriasOrdenadas.map(c => c.orden)) + 1 : 1;
 
         const { error } = await supabase
             .from("categorias")
-            .insert([{ nombre, orden }]);
+            .insert([{ nombre, orden, visible_cliente: visible }]);
 
         if (error) throw error;
 
@@ -318,6 +323,15 @@ function renderizarCategorias() {
         fila.innerHTML = `
             <td class="handle" style="cursor: move;">≡</td>
             <td>${categoria.nombre}</td>
+<td>
+  <button 
+    class="btn btn-sm ${categoria.visible_cliente ? 'btn-success' : 'btn-secondary'} toggle-visibilidad-btn"
+    data-id="${categoria.id}" 
+    data-visible="${categoria.visible_cliente}">
+    <i class="fas ${categoria.visible_cliente ? 'fa-eye' : 'fa-eye-slash'}"></i>
+  </button>
+</td>
+
         `;
         // Eventos para drag and drop
         fila.addEventListener('dragstart', handleDragStart);
@@ -334,6 +348,28 @@ function renderizarCategorias() {
                 } else {
                     selectCategoryRow(categoryId);
                 }
+            }
+        });
+        // Evento del toggle de visibilidad
+        fila.querySelector('.toggle-visibilidad-btn').addEventListener('click', async (e) => {
+            e.stopPropagation(); // evita que se seleccione la fila
+            const btn = e.currentTarget;
+            const id = btn.dataset.id;
+            const visibleActual = btn.dataset.visible === "true";
+            const nuevoEstado = !visibleActual;
+
+            try {
+                await supabase
+                    .from("categorias")
+                    .update({ visible_cliente: nuevoEstado })
+                    .eq("id", id);
+
+                mostrarToast(`✅ Visibilidad ${nuevoEstado ? "activada" : "ocultada"}`, "success");
+                await cargarCategorias(); // refresca la tabla
+
+            } catch (err) {
+                console.error("❌ Error al cambiar visibilidad:", err);
+                mostrarToast("❌ Error al cambiar visibilidad", "error");
             }
         });
 

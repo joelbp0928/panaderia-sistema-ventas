@@ -164,7 +164,9 @@ async function cargarCategorias() {
         const { data, error } = await supabase
             .from("categorias")
             .select("id, nombre")
-            .order("id", { ascending: true }); // Obtener las categorías en el orden de su ID
+            .eq("visible_cliente", true) // 🔍 Solo las visibles para el cliente
+            .order("orden", { ascending: true }); // O puedes seguir ordenando por id
+
 
         if (error) {
             throw error;
