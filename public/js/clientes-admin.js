@@ -153,12 +153,8 @@ function selectClientRow(clientId) {
   selectedClientRow = row;
   selectedClientId = clientId;
 
-  const acciones = document.getElementById("acciones-clientes");
-  if (acciones) {
-    acciones.querySelectorAll('button').forEach(btn => {
-      btn.style.display = 'inline-block';
-    });
-  }
+  document.getElementById('delete-client-btn').style.display = 'inline-block';
+  document.getElementById('edit-client-btn').style.display = 'inline-block';
 }
 
 // 🧹 Limpiar selección
@@ -169,12 +165,8 @@ function clearClientSelection() {
   selectedClientRow = null;
   selectedClientId = null;
 
-  const acciones = document.getElementById("acciones-clientes");
-  if (acciones) {
-    acciones.querySelectorAll('button').forEach(btn => {
-      btn.style.display = 'none';
-    });
-  }
+  document.getElementById('delete-client-btn').style.display = 'none';
+  document.getElementById('edit-client-btn').style.display = 'none';
 }
 
 // 🗑 Eliminar cliente

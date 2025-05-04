@@ -7,6 +7,7 @@ import { showLoading, hideLoading } from "./manageError.js";
 let selectedCategoryRow = null;
 let selectedCategoryId = null;
 let categoriasOrdenadas = [];
+let currentModal = null; // Variable para rastrear el modal actual
 
 // 🌐 EXPOSICIÓN DE FUNCIONES AL SCOPE GLOBAL
 //window.editarCategoria = editarCategoria;
@@ -15,6 +16,7 @@ window.eliminarCategoria = eliminarCategoria;
 // 🚀 INICIALIZACIÓN AL CARGAR LA PÁGINA
 document.addEventListener("DOMContentLoaded", function () {
     setupCategoryRowSelection();
+    setupModalEventListeners();
 
     // Evento para agregar categoría
     document.getElementById("btn-agregar-categoria").addEventListener("click", () => {
@@ -35,6 +37,41 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+// 🔧 Configuración de listeners para modales
+function setupModalEventListeners() {
+    // Limpiar al cerrar modal de categoría
+    const categoriaModal = document.getElementById('categoriaModal');
+    if (categoriaModal) {
+        categoriaModal.addEventListener('hidden.bs.modal', () => {
+            cleanUpModal();
+        });
+    }
+
+    // Limpiar al cerrar modal de confirmación
+    const deleteModal = document.getElementById('deleteCategoryModal');
+    if (deleteModal) {
+        deleteModal.addEventListener('hidden.bs.modal', () => {
+            cleanUpModal();
+            // Limpiar el event listener del botón de confirmación
+            const confirmBtn = document.getElementById("confirm-delete-btn-categoria");
+            confirmBtn.onclick = null;
+        });
+    }
+}
+
+// 🧹 Limpieza después de cerrar modales
+function cleanUpModal() {
+    // Eliminar backdrop si existe
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(backdrop => backdrop.remove());
+    
+    // Restaurar el scroll del body
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    
+    currentModal = null;
+}
 
 // 🧩 FUNCIONES PRINCIPALES
 

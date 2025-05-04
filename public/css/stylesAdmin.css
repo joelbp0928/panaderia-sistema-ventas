@@ -353,10 +353,10 @@ input[type="color"] {
 /* Estilo del contenedor de los botones (flex para alinearlos horizontalmente) */
 .button-container {
   display: flex;
-  justify-content: flex-end; /* Alinea los botones a la izquierda */
+  justify-content: flex-start; /* Alinea los botones a la izquierda */
   align-items: center; /* Centra los botones verticalmente */
-  gap: 40px; /* Espacio entre los botones, puedes ajustar este valor */
-  margin-right: 32px; /* Empuja los botones más a la izquierda */
+  gap: 30px; /* Espacio entre los botones, puedes ajustar este valor */
+  margin-left: 10px; /* Empuja los botones más a la izquierda */
   margin-bottom: 10px; /* Espacio inferior */
 }
 
@@ -806,3 +806,4 @@ Mejorar el espaciado entre las secciones
 #period-details .col-md-6 {
   margin-bottom: 20px;
 }*/
+

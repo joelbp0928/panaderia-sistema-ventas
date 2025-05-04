@@ -193,27 +193,6 @@
           <h2>Estamos trabajando 🏗🚧👷‍♂️</h2>
           <!--<button class="btn btn-primary mb-3">Agregar Cliente</button>-->
 
-          <!-- 🔘 Botones ocultos -->
-          <div
-            id="acciones-clientes"
-            class="mb-3"
-            style="display: flex; gap: 10px; margin-top: 10px"
-          >
-            <button
-              id="edit-client-btn"
-              class="btn btn-warning btn-sm"
-              style="display: none"
-            >
-              <i class="fas fa-edit"></i> Editar Cliente
-            </button>
-            <button
-              id="delete-client-btn"
-              class="btn btn-danger btn-sm"
-              style="display: none"
-            >
-              <i class="fas fa-trash"></i> Eliminar Cliente
-            </button>
-          </div>
           <!-- 🎛 Filtros de Clientes -->
           <div
             class="d-flex flex-wrap align-items-end gap-3 mb-3"
@@ -289,7 +268,6 @@
               </button>
             </div>
           </div>
-
           <!-- 🏷️ Badges de Filtros Activos -->
           <div id="filtros-activos-clientes" class="d-none mb-3">
             <span
@@ -323,7 +301,20 @@
               <i class="fas fa-sort-alpha-down me-1"></i>Orden: <span></span>
             </span>
           </div>
-
+          <!-- Contenedor para los botones de eliminar y editar -->
+          <div
+            id="acciones-clientes"
+            class="button-container"
+          >
+            <!-- Botón de eliminar (bote de basura) -->
+            <div id="delete-client-btn" class="button-delete">
+              <i class="fa-solid fa-trash"></i>
+            </div>
+            <!-- Botón de editar (lápiz) -->
+            <div id="edit-client-btn" class="button-edit">
+              <i class="fa-regular fa-pen-to-square"></i>
+            </div>
+          </div>
           <span class="text-muted small"
             >Selecciona un cliente para ver acciones</span
           >
@@ -1383,7 +1374,6 @@
                         id="product-stock"
                         class="form-control"
                         placeholder="Cantidad x Receta"
-                        required
                       />
                     </div>
                     <div class="form-section">

@@ -167,21 +167,21 @@ function validarFormulario({ nombre, precio, stock, categoria, ingredientes, ima
     const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     const MAX_SIZE_BYTES = 2 * 1024 * 1024;
 
-    if (!nombre || isNaN(precio) || isNaN(stock)) {
+   /* if (!nombre || isNaN(precio) || isNaN(stock)) {
         mostrarToast("⚠️ Todos los campos son obligatorios", "warning");
         return false;
     }
-
+*/
     if (categoria === "" || categoria === "Seleccionar Categoría") {
         mostrarToast("⚠️ Por favor selecciona una categoría", "warning");
         marcarErrorCampo("product-category", "⚠️ Por favor selecciona una categoría")
         return false;
     }
 
-    if (ingredientes.length === 0) {
+   /* if (ingredientes.length === 0) {
         mostrarToast("⚠️ Debes seleccionar al menos un ingrediente", "warning");
         return false;
-    }
+    }*/
 
     if (imagenFile) {
         if (!ALLOWED_TYPES.includes(imagenFile.type)) {
