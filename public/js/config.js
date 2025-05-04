@@ -1,5 +1,6 @@
 import { supabase } from './supabase-config.js'; // Importa la configuración de Supabase
 import { getClienteActivo } from './estado.js';
+import { agregarProductoAlCarrito } from './cart.js';
 
 // 🔹 Variable global para la categoría seleccionada
 let categoriaSeleccionada = null;
@@ -291,25 +292,25 @@ function renderizarProductos(productos) {
                 ${mostrarStock}
 
                 <div class="d-flex align-items-center justify-content-center mb-2 ${mostrarCantidad}">
-                <button class="btn btn-outline-secondary btn-sm me-2 cantidad-btn" data-index="${index}" data-action="restar">
-                    <i class="fas fa-minus"></i>
-                </button>
-                <span id="cantidad-${index}" class="mx-2">1</span>
-                <button class="btn btn-outline-secondary btn-sm ms-2 cantidad-btn" data-index="${index}" data-action="sumar">
-                    <i class="fas fa-plus"></i>
-                </button>
+                    <button class="btn btn-outline-secondary btn-sm me-2 cantidad-btn" data-index="${index}" data-action="restar">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <span id="cantidad-${index}" class="mx-2">1</span>
+                    <button class="btn btn-outline-secondary btn-sm ms-2 cantidad-btn" data-index="${index}" data-action="sumar">
+                        <i class="fas fa-plus"></i>
+                    </button>
                 </div>
 
                 <div class="acciones-producto mt-auto">
-                <button class="btn btn-primary w-100 mb-2 ${mostrarAgregar}" ${agregarDisabled}>
+                    <button class="btn btn-primary w-100 mb-2 btn-agregar-carrito ${mostrarAgregar}" data-index="${index}" ${agregarDisabled}>
                     <i class="fas fa-cart-plus me-2"></i>Agregar
-                </button>
-                <div class="alert alert-warning text-center py-1 mb-2 ${mostrarMensajeLogin}" style="font-size: 0.85rem;">
-                    Inicia sesión para comprar
-                </div>
-                <button class="btn btn-outline-secondary btn-sm ver-detalles" data-index="${index}">
-                    <i class="fas fa-eye me-1"></i> Ver detalles
-                </button>
+                    </button>
+                    <div class="alert alert-warning text-center py-1 mb-2 ${mostrarMensajeLogin}" style="font-size: 0.85rem;">
+                        Inicia sesión para comprar
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm ver-detalles" data-index="${index}">
+                        <i class="fas fa-eye me-1"></i> Ver detalles
+                    </button>
                 </div>
             </div>
         </div>
@@ -353,6 +354,25 @@ function renderizarProductos(productos) {
             modal.show();
         });
     });
+
+    document.querySelectorAll('.btn-agregar-carrito').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = e.currentTarget.dataset.index;
+            const producto = productos[index];
+            const cantidad = parseInt(document.getElementById(`cantidad-${index}`).textContent);
+            
+            if (!producto?.id || isNaN(cantidad) || cantidad < 1) {
+                mostrarToast("❌ Algo salió mal al agregar el producto", "error");
+                return;
+              }
+              
+            if (cantidad > 0 && producto?.id) {
+                agregarProductoAlCarrito(producto.id, cantidad);
+                console.log("aqui en el cart", producto.id, cantidad)
+            }
+        });
+    });
+
 }
 
 async function buscarProductos(termino) {

@@ -1,7 +1,7 @@
 // Importar otros módulos
 import { cargarProductos, cargarConfiguracion } from "./config.js";
 import { verificarSesion } from './auth-check.js'; // Importa la función para verificar la sesión
-import { inicializarCarrito } from "./cart.js";
+import { inicializarCarrito, mostrarCarrito } from "./cart.js";
 import { iniciarSesion } from "./auth.js";
 import { supabase } from "./supabase-config.js";
 import { mostrarToast, marcarErrorCampo, limpiarErrorCampo } from "./manageError.js";
@@ -29,6 +29,7 @@ window.onload = async function () {
     document.getElementById("login-form").addEventListener("submit", iniciarSesionGeneral);
     document.getElementById('signup-form').addEventListener('submit', registrarCliente);
     document.getElementById('logout-cliente-btn').addEventListener('click', cerrarSesionCliente);
+    document.getElementById("carritoSidebar").addEventListener("show.bs.offcanvas", mostrarCarrito);
 
 
   } catch (error) {
