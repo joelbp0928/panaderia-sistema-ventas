@@ -1,7 +1,7 @@
 // Importar otros módulos
 import { cargarProductos, cargarConfiguracion } from "./config.js";
 import { verificarSesion } from './auth-check.js'; // Importa la función para verificar la sesión
-import { inicializarCarrito, mostrarCarrito } from "./cart.js";
+import { inicializarCarrito, mostrarCarrito, generarResumenPopover } from "./cart.js";
 import { iniciarSesion } from "./auth.js";
 import { supabase } from "./supabase-config.js";
 import { mostrarToast, marcarErrorCampo, limpiarErrorCampo } from "./manageError.js";
@@ -13,28 +13,45 @@ import { iniciarSesionGeneral } from './auth-general.js';
 import "./forgot-password.js";
 
 window.onload = async function () {
-  try {
-    cargarConfiguracion();
-    await verificarSesionCliente();  // ✅ Ahora para cliente
-    // Cargar elementos principales de la página
-    //  cargarPromociones();
-    cargarProductos();
+    try {
+        cargarConfiguracion();
 
-    // Inicializar otros módulos
-    inicializarCarrito();
-    //      inicializarAutenticacion();
+        // Primero verificamos la sesión del cliente
+        const clienteVerificado = await verificarSesionCliente();
 
-    
-    // 📌 Asociar la función al formulario de inicio de sesión
-    document.getElementById("login-form").addEventListener("submit", iniciarSesionGeneral);
-    document.getElementById('signup-form').addEventListener('submit', registrarCliente);
-    document.getElementById('logout-cliente-btn').addEventListener('click', cerrarSesionCliente);
-    document.getElementById("carritoSidebar").addEventListener("show.bs.offcanvas", mostrarCarrito);
+        // Solo inicializamos el carrito si hay un cliente verificado
+        if (clienteVerificado) {
+            console.log("Cliente verificado - Inicializando carrito");
+            const carritoBtn = document.getElementById("carrito-btn");
 
+            if (carritoBtn) {
+                const popover = new bootstrap.Popover(carritoBtn, {
+                    trigger: 'hover',
+                    placement: 'bottom',
+                    html: true,
+                    content: "<div id='popover-carrito-content'>Cargando...</div>"
+                });
 
-  } catch (error) {
-    console.error("❌ Error en la inicialización de admin.js:", error);
-  }
+                carritoBtn.addEventListener("shown.bs.popover", async () => {
+                    await generarResumenPopover();
+                });
+            }
+            inicializarCarrito();
+        } else {
+            console.log("No hay cliente verificado - Carrito no disponible");
+        }
+
+        cargarProductos();
+
+        // 📌 Asociar la función al formulario de inicio de sesión
+        document.getElementById("login-form").addEventListener("submit", iniciarSesionGeneral);
+        document.getElementById('signup-form').addEventListener('submit', registrarCliente);
+        document.getElementById('logout-cliente-btn').addEventListener('click', cerrarSesionCliente);
+        document.getElementById("carritoSidebar").addEventListener("show.bs.offcanvas", mostrarCarrito);
+
+    } catch (error) {
+        console.error("❌ Error en la inicialización de admin.js:", error);
+    }
 
 }
 
@@ -113,6 +130,6 @@ document.getElementById("cart-btn").addEventListener("click", () => {
 
 // Evento que mueve el foco fuera del modal cuando se cierra
 document.addEventListener("hidden.bs.modal", function (event) {
-  // Mueve el foco a otro elemento fuera del modal (ejemplo: el botón de inicio de sesión)
-  document.getElementById("login-btn")?.focus();
+    // Mueve el foco a otro elemento fuera del modal (ejemplo: el botón de inicio de sesión)
+    document.getElementById("login-btn")?.focus();
 });

@@ -578,3 +578,16 @@ footer {
   font-size: 0.8rem;
   padding: 0.4em 0.6em;
 }
+
+@keyframes resplandor-suave {
+  0% {
+    background-color: #fff8e1;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.resplandor-temporal {
+  animation: resplandor-suave 1s ease-out;
+}

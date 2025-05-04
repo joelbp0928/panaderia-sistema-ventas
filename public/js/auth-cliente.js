@@ -121,7 +121,8 @@ export async function verificarSesionCliente() {
 
         if (!sessionData.session) {
             console.log("🟠 No hay sesión activa para cliente.");
-            return; // No redirigir, solo no mostrar elementos de usuario
+            setClienteActivo(false);
+            return false; // Retorna false cuando no hay sesión
         }
 
         const userId = sessionData.session.user.id;
@@ -134,21 +135,24 @@ export async function verificarSesionCliente() {
 
         if (userError || !userData) {
             console.warn("⚠️ Usuario no encontrado en base de datos cliente.");
-            return;
+            setClienteActivo(false);
+            return false; // Retorna false cuando no hay sesión
         }
 
         if (userData.rol !== "cliente") {
             console.warn("🚫 El usuario no es cliente.");
-            return;
+            setClienteActivo(false);
+            return false; // Retorna false cuando no hay sesión
         }
 
         actualizarHeaderCliente(userData.nombre);
-        setClienteActivo(true); // ✅ ACTUALIZA GLOBALMENTE
+        setClienteActivo(true);
+        return true; // Retorna true cuando hay cliente verificado
 
     } catch (error) {
         console.error("❌ Error verificando sesión cliente:", error);
         setClienteActivo(false);
-
+        return false; // Retorna false cuando no hay sesión
     }
 }
 

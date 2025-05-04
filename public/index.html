@@ -77,6 +77,9 @@
             class="btn btn-outline-light ms-2"
             data-bs-toggle="offcanvas"
             data-bs-target="#carritoSidebar"
+            id="carrito-btn"
+            data-bs-placement="bottom"
+            title="Resumen del carrito"
           >
             <i class="fas fa-shopping-cart"></i>
             <span id="carrito-count" class="badge bg-light text-dark ms-1"
@@ -92,7 +95,9 @@
     <!-- Offcanvas del carrito -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="carritoSidebar">
       <div class="offcanvas-header">
-        <h5 class="offcanvas-title">🛒 Tu carrito</h5>
+        <h5 class="offcanvas-title">
+          <i class="fa-solid fa-cart-shopping"></i> Tu carrito
+        </h5>
         <button
           type="button"
           class="btn-close"
