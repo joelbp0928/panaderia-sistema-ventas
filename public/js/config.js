@@ -79,6 +79,10 @@ export async function cargarProductos() {
           nombre,
           precio,
           imagen_url,
+          categoria_id,
+          categorias (
+            visible_cliente
+          ),
           productos_ingredientes (
             cantidad_usada,
             ingrediente_id,
@@ -93,14 +97,19 @@ export async function cargarProductos() {
         `)
             .order("id", { ascending: true });
 
+
         if (error) throw error;
 
-        renderizarProductos(data);
+        const productosVisibles = data.filter(producto =>
+            producto.categorias?.visible_cliente === true
+        );
+
+        renderizarProductos(productosVisibles);
+
     } catch (error) {
         console.error("Error al cargar los productos:", error);
     }
 }
-
 
 export async function cargarConfiguracion() {
     try {
@@ -137,7 +146,6 @@ export async function cargarConfiguracion() {
         console.error('Error al cargar la configuración:', error);
     }
 }
-
 // Función para aplicar el color primario al sitio
 function aplicarColorPrimario(color) {
     // Crear un color más oscuro para el hover
@@ -242,8 +250,6 @@ async function toggleCategory(categoryId) {
     }
 }
 
-
-
 function renderizarProductos(productos) {
     const productsList = document.getElementById('products-list');
     productsList.innerHTML = '';
@@ -273,8 +279,6 @@ function renderizarProductos(productos) {
         const mostrarStock = activo ? badgeStock : '';
         document.getElementById("seccion-sugerencias")?.classList.toggle("d-none", !activo);
 
-
-
         const productCard = document.createElement('div');
         productCard.classList.add('col-6', 'col-md-4', 'col-lg-2', 'mb-4');
 
@@ -284,29 +288,29 @@ function renderizarProductos(productos) {
             <div class="card-body d-flex flex-column justify-content-between">
                 <h5 class="card-title nombre-producto nombre-producto" title="${producto.nombre}">${producto.nombre}</h5>
                <p class="card-text fw-bold text-success">$${producto.precio}</p>
-${mostrarStock}
+                ${mostrarStock}
 
-<div class="d-flex align-items-center justify-content-center mb-2 ${mostrarCantidad}">
-  <button class="btn btn-outline-secondary btn-sm me-2 cantidad-btn" data-index="${index}" data-action="restar">
-    <i class="fas fa-minus"></i>
-  </button>
-  <span id="cantidad-${index}" class="mx-2">1</span>
-  <button class="btn btn-outline-secondary btn-sm ms-2 cantidad-btn" data-index="${index}" data-action="sumar">
-    <i class="fas fa-plus"></i>
-  </button>
-</div>
+                <div class="d-flex align-items-center justify-content-center mb-2 ${mostrarCantidad}">
+                <button class="btn btn-outline-secondary btn-sm me-2 cantidad-btn" data-index="${index}" data-action="restar">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <span id="cantidad-${index}" class="mx-2">1</span>
+                <button class="btn btn-outline-secondary btn-sm ms-2 cantidad-btn" data-index="${index}" data-action="sumar">
+                    <i class="fas fa-plus"></i>
+                </button>
+                </div>
 
-<div class="acciones-producto mt-auto">
-  <button class="btn btn-primary w-100 mb-2 ${mostrarAgregar}" ${agregarDisabled}>
-    <i class="fas fa-cart-plus me-2"></i>Agregar
-  </button>
-  <div class="alert alert-warning text-center py-1 mb-2 ${mostrarMensajeLogin}" style="font-size: 0.85rem;">
-    Inicia sesión para comprar
-  </div>
-  <button class="btn btn-outline-secondary btn-sm ver-detalles" data-index="${index}">
-    <i class="fas fa-eye me-1"></i> Ver detalles
-  </button>
-</div>
+                <div class="acciones-producto mt-auto">
+                <button class="btn btn-primary w-100 mb-2 ${mostrarAgregar}" ${agregarDisabled}>
+                    <i class="fas fa-cart-plus me-2"></i>Agregar
+                </button>
+                <div class="alert alert-warning text-center py-1 mb-2 ${mostrarMensajeLogin}" style="font-size: 0.85rem;">
+                    Inicia sesión para comprar
+                </div>
+                <button class="btn btn-outline-secondary btn-sm ver-detalles" data-index="${index}">
+                    <i class="fas fa-eye me-1"></i> Ver detalles
+                </button>
+                </div>
             </div>
         </div>
         `;
@@ -356,26 +360,34 @@ async function buscarProductos(termino) {
         const { data, error } = await supabase
             .from("productos")
             .select(`
-              id,
-              nombre,
-              precio,
-              imagen_url,
-              productos_ingredientes (
-                cantidad_usada,
-                ingrediente_id,
-                ingredientes:ingrediente_id (
-                  nombre,
-                  medida
-                )
-              ),
-              inventario_productos (
-                stock_actual
-              )
-            `);
+                    id,
+                    nombre,
+                    precio,
+                    imagen_url,
+                    categoria_id,
+                    categorias (
+                    visible_cliente
+                    ),
+                    productos_ingredientes (
+                    cantidad_usada,
+                    ingrediente_id,
+                    ingredientes:ingrediente_id (
+                        nombre,
+                        medida
+                    )
+                    ),
+                    inventario_productos (
+                    stock_actual
+                    )
+                `);
 
         if (error) throw error;
 
-        const resultados = data.filter(producto => {
+        const productosVisibles = data.filter(producto =>
+            producto.categorias?.visible_cliente === true
+        );
+        // 🔍 Aplica búsqueda
+        const resultados = productosVisibles.filter(producto => {
             const nombreProducto = producto.nombre.toLowerCase();
             const matchNombre = nombreProducto.includes(termino);
 
