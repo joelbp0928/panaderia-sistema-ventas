@@ -1,6 +1,7 @@
 import { supabase } from "./supabase-config.js";
 import { mostrarToast } from "./manageError.js";
 import { getClienteActivo } from './estado.js';
+import { confirmarPedido } from './procesar-pedido.js';
 
 export async function inicializarCarrito() {
   if (!getClienteActivo()) {
@@ -126,7 +127,7 @@ export async function mostrarCarrito() {
     carritoBody.innerHTML = `
        <div class="d-grid gap-2 mb-3">
         <button id="limpiar-carrito" class="btn btn-outline-danger animate__animated"><i class="fas fa-trash me-2"></i>Vaciar Carrito</button>
-        <button id="hacer-pedido" class="btn btn-success"><span class="spinner-border spinner-border-sm d-none me-2" id="spinner-pedido" role="status"></span><i class="fas fa-check-circle me-2"></i>Hacer Pedido</button>
+        <button id="hacer-pedido" class="btn btn-success animate__animated animate__pulse animate__infinite"><i class="fas fa-check-circle me-2"></i>Hacer Pedido</button>
       </div>
       <div class="animate__animated animate__fadeInRight">
         ${data.map(item => `
@@ -154,6 +155,7 @@ export async function mostrarCarrito() {
 <p class="mb-0"><i class="fas fa-dollar-sign me-1"></i> Total: <strong class="carrito-total-precio">$${total.toFixed(2)}</strong></p>
       </div>
     `;
+   // document.getElementById("hacer-pedido").classList.add("animate__animated", "animate__infinite", "animate__heartBeat");
 
     document.querySelectorAll(".actualizar-cantidad").forEach(btn => {
       btn.addEventListener("click", async () => {
@@ -235,20 +237,7 @@ export async function mostrarCarrito() {
     });
 
     // Evento de "hacer pedido" (por ahora solo alerta)
-    document.getElementById("hacer-pedido").addEventListener("click", () => {
-      const spinner = document.getElementById("spinner-pedido");
-      spinner.classList.remove("d-none");
-      setTimeout(() => {
-        spinner.classList.add("d-none");
-        Swal.fire({
-          icon: "success",
-          title: "Pedido iniciado",
-          text: "Ahora procesaremos tu pedido en la siguiente fase",
-          timer: 2500,
-          showConfirmButton: false
-        });
-      }, 1500);
-    });
+    document.getElementById("hacer-pedido").addEventListener("click", confirmarPedido);
 
   } catch (error) {
     console.error("❌ Error al mostrar el carrito:", error);

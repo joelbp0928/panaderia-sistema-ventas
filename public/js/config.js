@@ -19,10 +19,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Escuchar cambios en tiempo real del input
     const inputBusqueda = document.getElementById("busqueda-productos");
-    inputBusqueda.addEventListener("input", async function () {
-        const termino = inputBusqueda.value.trim().toLowerCase();
-        buscarProductos(termino);
-    });
+    if (!inputBusqueda) {
+        console.log("Elemento busqueda-productos no encontrado - omitiendo carga de barra de busqueda de productos");
+        return;
+    }else{
+        inputBusqueda.addEventListener("input", async function () {
+            const termino = inputBusqueda.value.trim().toLowerCase();
+            buscarProductos(termino);
+        });
+    }
+
 });
 
 async function cargarPromociones() {

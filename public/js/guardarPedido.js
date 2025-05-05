@@ -7,23 +7,30 @@ export async function guardarPedido(productosSeleccionados, userId, origen = "em
   const total = productosSeleccionados.reduce((acc, p) => acc + p.total, 0);
   const fechaActual = getCDMXISOString();
 
-  const { codigo_ticket, folio_secuencial } = await generarCodigoTicket();
+  const { codigo_ticket, folio_secuencial } = await generarCodigoTicket(origen, userId);
 
   try {
+    // Determinar los campos según el origen
+    const pedidoData = {
+      fecha: fechaActual,
+      total: total.toFixed(2),
+      estado: "pendiente",
+      notas: "",
+      codigo_ticket,
+      origen,
+      folio_secuencial
+    };
+
+    if (origen === "empacador") {
+      pedidoData.empleado_id = userId;
+    } else if (origen === "cliente") {
+      pedidoData.cliente_id = userId;
+    }
+
     // 1️⃣ Insertar en pedidos
     const { data: pedido, error } = await supabase
       .from("pedidos")
-      .insert({
-        fecha: fechaActual,
-        total: total.toFixed(2),
-        estado: "pendiente",
-        notas: "",
-        empleado_id: userId,
-        //  cliente_id: "00000000-0000-0000-0000-000000000001", // 👤 por ahora usamos cliente default
-        codigo_ticket,
-        origen: origen,
-        folio_secuencial
-      })
+      .insert(pedidoData)
       .select()
       .single();
 
@@ -61,30 +68,51 @@ export async function guardarPedido(productosSeleccionados, userId, origen = "em
  *   folio_secuencial: 7
  * }
  */
-export async function generarCodigoTicket(origen = "empacador") {
-  // 1️⃣ Obtener fecha actual en formato YYYY-MM-DD
+export async function generarCodigoTicket(origen = "empacador", userId) {
   const hoy = getLocalDateString();
+  
+  // Configuración de filtros
+  const filters = {
+    gte: `${hoy}T00:00:00`,
+    lte: `${hoy}T23:59:59`,
+    origen: origen
+  };
 
-  // 2️⃣ Contar cuántos pedidos hay hoy para ese origen
-  const { count, error } = await supabase
+  // Agregar filtro específico según el origen
+  if (origen === "empacador") {
+    filters.empleado_id = userId;
+  } else if (origen === "cliente") {
+    filters.cliente_id = userId;
+  }
+
+  // Construir la consulta
+  let query = supabase
     .from("pedidos")
     .select("*", { count: "exact", head: true })
-    .eq("origen", origen)
-    .gte("fecha", `${hoy}T00:00:00`)
-    .lte("fecha", `${hoy}T23:59:59`);
+    .gte("fecha", filters.gte)
+    .lte("fecha", filters.lte)
+    .eq("origen", filters.origen);
+
+  // Aplicar filtro adicional según el origen
+  if (origen === "empacador") {
+    query = query.eq("empleado_id", filters.empleado_id);
+  } else if (origen === "cliente") {
+    query = query.eq("cliente_id", filters.cliente_id);
+  }
+
+  // Ejecutar consulta
+  const { count, error } = await query;
 
   if (error) {
-    console.error("❌ Error al contar pedidos del día:", error.message);
-    throw new Error("No se pudo generar el código del ticket.");
+    console.error("Error al contar pedidos:", error);
+    throw new Error("No se pudo generar el código del ticket");
   }
 
   const folio_secuencial = (count ?? 0) + 1;
   const numeroTicket = folio_secuencial.toString().padStart(3, "0");
 
-  const codigo_ticket = `${origen.toUpperCase().slice(0, 5)}-${hoy.replaceAll("-", "")}-${numeroTicket}`;
-
   return {
-    codigo_ticket,
+    codigo_ticket: `${origen.toUpperCase().slice(0, 5)}-${hoy.replaceAll("-", "")}-${numeroTicket}`,
     folio_secuencial
   };
 }

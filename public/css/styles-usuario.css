@@ -591,3 +591,12 @@ footer {
 .resplandor-temporal {
   animation: resplandor-suave 1s ease-out;
 }
+
+#ticket-visual {
+  background: linear-gradient(to right, #fdfbfb, #ebedee);
+  border: 2px dashed #9a223d;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  font-family: "Courier New", monospace;
+  border-radius: 16px;
+  padding: 20px;
+}
