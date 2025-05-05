@@ -123,8 +123,19 @@ function clearProductSelection() {
 // ✅ MODAL DE ENTRADA (PRODUCCIÓN)
 export async function abrirModalEntradaProducto() {
     const select = document.getElementById("producto-select");
+    const contenedorIngredientes = document.getElementById("ingredientes-requeridos");
+    const cantidadInput = document.getElementById("cantidad-producto");
+    
+    // Limpiar los campos del modal
     select.innerHTML = `<option value="" disabled selected>Selecciona un producto...</option>`;
-
+    contenedorIngredientes.innerHTML = `
+        <strong>Ingredientes necesarios:</strong>
+        <ul id="lista-ingredientes-requeridos" class="mb-0"></ul>
+    `;
+    contenedorIngredientes.style.display = "none";
+    cantidadInput.value = "";
+    
+    // Cargar los productos
     const { data } = await supabase.from("productos").select("id, nombre").order("nombre");
     data?.forEach((prod) => {
         const option = document.createElement("option");
@@ -133,67 +144,114 @@ export async function abrirModalEntradaProducto() {
         select.appendChild(option);
     });
 
-    new bootstrap.Modal(document.getElementById("modalEntradaProducto")).show();
-
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById("modalEntradaProducto"));
+    modal.show();
 }
 
+// Agrega esta función de utilidad al inicio de tu archivo
+function debounce(func, timeout = 400) {
+    let timer;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => { func.apply(this, args); }, timeout);
+    };
+}
 // Mostrar ingredientes requeridos al cambiar producto o cantidad
 document.getElementById("producto-select").addEventListener("change", mostrarIngredientesRequeridos);
-document.getElementById("cantidad-producto").addEventListener("input", mostrarIngredientesRequeridos);
+document.getElementById("cantidad-producto").addEventListener("input", debounce(mostrarIngredientesRequeridos));
 
 async function mostrarIngredientesRequeridos() {
     const productoId = document.getElementById("producto-select").value;
     const cantidad = parseFloat(document.getElementById("cantidad-producto").value);
 
     const contenedor = document.getElementById("ingredientes-requeridos");
+    
+    // Limpiar completamente el contenedor (incluyendo mensajes previos)
+    contenedor.innerHTML = `
+        <strong>Ingredientes necesarios:</strong>
+        <ul id="lista-ingredientes-requeridos" class="mb-0"></ul>
+    `;
+    
+    // Obtener la referencia a la lista después de reconstruir el HTML
     const lista = document.getElementById("lista-ingredientes-requeridos");
-    lista.innerHTML = "";
     contenedor.style.display = "none";
 
     if (!productoId || isNaN(cantidad) || cantidad <= 0) return;
 
-    const { data: ingredientes, error } = await supabase
-        .from("productos_ingredientes")
-        .select("ingrediente_id, cantidad_usada, ingrediente:ingrediente_id(nombre, medida), producto:producto_id(stock)")
-        .eq("producto_id", productoId);
+    try {
+        // Mostrar carga mientras se consulta
+        contenedor.style.display = "block";
+        contenedor.classList.remove("alert-info", "alert-danger", "alert-warning");
+        contenedor.classList.add("alert-info");
+        lista.innerHTML = "<li>Calculando ingredientes necesarios...</li>";
 
+        const { data: ingredientes, error } = await supabase
+            .from("productos_ingredientes")
+            .select("ingrediente_id, cantidad_usada, ingrediente:ingrediente_id(nombre, medida), producto:producto_id(stock)")
+            .eq("producto_id", productoId);
 
-    if (!ingredientes || ingredientes.length === 0) return;
+        if (error) throw error;
+        if (!ingredientes || ingredientes.length === 0) {
+            contenedor.style.display = "none";
+            return;
+        }
 
-    let hayFaltantes = false;
+        lista.innerHTML = ""; // Limpiar mensaje de carga
+        let hayFaltantes = false;
 
-    for (const ing of ingredientes) {
-        // Suponiendo que cada ingrediente incluye: cantidad_usada, stock
-        const lotesNecesarios = cantidad / ing.producto.stock;
-        const cantidadNecesaria = ing.cantidad_usada * lotesNecesarios;
+        for (const ing of ingredientes) {
+            const lotesNecesarios = cantidad / ing.producto.stock;
+            const cantidadNecesaria = ing.cantidad_usada * lotesNecesarios;
 
-        const { data: inventario } = await supabase
-            .from("inventario_ingredientes")
-            .select("stock_actual")
-            .eq("ingrediente_id", ing.ingrediente_id)
-            .single();
+            // Consulta más robusta con manejo de errores
+            let stockDisponible = 0;
+            try {
+                const { data: inventario, error: invError } = await supabase
+                    .from("inventario_ingredientes")
+                    .select("stock_actual")
+                    .eq("ingrediente_id", ing.ingrediente_id)
+                    .maybeSingle();
 
-        const stockDisponible = inventario?.stock_actual ?? 0;
-        const suficiente = stockDisponible >= cantidadNecesaria;
-        if (!suficiente) hayFaltantes = true;
+                stockDisponible = inventario?.stock_actual ?? 0;
+            } catch (error) {
+                console.error("Error al consultar inventario:", error);
+                stockDisponible = 0;
+            }
 
-        const li = document.createElement("li");
-        li.innerHTML = `
-        ${ing.ingrediente.nombre} - 
-        necesita <strong>${cantidadNecesaria.toFixed(2)} ${ing.ingrediente.medida}</strong> 
-        | stock: <span class="${suficiente ? "text-success" : "text-danger"} fw-bold">
-          ${stockDisponible.toFixed(2)} ${ing.ingrediente.medida}
-        </span>
-      `;
-        lista.appendChild(li);
+            const suficiente = stockDisponible >= cantidadNecesaria;
+            if (!suficiente) hayFaltantes = true;
+
+            const li = document.createElement("li");
+            li.innerHTML = `
+                ${ing.ingrediente.nombre} - 
+                necesita <strong>${cantidadNecesaria.toFixed(2)} ${ing.ingrediente.medida}</strong> 
+                | stock: <span class="${suficiente ? "text-success" : "text-danger"} fw-bold">
+                ${stockDisponible.toFixed(2)} ${ing.ingrediente.medida}
+                </span>
+            `;
+            lista.appendChild(li);
+        }
+
+        // Cambiar color del contenedor según resultado
+        contenedor.classList.remove("alert-info", "alert-danger");
+        contenedor.classList.add(hayFaltantes ? "alert-danger" : "alert-info");
+        
+        // Mensaje adicional si hay faltantes (solo si no existe ya)
+        if (hayFaltantes && !contenedor.querySelector('.mensaje-faltante')) {
+            const mensajeFaltante = document.createElement("div");
+            mensajeFaltante.className = "mt-2 small mensaje-faltante";
+            mensajeFaltante.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>No hay suficiente stock para algunos ingredientes`;
+            contenedor.appendChild(mensajeFaltante);
+        }
+
+    } catch (error) {
+        console.error("Error general:", error);
+        lista.innerHTML = "<li>Error al calcular los ingredientes necesarios</li>";
+        contenedor.classList.remove("alert-info", "alert-danger");
+        contenedor.classList.add("alert-danger");
     }
-
-    // Cambiar color del contenedor si hay faltantes
-    contenedor.classList.remove("alert-info", "alert-danger");
-    contenedor.classList.add(hayFaltantes ? "alert-danger" : "alert-info");
-    contenedor.style.display = "block";
 }
-
 
 
 export async function registrarEntradaProducto(e) {

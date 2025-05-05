@@ -161,7 +161,7 @@ export async function cerrarSesionCliente() {
     try {
         await supabase.auth.signOut();
         localStorage.removeItem("nombre_cliente");
-        mostrarToast("👋 Cerrando sesión...", "info");
+        mostrarToast("Cerrando sesión...", "warning");
         setTimeout(() => {
             window.location.href = "index.html";
         }, 1000);
