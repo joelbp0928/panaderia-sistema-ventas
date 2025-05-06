@@ -592,11 +592,23 @@ footer {
   animation: resplandor-suave 1s ease-out;
 }
 
-#ticket-visual {
-  background: linear-gradient(to right, #fdfbfb, #ebedee);
-  border: 2px dashed #9a223d;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-  font-family: "Courier New", monospace;
-  border-radius: 16px;
-  padding: 20px;
+.ticket-impresion {
+  animation: printOut 0.6s ease-in-out forwards;
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+@keyframes printOut {
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.ticket-impresion {
+  background-image: url('./img/logo_empresa.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 60%;
+  opacity: 0.98;
 }

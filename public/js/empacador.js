@@ -337,7 +337,7 @@ document.getElementById("finalize-btn").addEventListener("click", async function
     const { data: sessionData } = await supabase.auth.getSession();
     const userId = sessionData.session.user.id;
 
-    const pedidoGuardado = await guardarPedido(productosSeleccionados, userId);
+    const pedidoGuardado = await guardarPedido(productosSeleccionados, userId, "empacador");
     if (!pedidoGuardado) return;
 
     const codigoTicket = pedidoGuardado.codigo_ticket;

@@ -108,7 +108,95 @@
         <!-- Aquí se insertarán dinámicamente los productos del carrito -->
       </div>
     </div>
-    <div id="ticket-visual" class="d-none p-3 shadow-lg rounded bg-white text-dark" style="max-width: 300px; margin: 0 auto; font-family: monospace;"></div>
+    <!-- Modal del Ticket -->
+    <div class="modal fade" id="modalTicket" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content p-3 animate__animated animate__fadeInDown">
+          <div class="modal-header border-0">
+            <h5 class="modal-title">Ticket generado</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Cerrar"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div id="ticket-visual" class="d-flex justify-content-center">
+              <div
+                id="ticket-capturable"
+                class="p-3 w-100"
+                style="
+                  max-width: 320px;
+                  background: white;
+                  font-family: 'Courier New', monospace;
+                  font-size: 0.8rem;
+                  border: 2px dashed #6c1b2d;
+                  border-radius: 10px;
+                  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+                  animation: printTicket 1s ease-out;
+                "
+              >
+                <div class="text-center mb-2">
+                  <img
+                    id="logo-ticket"
+                    src=""
+                    alt="Logo"
+                    style="height: 60px; object-fit: contain"
+                  />
+                  <h5
+                    class="mt-2"
+                    id="empresa-nombre"
+                    style="color: #6c1b2d; font-weight: bold"
+                  >
+                    Mr. Donut Studio
+                  </h5>
+                  <p
+                    class="mb-0"
+                    id="ticket-frase"
+                    style="font-size: 0.65rem; color: #777"
+                  >
+                    Cada dona cuenta una historia 🍩✨
+                  </p>
+                </div>
+                <hr />
+                <div class="text-start mb-2">
+                  <p class="mb-1">
+                    <strong>Cliente:</strong>
+                    <span id="nombre-cliente">---</span>
+                  </p>
+                  <p class="mb-1">
+                    <strong>Ticket:</strong> <span id="codigo-ticket">---</span>
+                  </p>
+                  <p class="mb-1" id="fecha-ticket">---</p>
+                </div>
+                <div id="detalle-productos"></div>
+                <hr />
+                <div class="d-flex justify-content-between">
+                  <strong>Total</strong>
+                  <strong id="total-ticket">---</strong>
+                </div>
+                <div class="text-center mt-3">
+                  <div id="qr-pedido"></div>
+                  <p style="font-size: 0.65rem; margin-top: 5px">
+                    Muestra este ticket al cajero
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer border-0">
+            <button id="btn-descargar-ticket" class="btn btn-primary">
+              <i class="fas fa-download me-1"></i> Descargar ticket
+            </button>
+            <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Promociones -->
     <section id="promotions">
       <div id="promo-carousel" class="carousel slide" data-bs-ride="carousel">

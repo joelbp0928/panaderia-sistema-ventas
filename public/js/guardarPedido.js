@@ -3,31 +3,27 @@ import { supabase } from "./supabase-config.js";
 import { mostrarToast } from "./manageError.js";
 import { getCDMXISOString, getLocalDateString } from "./dateLocalDate.js"
 
-export async function guardarPedido(productosSeleccionados, userId, origen = "empacador") {
+export async function guardarPedido(productosSeleccionados, userId, origen = "empacador", estadoPersonalizado = null) {
   const total = productosSeleccionados.reduce((acc, p) => acc + p.total, 0);
   const fechaActual = getCDMXISOString();
+
+  // Determinar el estado automáticamente si no se especifica
+  const estado = estadoPersonalizado || (origen === "empacador" ? "empacado" : "pendiente");
 
   const { codigo_ticket, folio_secuencial } = await generarCodigoTicket(origen, userId);
 
   try {
-    // Determinar los campos según el origen
     const pedidoData = {
       fecha: fechaActual,
       total: total.toFixed(2),
-      estado: "pendiente",
+      estado, // Usamos el estado determinado
       notas: "",
       codigo_ticket,
       origen,
-      folio_secuencial
+      folio_secuencial,
+      [origen === "empacador" ? "empleado_id" : "cliente_id"]: userId
     };
 
-    if (origen === "empacador") {
-      pedidoData.empleado_id = userId;
-    } else if (origen === "cliente") {
-      pedidoData.cliente_id = userId;
-    }
-
-    // 1️⃣ Insertar en pedidos
     const { data: pedido, error } = await supabase
       .from("pedidos")
       .insert(pedidoData)
@@ -36,8 +32,7 @@ export async function guardarPedido(productosSeleccionados, userId, origen = "em
 
     if (error) throw error;
 
-    // 2️⃣ Insertar productos del pedido
-    const productosDB = productosSeleccionados.map((prod) => ({
+    const productosDB = productosSeleccionados.map(prod => ({
       pedido_id: pedido.id,
       producto_id: prod.id,
       cantidad: prod.cantidad,
