@@ -612,3 +612,49 @@ footer {
   background-size: 60%;
   opacity: 0.98;
 }
+
+.sidebar-historial {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 360px;
+  height: 100%;
+  background: #fff;
+  box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+  z-index: 1055;
+  transition: right 0.4s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  border-left: 4px solid var(--primary-color-obscuro);
+}
+
+.sidebar-historial.activo {
+  right: 0;
+}
+
+.sidebar-header {
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sidebar-content {
+  padding: 1rem;
+  overflow-y: auto;
+  flex-grow: 1;
+  background: #fff;
+}
+
+
+/* Animaciones */
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

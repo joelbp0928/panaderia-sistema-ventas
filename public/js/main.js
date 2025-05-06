@@ -56,7 +56,57 @@ window.onload = async function () {
 }
 
 
-
+document.getElementById("btnHistorialPedidos").addEventListener("click", async () => {
+    const overlay = document.getElementById("sidebarHistorial");
+    overlay.classList.remove("d-none");
+    document.body.style.overflow = "hidden"; // Evita scroll del fondo
+  
+    // Cargar pedidos del cliente
+    const { data: user } = await supabase.auth.getUser();
+    const usuario_id = user?.user?.id;
+  console.log(usuario_id)
+    const { data: pedidos, error } = await supabase
+      .from("pedidos")
+      .select("*")
+      .eq("cliente_id", usuario_id)
+      .order("fecha", { ascending: false });
+  
+    const contenedor = document.getElementById("contenidoHistorial");
+    if (error || !pedidos || pedidos.length === 0) {
+      contenedor.innerHTML = `<p class="text-muted mt-3"><i class="fas fa-ban me-2"></i>Sin pedidos recientes</p>`;
+      return;
+    }
+  
+    contenedor.innerHTML = pedidos.map(p => `
+      <div class="border-bottom py-2">
+        <div><i class="fas fa-receipt me-2"></i><strong>Ticket:</strong> ${p.codigo_ticket}</div>
+        <div><i class="fas fa-calendar-alt me-2"></i>${new Date(p.fecha).toLocaleString()}</div>
+        <div><i class="fas fa-dollar-sign me-2"></i>Total: $${p.total}</div>
+      </div>
+    `).join('');
+  });
+  
+  // Cerrar con botón
+  document.getElementById("cerrarSidebarHistorial").addEventListener("click", () => {
+    document.getElementById("sidebarHistorial").classList.add("d-none");
+    document.body.style.overflow = "";
+  });
+  
+  // Cerrar con Esc o clic fuera
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") cerrarSidebar();
+  });
+  
+  document.getElementById("sidebarHistorial").addEventListener("click", (e) => {
+    if (e.target.id === "sidebarHistorial") cerrarSidebar();
+  });
+  
+  function cerrarSidebar() {
+    const sidebar = document.getElementById("sidebarHistorial");
+    sidebar.classList.add("d-none");
+    document.body.style.overflow = "";
+  }
+  
 
 
 
