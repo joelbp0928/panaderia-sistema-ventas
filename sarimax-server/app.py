@@ -7,6 +7,7 @@ from config import SUPABASE_URL, SUPABASE_API_KEY
 from urllib.parse import urlencode
 
 
+
 # Crear app Flask
 app = Flask(__name__)
 CORS(app)
@@ -40,7 +41,8 @@ def obtener_productos():
 
 
 def obtener_historial_cliente(cliente_id):
-    url = f"{SUPABASE_URL}/rest/v1/historial_cliente"
+    url = f"{SUPABASE_URL}/rest/v1/rpc/obtener_historial_cliente"  # ✅
+
     
     headers = {
         "apikey": SUPABASE_API_KEY,
@@ -49,18 +51,23 @@ def obtener_historial_cliente(cliente_id):
         "Accept": "application/json"
     }
 
-    params = {
-        "select": "producto_id,fecha_compra",
-        "cliente_id": f"eq.{cliente_id}",
-        "order": "fecha_compra"
+    #params = {
+     #   "select": "producto_id,fecha_compra",
+      #  "cliente_id": f"eq.{cliente_id}",
+       # "order": "fecha_compra"
+    #}
+    payload = {
+        "p_cliente_id": cliente_id
     }
 
     # Solo para depurar (puedes quitar después)
     print(f"📌 Cliente ID enviado a Supabase: {cliente_id}")
-    query_string = urlencode(params)
-    print(f"🌐 URL completa: {url}?{query_string}")
+    #query_string = urlencode(params)
+    #print(f"🌐 URL completa: {url}?{query_string}")
 
-    response = requests.get(url, headers=headers, params=params)
+    #response = requests.get(url, headers=headers, params=params)
+    response = requests.post(url, headers=headers, json=payload)
+
 
     print("📦 Status:", response.status_code)
     print("📄 Respuesta cruda:", response.text)
@@ -105,7 +112,7 @@ def sugerencia():
 
     # Paso 1: Extrae fechas y producto_id (UUID)
     fechas = pd.to_datetime(
-        [x['fecha_compra'] for x in historial],
+        [x['fecha'] for x in historial],
         format="%H:%M:%S.%f%z",  # O ajusta este formato si cambia el tipo
         errors='coerce'
     )
@@ -157,4 +164,5 @@ def mostrar_productos():
 # === Correr servidor ===
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
+
 
