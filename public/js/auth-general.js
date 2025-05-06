@@ -142,6 +142,7 @@ export async function iniciarSesionGeneral(event) {
 
     if (rol === "cliente") {
       localStorage.setItem("nombre_cliente", nombre);
+      localStorage.setItem("cliente_id", userId);  // <- Aquí lo guardas
       mostrarToast(`✅ Bienvenido cliente, ${nombre}!`, "success");
 
       setTimeout(() => {
