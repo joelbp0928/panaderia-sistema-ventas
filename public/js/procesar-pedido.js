@@ -82,35 +82,42 @@ export async function confirmarPedido() {
         const color = configuracionGlobal.color_primario || "#6c1b2d";
 
         ticketContenido.innerHTML = `
-    <div class="ticket-impresion animate__animated animate__fadeInDown" style="max-width: 320px; background: white; font-family: 'Courier New', monospace; border: 2px dashed ${color}; padding: 16px; border-radius: 12px;">
-      <div class="text-center">
-        <img src="${configuracionGlobal.logo_url || './img/logo_empresa.png'}" style="max-height: 60px; object-fit: contain; margin-bottom: 8px;" alt="Logo" />
-        <h5 style="margin: 4px 0; color: ${color};">${configuracionGlobal.nombre_empresa}</h5>
-        <hr />
-        <small><strong>Cliente:</strong> ${nombreCliente}</small><br/>
-        <small><strong>Ticket:</strong> ${pedido.codigo_ticket}</small><br/>
-        <small>${new Date(pedido.fecha).toLocaleString()}</small>
-      </div>
-      <hr />
-      ${productosSeleccionados.map(p => `
-        <div class="d-flex justify-content-between border-bottom py-1">
-          <span>${p.nombre} x${p.cantidad}</span>
-          <span>$${p.total.toFixed(2)}</span>
-        </div>`).join('')}
-      <hr />
-      <div class="d-flex justify-content-between mb-2">
-        <strong>Total</strong>
-        <strong>$${pedido.total}</strong>
-      </div>
-      <div class="text-center mt-3" id="qr-pedido"></div>
-      <p class="mt-2 text-center" style="font-size: 0.7rem; color: #555;">
-        📌 Este no es un comprobante de pago.<br>
-        Presenta este ticket al cajero para poder pagar tu pedido.<br>
-        El pedido está sujeto a disponibilidad en tienda.
-      </p>
-      <hr />
-      <p class="text-center mb-0" style="font-size: 0.65rem; color: #999;">✨ Gracias por tu pedido ✨<br>¡Esperamos verte pronto!</p>
-    </div>`;
+        <div class="ticket-impresion animate__animated animate__fadeInDown" style="max-width: 320px; background: white; font-family: 'Courier New', monospace; border: 2px dashed ${color}; padding: 16px; border-radius: 12px;">
+          <div class="text-center mb-2">
+            <h5 style="margin: 4px 0; color: ${color};">${configuracionGlobal.nombre_empresa}</h5>
+            <hr />
+            <small><i class="fas fa-user me-1 text-primary"></i><strong>Cliente:</strong> ${nombreCliente}</small><br/>
+            <small><i class="fas fa-receipt me-1 text-secondary"></i><strong>Ticket:</strong> ${pedido.codigo_ticket}</small><br/>
+            <small><i class="fas fa-calendar-day me-1 text-muted"></i>${new Date(pedido.fecha).toLocaleString()}</small>
+          </div>
+          <hr />
+          ${productosSeleccionados.map(p => `
+            <div class="d-flex justify-content-between border-bottom py-1">
+              <span><i class="fas fa-cookie-bite me-1 text-success"></i>${p.nombre} x${p.cantidad}</span>
+              <span>$${p.total.toFixed(2)}</span>
+            </div>`).join('')}
+          <hr />
+          <div class="d-flex justify-content-between mb-2">
+            <strong><i class="fas fa-coins me-1"></i>Total</strong>
+            <strong>$${pedido.total}</strong>
+          </div>
+          <div class="text-center mt-3" id="qr-pedido"></div>
+        
+          <div class="alert alert-warning mt-3 p-2 text-start" style="font-size: 0.68rem;">
+            <i class="fas fa-info-circle me-1 text-warning"></i>
+            <strong>Importante:</strong><br>
+            <ul class="ps-3 mb-0">
+              <li>Este <strong>no es un comprobante de pago</strong>.</li>
+              <li><i class="fas fa-save me-1"></i>Guarda este ticket para poder pagar.</li>
+              <li><i class="fas fa-clock me-1"></i>Espera confirmación en tienda antes de pagar.</li>
+            </ul>
+          </div>
+        
+          <p class="text-center mb-0 mt-2" style="font-size: 0.65rem; color: #999;">
+            <i class="fas fa-star text-warning me-1"></i>Gracias por tu pedido<br>¡Esperamos verte pronto!
+          </p>
+        </div>`;
+        
 
         const modal = new bootstrap.Modal(document.getElementById("modalTicket"));
         modal.show();
