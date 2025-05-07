@@ -80,7 +80,7 @@ export async function confirmarPedido() {
 
         const ticketContenido = document.getElementById("ticket-visual");
         const color = configuracionGlobal.color_primario || "#6c1b2d";
-
+console.log(pedido.estado);
         ticketContenido.innerHTML = `
         <div class="ticket-impresion animate__animated animate__fadeInDown" style="max-width: 320px; background: white; font-family: 'Courier New', monospace; border: 2px dashed ${color}; padding: 16px; border-radius: 12px;">
           <div class="text-center mb-2">
@@ -109,13 +109,14 @@ export async function confirmarPedido() {
             <ul class="ps-3 mb-0">
               <li>Este <strong>no es un comprobante de pago</strong>.</li>
               <li><i class="fas fa-save me-1"></i>Guarda este ticket para poder pagar.</li>
-              <li><i class="fas fa-clock me-1"></i>Espera confirmación en tienda antes de pagar.</li>
+              <li><i class="fas fa-clock me-1"></i>Estado actual: ${pedido.estado}.</li>
+              <li><i class="fa-solid fa-exclamation"></i> Espera confirmación de tienda antes de pagar.</li>
             </ul>
           </div>
         
-          <p class="text-center mb-0 mt-2" style="font-size: 0.65rem; color: #999;">
-            <i class="fas fa-star text-warning me-1"></i>Gracias por tu pedido<br>¡Esperamos verte pronto!
-          </p>
+            <p class="text-center mb-0 mt-2" style="font-size: 0.65rem; color: #999;">
+                <i class="fas fa-star text-warning me-1"></i>Gracias por tu preferencia
+            </p>
         </div>`;
         
 

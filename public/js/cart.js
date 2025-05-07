@@ -8,7 +8,7 @@ export async function inicializarCarrito() {
     console.warn("No se puede inicializar carrito - cliente no verificado");
     return;
   }
-  console.log("Carrito inicializado correctamente")
+//  console.log("Carrito inicializado correctamente")
   //actualizar Contador Carrito
   const { data: user } = await supabase.auth.getUser();
   const usuario_id = user?.user?.id;
