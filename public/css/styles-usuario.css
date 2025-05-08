@@ -76,24 +76,6 @@ header {
   color: var(--blanco);
 }
 
-/* 📢 Promociones */
-/*#promotions {
-  width: 100%;
-  max-height: 200px;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 10px;
-}*/
-
-.promo-slider img {
-  width: 100%;
-  max-height: 200px;
-  border-radius: 10px;
-  object-fit: cover;
-}
-
 /* texto sugerencia */
 #titulo-recomendacion {
   text-align: center;
@@ -446,6 +428,34 @@ footer {
   border-radius: 0 0 10px 10px;
 }
 
+/* 📢 Promociones */
+
+/* 🔥 Estilo mejorado para el carrusel de promociones */
+#promo-carousel {
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#promo-carousel .carousel-inner {
+  max-height: 30px;
+}
+
+#promo-carousel .carousel-caption {
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+  padding: 1rem;
+  backdrop-filter: blur(5px);
+}
+
+#promo-carousel .carousel-caption h5 {
+  font-size: 1.8rem;
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+}
+
+
 #promo-carousel .carousel-inner {
   max-height: 400px; /* Ajustar la altura de la imagen */
 }
@@ -455,9 +465,11 @@ footer {
 }
 
 #promo-carousel .carousel-item img {
-  object-fit: contain; /* Ajusta las imágenes para que no se deformen */
-  height: 100%; /* Asegura que las imágenes no sobrepasen el tamaño del contenedor */
-  max-height: 300px; /* Limitar la altura máxima de las imágenes */
+  width: 100%;
+  max-height: 250px;
+  object-fit: contain; /* ✅ Mostrar imagen completa */
+  border-radius: 10px;
+  background-color: #f5f5f5; /* Fondo claro por si la imagen no ocupa todo */
 }
 
 #promo-carousel .carousel-caption h5 {
@@ -716,4 +728,12 @@ footer {
 
 .rotado {
   transform: rotate(180deg);
+}
+.pedido-urgente {
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { transform: scale(1); background-color: #ffc107; }
+  50% { transform: scale(1.1); background-color: #ff5722; }
 }

@@ -34,33 +34,35 @@ document.addEventListener('DOMContentLoaded', function () {
 async function cargarPromociones() {
     try {
         // 1. Obtener referencias a los elementos del DOM
+        const promotionsSection = document.getElementById("promotions");
+        const promoCarousel = document.getElementById("promo-carousel");
         const promoSlider = document.getElementById("promo-slider");
-        const promoSection = document.getElementById("promo-section"); // Contenedor padre
-        
+
         // Verificar si los elementos existen
-        if (!promoSlider || !promoSection) {
+        if (!promotionsSection || !promoCarousel || !promoSlider) {
             console.log("Elementos de promociones no encontrados - omitiendo carga");
             return;
         }
 
-        // 2. Consultar promociones activas
+        // 2. Consultar promociones activas con fecha de expiración futura
         const { data: promocionesActivas, error } = await supabase
             .from('promociones')
-            .select('id, nombre, imagen_url, descripcion')
+            .select('id, nombre, imagen_url, fecha_expiracion')
             .eq('activa', true)
+            .gt('fecha_expiracion', new Date().toISOString()) // Cambiado a gt (greater than)
             .order('fecha_inicio', { ascending: false });
 
         if (error) throw error;
 
         // 3. Manejar caso cuando no hay promociones
         if (!promocionesActivas || promocionesActivas.length === 0) {
-            promoSection.classList.add('d-none'); // Oculta toda la sección
+            promotionsSection.style.display = 'none'; // Oculta toda la sección
             return;
         }
 
         // 4. Mostrar la sección (por si estaba oculta)
-        promoSection.classList.remove('d-none');
-        document.getElementById("promotions").classList.remove('d-none');
+        promotionsSection.style.display = 'block';
+
         // 5. Limpiar y construir el carrusel
         promoSlider.innerHTML = ''; // Limpiar contenido previo
 
@@ -68,31 +70,35 @@ async function cargarPromociones() {
             const slide = document.createElement("div");
             slide.classList.add("carousel-item");
             if (index === 0) slide.classList.add("active");
-
+          
+            const hoy = new Date();
+            const expira = new Date(promocion.fecha_expiracion);
+            const diasRestantes = Math.ceil((expira - hoy) / (1000 * 60 * 60 * 24));
+            const esUltimosDias = diasRestantes <= 3;
+          
             slide.innerHTML = `
-                <img src="${promocion.imagen_url}" 
-                     class="d-block w-100 promo-image" 
-                     alt="${promocion.nombre}" 
-                     loading="lazy"
-                     style="max-height: 300px; object-fit: cover;">
-                <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
-                    <h5>${promocion.nombre}</h5>
-                    ${promocion.descripcion ? `<p>${promocion.descripcion}</p>` : ''}
-                </div>
+              <img src="${promocion.imagen_url}" 
+                   class="d-block w-100" 
+                   alt="${promocion.nombre}" 
+                   loading="lazy"
+                   style="object-fit: contain; max-height: 250px; background-color: #f5f5f5; border-radius: 10px;">
+              <div class="d-flex flex-column align-items-center justify-content-center">
+                ${esUltimosDias ? `<span class="badge bg-warning text-dark animate__animated animate__pulse">¡Últimos días!</span>` : ""}
+              </div>
             `;
-
             promoSlider.appendChild(slide);
-        });
+          });
 
         // 6. Inicializar el carrusel (si usa Bootstrap)
-        const carousel = new bootstrap.Carousel(promoSlider.parentElement);
+        new bootstrap.Carousel(promoCarousel);
 
     } catch (error) {
         console.error("Error al cargar promociones:", error);
         // Ocultar sección en caso de error
-        const promoSection = document.getElementById("promo-section");
-        document.getElementById("promotions").classList.add('d-none');
-        if (promoSection) promoSection.classList.add('d-none');
+        const promotionsSection = document.getElementById("promotions");
+        if (promotionsSection) {
+            promotionsSection.style.display = 'none';
+        }
     }
 }
 
