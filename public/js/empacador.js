@@ -4,25 +4,111 @@ import { verificarSesion, cerrarSesion } from './auth-check.js'; // Importa la f
 import { guardarPedido } from "./guardarPedido.js";
 import { supabase } from "./supabase-config.js";
 import { getLocalDateString } from "./dateLocalDate.js";
-const beepError = new Audio("../sounds/error-beep.mp3");
 
+const beepError = new Audio("../sounds/error-beep.mp3");
 let productosSeleccionados = []; // Array para almacenar los productos seleccionados
 let selectedProductId = null; // ID del producto seleccionado para editar la cantidad
 let editQuantityModal = null; // Variable global para guardar la instancia
+let cantidadPedidosActual = 0; // Para comparar si aumentó
+let realtimeChannel = null;
 
+// Iniciar la aplicación cuando el DOM esté listo
 window.onload = async function () {
-    await verificarSesion(); // Verificar si la sesión está activa
+    initializeApp()
+};
+
+// Función principal de inicialización
+async function initializeApp() {
+    await verificarSesion();
     cargarConfiguracion();
-    cargarCategorias(); // Llamamos a la función que carga las categorías
+    cargarCategorias();
     actualizarTabla();
-    //  agregarProducto();
+
+    if ("Notification" in window) {
+        Notification.requestPermission().then(p => console.log("Notificación:", p));
+    }
+
     await actualizarContadorPedidosHoy();
 
-    // 🔹 Asociar el evento de Cerrar Sesión al botón logout-btn
-    document.getElementById("logout-btn").addEventListener("click", cerrarSesion);
-    //   document.getElementById("orders-btn").addEventListener("click", showOrders);
-    //  document.getElementById("edit-cuantity-modal-btn").addEventListener("click", showEditQuantityModal);
+    setupEventListeners();
+    await inicializarPedidosPendientes();
+    setupRealtime();
 }
+
+// Configurar event listeners
+function setupEventListeners() {
+    document.getElementById("logout-btn").addEventListener("click", cerrarSesion);
+    document.getElementById("orders-btn").addEventListener("click", () => {
+        mostrarToast("Hay pedidos nuevos. ¡Revísalos!", "info");
+    });
+    // ... otros event listeners
+}
+
+// Configura el canal de suscripción
+// Configura el canal de suscripción
+function setupRealtime() {
+    if (realtimeChannel) {
+        supabase.removeChannel(realtimeChannel);
+    }
+
+    realtimeChannel = supabase
+        .channel('pedidos_pendientes_empacador')
+        .on(
+            'postgres_changes',
+            {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'pedidos',
+                filter: 'estado=eq.pendiente'
+            },
+            (payload) => {
+              //  console.log('Nuevo pedido pendiente detectado:', payload);
+                if (payload.new?.origen === 'cliente') {
+                    handleNewOrder(payload.new);
+                }
+            }
+        )
+        .subscribe((status, err) => {
+           // console.log('Estado de suscripción:', status);
+            if (err) {
+                console.error('Error en la suscripción:', err);
+                // Reconectar después de 5 segundos si hay error
+                setTimeout(setupRealtime, 5000);
+            }
+            if (status === 'CHANNEL_ERROR') {
+                // Reconectar después de 5 segundos si hay error de canal
+                setTimeout(setupRealtime, 5000);
+            }
+        });
+}
+
+const handleNewOrder = (pedido) => {
+    // 1. Muestra notificación visual
+    showNotification(pedido);
+
+    // 2. Reproduce sonido
+    playNotificationSound();
+
+    // 3. Actualiza el contador
+    updatePendingOrdersCount();
+
+    // 4. Muestra alerta en la interfaz
+    displayOrderAlert(pedido);
+};
+
+const showNotification = (pedido) => {
+    if (Notification.permission === 'granted') {
+        new Notification('Nuevo Pedido', {
+            body: `Ticket ${pedido.codigo_ticket} - $${pedido.total}`,
+            icon: `${configuracionGlobal.logo_url}`
+        });
+    }
+};
+
+const playNotificationSound = () => {
+    const audio = new Audio('../sounds/notificacionM.mp3');
+    audio.play().catch(e => console.log('Error al reproducir sonido:', e));
+};
 
 // Mostrar modal para editar cantidad
 function showEditQuantityModal(productId, currentQuantity) {
@@ -61,9 +147,9 @@ async function cargarCategorias() {
         // Iterar sobre las categorías y crear un botón por cada una
         categorias.forEach(categoria => {
             const categoryButton = document.createElement('button');
-           
+
             categoryButton.classList.add('category-btn');
-            
+
             categoryButton.textContent = categoria.nombre; // Usamos el nombre de la categoría de la base de datos
             categoryButton.dataset.category = categoria.id;
             categoryButton.onclick = () => cargarProductosPorCategoria(categoria.id); // Aquí usamos el ID para hacer la acción
@@ -537,7 +623,7 @@ async function actualizarContadorPedidosHoy() {
 
     const badge = document.getElementById("contador-pedidos-hoy");
     badge.innerHTML = `<i class="fa-solid fa-truck me-1"></i> Hoy: ${count} pedido${count === 1 ? "" : "s"}`;
-    
+
 
 }
 
@@ -568,7 +654,7 @@ document.getElementById("open-history-btn").addEventListener("click", async () =
     const cantidadPedidos = document.getElementById("cantidad-pedidos");
 
     const lista = document.getElementById("lista-historial");
-    
+
     if (!pedidos.length) {
         badgeResultados.style.display = "none";
         lista.innerHTML = `<li class="list-group-item text-muted">No se encontraron pedidos con los filtros.</li>`;
@@ -578,7 +664,7 @@ document.getElementById("open-history-btn").addEventListener("click", async () =
     cantidadPedidos.textContent = pedidos.length;
     badgeResultados.style.display = "block";
     setTimeout(() => badgeResultados.classList.add("show"), 50);
-    
+
     lista.innerHTML = ""; // Limpiar primero
 
     if (error) {
@@ -656,7 +742,7 @@ async function cargarHistorialPedidos() {
 
     const lista = document.getElementById("lista-historial");
     lista.innerHTML = "";
-    
+
     if (!pedidos.length) {
         badgeResultados.style.display = "none";
         lista.innerHTML = `<li class="list-group-item text-muted">No se encontraron pedidos con los filtros.</li>`;
@@ -694,4 +780,151 @@ async function cargarHistorialPedidos() {
         item.onclick = () => verDetallePedido(pedido.id);
         lista.appendChild(item);
     });
+}
+
+
+async function inicializarPedidosPendientes() {
+    const { data: pedidos, error } = await supabase
+        .from("pedidos")
+        .select("id")
+        .eq("estado", "pendiente")
+        .eq("origen", "cliente");
+
+    if (error || !pedidos) return;
+
+    cantidadPedidosActual = pedidos.length;
+
+    if (cantidadPedidosActual > 0) {
+        mostrarBotonPedidos(cantidadPedidosActual);
+    }
+}
+
+async function verificarNuevosPedidos() {
+    const { data: pedidos, error } = await supabase
+        .from("pedidos")
+        .select("id")
+        .eq("estado", "pendiente")
+        .eq("origen", "cliente");
+
+    if (error || !pedidos) return;
+
+    if (pedidos.length > cantidadPedidosActual) {
+        cantidadPedidosActual = pedidos.length;
+        mostrarBotonPedidos(pedidos.length, true);
+    } else {
+        cantidadPedidosActual = pedidos.length;
+    }
+}
+
+function mostrarBotonPedidos(cantidad, notificar = false) {
+    const ordersBtn = document.getElementById("orders-btn");
+    const badge = document.getElementById("order-notification");
+
+    ordersBtn.classList.remove("d-none");
+    ordersBtn.classList.add("pedido-urgente");
+    badge.textContent = `¡${cantidad}!`;
+
+    if (notificar && Notification.permission === "granted") {
+        const notif = new Notification("🛒 Nuevo pedido recibido", {
+            body: `Hay ${cantidad} pedido(s) pendientes.`,
+            icon: `${configuracionGlobal.logo_url}`
+        });
+        notif.onclick = () => window.focus();
+
+        const sonido = new Audio("../sounds/notificacionM.mp3");
+        sonido.play();
+    }
+}
+
+
+
+
+function mostrarNotificacionPedido(pedido) {
+    // Notificación en el navegador
+    if (Notification.permission === "granted") {
+        const notif = new Notification("🛍 Nuevo Pedido Pendiente", {
+            body: `Ticket: ${pedido.codigo_ticket}\nTotal: $${pedido.total}`,
+            icon: configuracionGlobal?.logo_url || '/icon.png',
+            tag: 'nuevo-pedido'
+        });
+        notif.onclick = () => window.focus();
+    }
+
+    // Notificación visual en la interfaz
+    const notifContainer = document.getElementById('notifications-container');
+    const notifId = `notif-${Date.now()}`;
+
+    const notifElement = document.createElement('div');
+    notifElement.id = notifId;
+    notifElement.className = 'alert alert-warning alert-dismissible fade show';
+    notifElement.innerHTML = `
+        <strong>Nuevo pedido!</strong> 
+        <div>Ticket: ${pedido.codigo_ticket}</div>
+        <div>Total: $${pedido.total}</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    notifContainer.appendChild(notifElement);
+
+    // Sonido de notificación
+    new Audio('../sounds/notificacionM.mp3').play().catch(e => console.log('Error al reproducir sonido:', e));
+
+    // Eliminar notificación después de 10 segundos
+    setTimeout(() => {
+        const element = document.getElementById(notifId);
+        if (element) {
+            const bsAlert = new bootstrap.Alert(element);
+            bsAlert.close();
+        }
+    }, 10000);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function displayOrderAlert(pedido) {
+    const container = document.getElementById('notifications-container');
+    if (!container) return;
+
+    const alertId = `alert-${Date.now()}`;
+    const alertHTML = `
+        <div id="${alertId}" class="alert alert-warning alert-dismissible fade show">
+            <strong>Nuevo Pedido</strong>
+            <p>Ticket: ${pedido.codigo_ticket}</p>
+            <p>Total: $${pedido.total}</p>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+
+    container.insertAdjacentHTML('afterbegin', alertHTML);
+
+    // Eliminar después de 10 segundos
+    setTimeout(() => {
+        const alertElement = document.getElementById(alertId);
+        if (alertElement) {
+            const bsAlert = new bootstrap.Alert(alertElement);
+            bsAlert.close();
+        }
+    }, 10000);
+}
+
+function updatePendingOrdersCount() {
+    const badge = document.getElementById('order-notification');
+    if (badge) {
+        cantidadPedidosActual++;
+        badge.textContent = `¡${cantidadPedidosActual}!`;
+    }
 }

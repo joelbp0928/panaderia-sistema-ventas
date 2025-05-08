@@ -57,57 +57,6 @@ window.onload = async function () {
 
 }
 
-  
-
-
-
-// 🔹 Cargar promociones desde Firebase
-/*function cargarPromociones() {
-    fetch("https://us-central1-gestor-panaderia.cloudfunctions.net/api/config/promociones")
-        .then(response => response.json())
-        .then(data => {
-            const promoContainer = document.getElementById("promotions");
-            promoContainer.innerHTML = "";
-
-            data.forEach(promo => {
-                const promoElement = document.createElement("div");
-                promoElement.classList.add("promo-slider");
-                promoElement.innerHTML = `<img src="${promo.imagen_url}" alt="${promo.nombre}" class="promo-img"/>`;
-                promoContainer.appendChild(promoElement);
-            });
-        })
-        .catch(error => console.error("❌ Error cargando promociones:", error));
-}*/
-
-// 🔹 Cargar productos dinámicamente
-/*function cargarProductos() {
-    fetch("https://us-central1-gestor-panaderia.cloudfunctions.net/api/config/productos")
-        .then(response => response.json())
-        .then(data => {
-            const productContainer = document.querySelector(".product-grid");
-            productContainer.innerHTML = "";
-
-            data.forEach(producto => {
-                const productElement = document.createElement("div");
-                productElement.classList.add("product-card");
-                productElement.innerHTML = `
-                    <img src="${producto.imagen_url}" alt="${producto.nombre}" />
-                    <h3>${producto.nombre}</h3>
-                    <p>$${producto.precio.toFixed(2)}</p>
-                    <button class="add-to-cart-btn" onclick="agregarAlCarrito('${producto.nombre}', ${producto.precio}, '${producto.imagen_url}')">Agregar</button>
-                `;
-                productContainer.appendChild(productElement);
-            });
-        })
-        .catch(error => console.error("❌ Error cargando productos:", error));
-}
-*/
-// 🔹 Carrito de compras dinámico
-/*const cart = document.getElementById("cart");
-document.getElementById("cart-btn").addEventListener("click", () => {
-    cart.classList.toggle("open");
-});*/
-
 //Recuperacion Contraseña
 /*document.getElementById("forgot-password-form").addEventListener("submit", function (e) {
     e.preventDefault(); // Evita el envío tradicional del formulario

@@ -580,3 +580,27 @@ header button.btn:hover {
     margin: 10px 0;
   }
 }
+
+/* ✨ Parpadeo y rebote suave */
+@keyframes pulseAlert {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes bounceHorizontal {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-5px); }
+}
+
+/* 🔔 Clase para activar animación */
+.pedido-urgente {
+  animation: pulseAlert 0.8s ease-in-out infinite, bounceHorizontal 1.2s ease-in-out infinite;
+  box-shadow: 0 0 10px red;
+}
+
+
+@keyframes blink {
+  0%, 100% { transform: scale(1); background-color: #ffc107; }
+  50% { transform: scale(1.1); background-color: #ff5722; }
+}

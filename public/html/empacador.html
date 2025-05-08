@@ -29,6 +29,13 @@
           <span id="contador-pedidos-hoy" class="badge rounded-pill text-bg-light px-3 py-2 shadow-sm">
             <i class="fa-solid fa-truck"></i> Hoy: 0 pedidos
           </span>
+          <button id="orders-btn" class="btn btn-danger position-relative d-none">
+            <i class="fa-solid fa-bell"></i> Nuevos pedidos
+            <span id="order-notification" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">
+              ¡1!
+            </span>
+          </button>
+          
         </div>
       
         <!-- Nombre del empleado -->
@@ -158,6 +165,7 @@
           </div>
         </div>
       </div>
+      <div id="notifications-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1100; width: 300px;"></div>
       <!-- Contenido Principal -->
       <div id="content">
         <!-- Listado de productos seleccionados -->
