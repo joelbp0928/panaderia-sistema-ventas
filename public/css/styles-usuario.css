@@ -94,23 +94,89 @@ header {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+/* texto sugerencia */
+
+#seccion-sugerencias{
+  background-color: var(--primary-bg-dark, #2a7a94);
+  padding: 30px 20px;
+  border-radius: 25px;
+  box-shadow:
+    0 12px 25px rgba(0, 0, 0, 0.35),
+    0 20px 50px rgba(0, 0, 0, 0.25);  /* sombra doble para más profundidad */
+  width: fit-content;
+  margin: 60px auto 0 auto;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+#seccion-sugerencias:hover {
+  transform: scale(1.01);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s ease;
+}
+
+#titulo-recomendacion{
+  text-align: center;
+  margin-top: 40px;
+  font-family: 'Segoe UI', sans-serif;
+  box-shadow:
+    0 12px 25px rgba(0, 0, 0, 0.35),
+    0 20px 50px rgba(0, 0, 0, 0.25);  /* sombra doble para más profundidad */
+}
+
+#titulo-recomendacion {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  background-color: var(--primary-bg-color, #fef3c7);
+  padding: 10px 20px;
+  border-radius: 16px;
+  box-shadow:
+    0 12px 25px rgba(0, 0, 0, 0.35),
+    0 20px 50px rgba(0, 0, 0, 0.25);  /* sombra doble para más profundidad */
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #5b3e1d;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  max-width: fit-content;
+  transition: background-color 0.3s ease;
+  background-color: #d5eef8; /* o tu color actual */
+  border: 2px solid white;
+  border-radius: 15px;
+  padding: 10px 20px;
+  
+}
+
+
 /* sugerencia */
 .tarjeta-horizontal {
   display: flex;
   align-items: center;
-  gap: 16px;
-  background-color: #fff8e1;
+  background-color: #fff8dc;
   border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-  max-width: 600px;
-  margin: 30px auto;
-  padding: 10px;
-  font-family: "Segoe UI", sans-serif;
-  transition: transform 0.3s ease;
+  box-shadow:
+    0 12px 25px rgba(0, 0, 0, 0.35),
+    0 20px 50px rgba(0, 0, 0, 0.25); /* sombra doble para más profundidad */
+  padding: 10px 15px;
+  max-width: 300px; /* 🔽 Esto reduce el ancho */
+  margin: auto;
+  transition: transform 0.2s ease;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  
 }
+
+#tarjeta-sugerencia.mostrar {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 
 .tarjeta-horizontal:hover {
   transform: scale(1.01);
+  
 }
 
 .tarjeta-horizontal img {
@@ -119,6 +185,7 @@ header {
   object-fit: cover;
   border-radius: 10px;
   flex-shrink: 0;
+  
 }
 
 .contenido-pan {
@@ -129,6 +196,7 @@ header {
   margin: 0 0 6px;
   color: #4e342e;
   font-size: 1.2rem;
+  margin-left: 22px;
 }
 
 .contenido-pan p {
@@ -138,13 +206,13 @@ header {
 }
 
 #btn-carrito {
-  padding: 8px 14px;
-  background-color: #8e44ad;
+  background-color: var(--primary-color, #6c1b2d);
   color: white;
   border: none;
-  border-radius: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 0.9rem;
+  margin-left: 20px;
 }
 
 #btn-carrito:hover {
