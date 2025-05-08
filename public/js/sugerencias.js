@@ -22,19 +22,45 @@ function obtenerSugerencia() {
     const boton = document.getElementById("btn-carrito");
     const titulo = document.getElementById("titulo-recomendacion");
 
-    if (data.estado === "sin_historial") {
+       if (data.estado === "sin_historial") {
       // Mostrar mensaje 
-      const contenedor = document.getElementById("tarjeta-sugerencia");
-      contenedor.style.display = "flex";
-      contenedor.innerHTML = `
-        <div style="text-align:center; padding: 20px;">
-          <h2 style="margin-bottom:10px;">   🔍 Aún no hay recomendaciones</h2>
-          <p>${data.mensaje}</p>
-          <img src="https://media.gettyimages.com/id/165604356/es/vector/pan-redondo.jpg?s=612x612&w=gi&k=20&c=rpEWUW_3LPEb-RUkHePrZ9howUHgX2oSaItfHejHsVI=" alt="Pan esperando" style="max-width: 200px; margin-top: 10px;">
-        </div>
-      `;
-      return;
-    }
+      const tarjeta = document.getElementById("seccion-sugerencias");
+  tarjeta.style.display = "flex";
+  tarjeta.innerHTML = ""; // Limpia contenido previo
+
+  const color = window.configuracionGlobal.color_primario || "#6c1b2d";
+  const fondo = tinycolor(color).lighten(35).toHexString();
+  const borde = tinycolor(color).darken(10).toString();
+  const sombra = tinycolor(color).setAlpha(0.25).toRgbString();
+
+  // Crear el contenedor del mensaje
+  const mensaje = document.createElement("div");
+  mensaje.style.cssText = `
+    background: ${fondo};
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 6px 18px ${sombra};
+    border: 1px solid ${borde};
+    max-width: 400px;
+    margin: 0 auto;
+    text-align: center;
+    font-family: 'Segoe UI', sans-serif;
+  `;
+  mensaje.innerHTML = `
+    <div style="text-align:center; padding: 25px; background-color: #dff2fb; border-radius: 15px;">
+    <h2 style="margin-bottom: 10px; font-size: 1.8rem; color: #2c6580;">
+      <i class="fas fa-search"></i> Aún no hay recomendaciones
+    </h2>
+    <p style="margin-bottom: 20px; font-size: 1rem;">
+      Compra 5 productos para poder darte sugerencias deliciosas </i>
+    </p>
+    <i class="fas fa-bread-slice" style="font-size: 80px; color: #a67847;"></i>
+  </div>
+  `;
+
+  tarjeta.appendChild(mensaje); // Lo insertas dentro de la tarjeta
+  return;
+}
 
     
 
