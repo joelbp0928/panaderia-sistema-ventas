@@ -167,21 +167,21 @@ function validarFormulario({ nombre, precio, stock, categoria, ingredientes, ima
     const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     const MAX_SIZE_BYTES = 2 * 1024 * 1024;
 
-   /* if (!nombre || isNaN(precio) || isNaN(stock)) {
-        mostrarToast("⚠️ Todos los campos son obligatorios", "warning");
-        return false;
-    }
-*/
+    /* if (!nombre || isNaN(precio) || isNaN(stock)) {
+         mostrarToast("⚠️ Todos los campos son obligatorios", "warning");
+         return false;
+     }
+ */
     if (categoria === "" || categoria === "Seleccionar Categoría") {
         mostrarToast("⚠️ Por favor selecciona una categoría", "warning");
         marcarErrorCampo("product-category", "⚠️ Por favor selecciona una categoría")
         return false;
     }
 
-   /* if (ingredientes.length === 0) {
-        mostrarToast("⚠️ Debes seleccionar al menos un ingrediente", "warning");
-        return false;
-    }*/
+    /* if (ingredientes.length === 0) {
+         mostrarToast("⚠️ Debes seleccionar al menos un ingrediente", "warning");
+         return false;
+     }*/
 
     if (imagenFile) {
         if (!ALLOWED_TYPES.includes(imagenFile.type)) {
@@ -909,53 +909,65 @@ async function mostrarDetallesProducto(idProducto) {
         const { data: producto, error } = await supabase
             .from("productos")
             .select(`
-            nombre, precio, stock, categoria_id, imagen_url, fecha_registro, precio_unitario,
-            productos_ingredientes:productos_ingredientes(ingrediente_id, cantidad_usada, precio_cantidad_usada),
-            categorias:categoria_id(nombre)
-        `)
+                nombre, precio, stock, categoria_id, imagen_url, fecha_registro, precio_unitario,
+                productos_ingredientes:productos_ingredientes(ingrediente_id, cantidad_usada, precio_cantidad_usada),
+                categorias:categoria_id(nombre)
+            `)
             .eq("id", idProducto)
             .single();
 
         if (error) throw error;
 
+        // Función helper para formatear precios
+        const formatearPrecio = (valor) => {
+            if (valor === null || valor === undefined || isNaN(valor)) return "N/D";
+            return `$${parseFloat(valor).toFixed(2)}`;
+        };
+
         // Llenar el modal con los datos del producto
-        document.getElementById("detalle-producto-nombre").innerText = producto.nombre;
-        document.getElementById("detalle-producto-precio").innerText = `$${producto.precio.toFixed(2)}`;
-        document.getElementById("detalle-producto-stock").innerText = producto.stock;
-        document.getElementById("detalle-producto-categoria").innerText = producto.categorias?.nombre || "Sin categoría";
-        document.getElementById("detalle-producto-fecha-registro").innerText = formatearFecha(producto.fecha_registro);
-        document.getElementById("detalle-producto-costo-unitario").innerText = `$${producto.precio_unitario.toFixed(2)}`;
-        // Mostrar imagen
-        document.getElementById("detalle-producto-imagen").src = producto.imagen_url;
+        document.getElementById("detalle-producto-nombre").innerText = producto.nombre || "N/D";
+        document.getElementById("detalle-producto-precio").innerText = formatearPrecio(producto.precio);
+        document.getElementById("detalle-producto-stock").innerText = producto.stock !== null ? producto.stock : "N/D";
+        document.getElementById("detalle-producto-categoria").innerText = producto.categorias?.nombre || "N/D";
+        document.getElementById("detalle-producto-fecha-registro").innerText = producto.fecha_registro ? formatearFecha(producto.fecha_registro) : "N/D";
+        document.getElementById("detalle-producto-costo-unitario").innerText = formatearPrecio(producto.precio_unitario);
+        
+        // Mostrar imagen o placeholder si no hay
+        const imgElement = document.getElementById("detalle-producto-imagen");
+        imgElement.src = producto.imagen_url || 'https://via.placeholder.com/300?text=Sin+imagen';
+        imgElement.alt = producto.nombre || "Producto sin nombre";
 
-        // Mostrar ingredientes
-        // Mostrar ingredientes
-        const ingredientes = await Promise.all(producto.productos_ingredientes.map(async (i) => {
-            // Consultar el nombre del ingrediente desde la base de datos
-            const { data: ingrediente, error: ingredienteError } = await supabase
-                .from("ingredientes")
-                .select("nombre, medida")
-                .eq("id", i.ingrediente_id)
-                .single();
+        // Manejo de ingredientes
+        if (!producto.productos_ingredientes || producto.productos_ingredientes.length === 0) {
+            document.getElementById("detalle-producto-ingredientes").innerText = "N/D";
+        } else {
+            const ingredientes = await Promise.all(producto.productos_ingredientes.map(async (i) => {
+                if (!i.ingrediente_id) return "N/D";
 
-            if (ingredienteError) {
-                console.error("Error al obtener el ingrediente:", ingredienteError);
-                return `${i.ingrediente_id}: ${i.cantidad_usada} x $${i.precio_cantidad_usada.toFixed(2)}`;  // Mostrar solo el id si falla la consulta
-            }
+                try {
+                    const { data: ingrediente, error: ingredienteError } = await supabase
+                        .from("ingredientes")
+                        .select("nombre, medida")
+                        .eq("id", i.ingrediente_id)
+                        .single();
 
-            // Formatear el ingrediente con nombre, cantidad y precio
-            return `${ingrediente.nombre}: ${i.cantidad_usada}${ingrediente.medida} x $${i.precio_cantidad_usada.toFixed(2)}`;
-        }));
+                    if (ingredienteError || !ingrediente) return "N/D";
 
-        // Unir todos los ingredientes con una coma
-        document.getElementById("detalle-producto-ingredientes").innerText = ingredientes.join(", ");
+                    return `${ingrediente.nombre || 'N/D'}: ${i.cantidad_usada || 'N/D'}${ingrediente.medida || ''} x ${formatearPrecio(i.precio_cantidad_usada)}`;
+                } catch (error) {
+                    console.error("Error al obtener el ingrediente:", error);
+                    return "N/D";
+                }
+            }));
+
+            document.getElementById("detalle-producto-ingredientes").innerText = 
+                ingredientes.filter(i => i !== "N/D").length > 0 ? ingredientes.join(", ") : "N/D";
+        }
+
         // Mostrar el modal
-        productModalDetalles.show(); // ✅ Usa la instancia global ya creada
+        productModalDetalles.show();
 
-
-        document.getElementById("btn-eliminar-producto").removeEventListener("click", eliminarProducto);
-        document.getElementById("btn-editar-producto").removeEventListener("click", editarProducto);
-        // Acción de eliminar producto
+        // Configurar botones de acciones
         document.getElementById("btn-eliminar-producto").onclick = () => eliminarProducto(idProducto);
         document.getElementById("btn-editar-producto").onclick = () => editarProducto(idProducto);
 
