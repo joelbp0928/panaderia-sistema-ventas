@@ -401,7 +401,7 @@ function renderizarProductos(productos) {
               
             if (cantidad > 0 && producto?.id) {
                 agregarProductoAlCarrito(producto.id, cantidad);
-                console.log("aqui en el cart", producto.id, cantidad)
+               // console.log("aqui en el cart", producto.id, cantidad)
             }
         });
     });

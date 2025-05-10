@@ -155,7 +155,6 @@ export async function mostrarCarrito() {
 <p class="mb-0"><i class="fas fa-dollar-sign me-1"></i> Total: <strong class="carrito-total-precio">$${total.toFixed(2)}</strong></p>
       </div>
     `;
-   // document.getElementById("hacer-pedido").classList.add("animate__animated", "animate__infinite", "animate__heartBeat");
 
     document.querySelectorAll(".actualizar-cantidad").forEach(btn => {
       btn.addEventListener("click", async () => {

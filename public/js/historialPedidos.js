@@ -159,8 +159,9 @@ export function inicializarHistorialPedidos() {
                     confirmButtonText: '<i class="fas fa-download me-1"></i> Descargar Ticket',
                     cancelButtonText: 'Cerrar',
                     reverseButtons: true,
-                    preConfirm: () => {
-                        descargarTicketDesdeHistorial(pedidoId);
+                    preConfirm: async () => {
+                        await descargarTicketDesdeHistorial(pedidoId);
+                        return false; // Evita que se cierre el modal automáticamente
                     }
                 });
 
@@ -214,6 +215,12 @@ async function obtenerTotalesProductosPorPedido(idsPedidos) {
 
 
 async function descargarTicketDesdeHistorial(pedidoId) {
+    // Mostrar spinner al inicio
+    const swalInstance = Swal.fire({
+        title: 'Generando ticket...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
     try {
         // Obtener información del pedido
         const { data: pedido, error: errorPedido } = await supabase
@@ -313,10 +320,22 @@ async function descargarTicketDesdeHistorial(pedidoId) {
         link.href = canvas.toDataURL("image/png", 1.0);
         link.download = `ticket-${pedido.codigo_ticket}.png`;
         link.click();
+        // Dentro del try, después de link.click():
+        await swalInstance.close();
+        Swal.fire({
+            icon: 'success',
+            title: 'Ticket descargado',
+            text: `El ticket ${pedido.codigo_ticket} se ha descargado correctamente`,
+            timer: 2000,
+            showConfirmButton: false
+        });
+        // Cerrar spinner después de descargar
+        await swalInstance.close();
 
         // Limpiar
         document.body.removeChild(temp);
     } catch (err) {
+        await swalInstance.close();
         mostrarToast("❌ No se pudo descargar el ticket", "error");
         console.error(err);
     }

@@ -8,35 +8,35 @@ import { configuracionGlobal } from "./config.js";
 import { getClienteActivo } from "./estado.js";
 
 export async function confirmarPedido() {
-    try {
-        const { data: user } = await supabase.auth.getUser();
-        const usuario_id = user?.user?.id;
-        if (!usuario_id) {
-            mostrarToast("Debes iniciar sesión para realizar un pedido", "warning");
-            return;
-        }
+  try {
+    const { data: user } = await supabase.auth.getUser();
+    const usuario_id = user?.user?.id;
+    if (!usuario_id) {
+      mostrarToast("Debes iniciar sesión para realizar un pedido", "warning");
+      return;
+    }
 
-        const { data: carrito, error } = await supabase
-            .from("carrito")
-            .select(`id, cantidad, productos:producto_id (id, nombre, precio)`)
-            .eq("usuario_id", usuario_id);
+    const { data: carrito, error } = await supabase
+      .from("carrito")
+      .select(`id, cantidad, productos:producto_id (id, nombre, precio)`)
+      .eq("usuario_id", usuario_id);
 
-        if (error || !carrito || carrito.length === 0) {
-            mostrarToast("Tu carrito está vacío", "warning");
-            return;
-        }
+    if (error || !carrito || carrito.length === 0) {
+      mostrarToast("Tu carrito está vacío", "warning");
+      return;
+    }
 
-        const productosSeleccionados = carrito.map(item => ({
-            id: item.productos.id,
-            nombre: item.productos.nombre,
-            cantidad: item.cantidad,
-            precio: item.productos.precio,
-            total: item.productos.precio * item.cantidad
-        }));
+    const productosSeleccionados = carrito.map(item => ({
+      id: item.productos.id,
+      nombre: item.productos.nombre,
+      cantidad: item.cantidad,
+      precio: item.productos.precio,
+      total: item.productos.precio * item.cantidad
+    }));
 
-        const total = productosSeleccionados.reduce((acc, p) => acc + p.total, 0);
+    const total = productosSeleccionados.reduce((acc, p) => acc + p.total, 0);
 
-        const resumenHTML = productosSeleccionados.map(p => `
+    const resumenHTML = productosSeleccionados.map(p => `
       <tr>
         <td>${p.nombre}</td>
         <td>${p.cantidad}</td>
@@ -45,43 +45,43 @@ export async function confirmarPedido() {
       </tr>
     `).join("");
 
-        const { isConfirmed } = await Swal.fire({
-            title: 'Confirmar Pedido',
-            html: `
+    const { isConfirmed } = await Swal.fire({
+      title: 'Confirmar Pedido',
+      html: `
         <table class="table">
           <thead><tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Total</th></tr></thead>
           <tbody>${resumenHTML}</tbody>
           <tfoot><tr><td colspan="3"><strong>Total</strong></td><td><strong>$${total.toFixed(2)}</strong></td></tr></tfoot>
         </table>
       `,
-            icon: 'info',
-            showCancelButton: true,
-            confirmButtonText: 'Confirmar',
-            cancelButtonText: 'Cancelar'
-        });
+      icon: 'info',
+      showCancelButton: true,
+      confirmButtonText: 'Confirmar',
+      cancelButtonText: 'Cancelar'
+    });
 
-        if (!isConfirmed) return;
+    if (!isConfirmed) return;
 
-        const { data: clienteData } = await supabase
-            .from("usuarios")
-            .select("nombre")
-            .eq("id", usuario_id)
-            .maybeSingle();
+    const { data: clienteData } = await supabase
+      .from("usuarios")
+      .select("nombre")
+      .eq("id", usuario_id)
+      .maybeSingle();
 
-        const nombreCliente = clienteData?.nombre || "Cliente";
+    const nombreCliente = clienteData?.nombre || "Cliente";
 
-        const pedido = await guardarPedido(productosSeleccionados, usuario_id, "cliente");
-        if (!pedido) return;
+    const pedido = await guardarPedido(productosSeleccionados, usuario_id, "cliente");
+    if (!pedido) return;
 
-        await supabase.from("carrito").delete().eq("usuario_id", usuario_id);
-        mostrarToast("Pedido realizado con éxito", "success");
+    await supabase.from("carrito").delete().eq("usuario_id", usuario_id);
+    mostrarToast("Pedido realizado con éxito", "success");
 
-        await mostrarCarrito();
+    await mostrarCarrito();
 
-        const ticketContenido = document.getElementById("ticket-visual");
-        const color = configuracionGlobal.color_primario || "#6c1b2d";
-console.log(pedido.estado);
-        ticketContenido.innerHTML = `
+    const ticketContenido = document.getElementById("ticket-visual");
+    const color = configuracionGlobal.color_primario || "#6c1b2d";
+
+    ticketContenido.innerHTML = `
         <div class="ticket-impresion animate__animated animate__fadeInDown" style="max-width: 320px; background: white; font-family: 'Courier New', monospace; border: 2px dashed ${color}; padding: 16px; border-radius: 12px;">
           <div class="text-center mb-2">
             <h5 style="margin: 4px 0; color: ${color};">${configuracionGlobal.nombre_empresa}</h5>
@@ -101,7 +101,7 @@ console.log(pedido.estado);
             <strong><i class="fas fa-coins me-1"></i>Total</strong>
             <strong>$${pedido.total}</strong>
           </div>
-          <div class="text-center mt-3" id="qr-pedido"></div>
+        <div class="text-center mt-3" id="qr-pedido" style="display: flex; justify-content: center;"></div>
         
           <div class="alert alert-warning mt-3 p-2 text-start" style="font-size: 0.68rem;">
             <i class="fas fa-info-circle me-1 text-warning"></i>
@@ -118,52 +118,59 @@ console.log(pedido.estado);
                 <i class="fas fa-star text-warning me-1"></i>Gracias por tu preferencia
             </p>
         </div>`;
-        
 
-        const modal = new bootstrap.Modal(document.getElementById("modalTicket"));
-        modal.show();
 
-        const audio = new Audio('./sounds/print.mp3');
-        audio.volume = 0.7;
-        audio.play();
+    const modal = new bootstrap.Modal(document.getElementById("modalTicket"));
+    modal.show();
 
-        modal._element.addEventListener('shown.bs.modal', () => {
-            new QRCode(document.getElementById("qr-pedido"), {
-                text: pedido.codigo_ticket,
-                width: 100,
-                height: 100
-            });
+    const audio = new Audio('./sounds/print.mp3');
+    audio.volume = 0.7;
+    audio.play();
+
+    modal._element.addEventListener('shown.bs.modal', () => {
+      // Limpiar el contenedor del QR antes de generar uno nuevo
+      const qrContainer = document.getElementById("qr-pedido");
+      qrContainer.innerHTML = ''; // Esto limpia cualquier QR anterior
+
+      // Generar el nuevo QR
+      new QRCode(qrContainer, {
+        text: pedido.codigo_ticket,
+        width: 100,
+        height: 100,
+        colorDark: color, // Opcional: usar el color primario para el QR
+        colorLight: "#ffffff"
+      });
+    });
+    
+    document.getElementById("btn-descargar-ticket").onclick = async () => {
+      const ticketElement = document.querySelector("#ticket-visual .ticket-impresion");
+
+      if (!ticketElement) {
+        mostrarToast("❌ Ticket no encontrado", "error");
+        return;
+      }
+
+      try {
+        const canvas = await html2canvas(ticketElement, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: false,
+          logging: false
         });
 
-        document.getElementById("btn-descargar-ticket").onclick = async () => {
-            const ticketElement = document.querySelector("#ticket-visual .ticket-impresion");
-          
-            if (!ticketElement) {
-              mostrarToast("❌ Ticket no encontrado", "error");
-              return;
-            }
-          
-            try {
-              const canvas = await html2canvas(ticketElement, {
-                scale: 2,
-                useCORS: true,
-                allowTaint: false,
-                logging: false
-              });
-          
-              const link = document.createElement("a");
-              link.href = canvas.toDataURL("image/png", 1.0);
-              link.download = `ticket-${pedido.codigo_ticket}.png`;
-              link.click();
-            } catch (error) {
-              console.error("❌ Error al generar imagen del ticket:", error);
-              mostrarToast("Error al descargar el ticket", "error");
-            }
-          };
-          
+        const link = document.createElement("a");
+        link.href = canvas.toDataURL("image/png", 1.0);
+        link.download = `ticket-${pedido.codigo_ticket}.png`;
+        link.click();
+      } catch (error) {
+        console.error("❌ Error al generar imagen del ticket:", error);
+        mostrarToast("Error al descargar el ticket", "error");
+      }
+    };
 
-    } catch (err) {
-        console.error("Error al confirmar el pedido:", err);
-        mostrarToast("Error al confirmar el pedido", "error");
-    }
+
+  } catch (err) {
+    console.error("Error al confirmar el pedido:", err);
+    mostrarToast("Error al confirmar el pedido", "error");
+  }
 }
