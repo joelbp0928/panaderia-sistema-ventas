@@ -934,15 +934,54 @@ async function mostrarDetallesProducto(idProducto) {
         
         // Mostrar imagen o placeholder si no hay
         const imgElement = document.getElementById("detalle-producto-imagen");
-        imgElement.src = producto.imagen_url || 'https://via.placeholder.com/300?text=Sin+imagen';
+        imgElement.src = producto.imagen_url || '';
         imgElement.alt = producto.nombre || "Producto sin nombre";
 
-        // Manejo de ingredientes
+        // Manejo de ingredientes - Lista desplegable mejorada
+        const ingredientesContainer = document.getElementById("detalle-producto-ingredientes");
+        ingredientesContainer.innerHTML = ''; // Limpiar contenedor
+
         if (!producto.productos_ingredientes || producto.productos_ingredientes.length === 0) {
-            document.getElementById("detalle-producto-ingredientes").innerText = "N/D";
+            ingredientesContainer.innerHTML = '<div class="alert alert-info mt-3">No hay ingredientes registrados</div>';
         } else {
+            // Crear botón para mostrar/ocultar ingredientes
+            const toggleButton = document.createElement("button");
+            toggleButton.className = "btn btn-outline-custom btn-sm mb-3 btn-ingredientes-compact d-flex justify-content-between align-items-center";
+            toggleButton.innerHTML = `
+                <span class="me-1">Ingredientes (${producto.productos_ingredientes.length})  </span>
+                <i class="fas fa-chevron-down"></i>
+            `;
+            toggleButton.setAttribute("type", "button");
+            toggleButton.setAttribute("data-bs-toggle", "collapse");
+            toggleButton.setAttribute("data-bs-target", "#ingredientesCollapse");
+            toggleButton.setAttribute("aria-expanded", "false");
+            toggleButton.setAttribute("aria-controls", "ingredientesCollapse");
+            
+            // Crear contenedor colapsable
+            const collapseDiv = document.createElement("div");
+            collapseDiv.className = "collapse mt-2";
+            collapseDiv.id = "ingredientesCollapse";
+            
+            // Crear tabla de ingredientes
+            const table = document.createElement("table");
+            table.className = "table table-sm table-borderless";
+            
+            // Crear encabezados de tabla
+            const thead = document.createElement("thead");
+            thead.innerHTML = `
+                <tr class="border-bottom">
+                    <th class="fw-normal text-muted">Ingrediente</th>
+                    <th class="fw-normal text-muted text-end">Cantidad</th>
+                    <th class="fw-normal text-muted text-end">Costo</th>
+                </tr>
+            `;
+            
+            // Crear cuerpo de tabla
+            const tbody = document.createElement("tbody");
+            
+            // Obtener detalles de cada ingrediente
             const ingredientes = await Promise.all(producto.productos_ingredientes.map(async (i) => {
-                if (!i.ingrediente_id) return "N/D";
+                if (!i.ingrediente_id) return null;
 
                 try {
                     const { data: ingrediente, error: ingredienteError } = await supabase
@@ -951,17 +990,76 @@ async function mostrarDetallesProducto(idProducto) {
                         .eq("id", i.ingrediente_id)
                         .single();
 
-                    if (ingredienteError || !ingrediente) return "N/D";
+                    if (ingredienteError || !ingrediente) return null;
 
-                    return `${ingrediente.nombre || 'N/D'}: ${i.cantidad_usada || 'N/D'}${ingrediente.medida || ''} x ${formatearPrecio(i.precio_cantidad_usada)}`;
+                    return {
+                        nombre: ingrediente.nombre || 'N/D',
+                        medida: ingrediente.medida || '',
+                        cantidad: i.cantidad_usada || 'N/D',
+                        costo: formatearPrecio(i.precio_cantidad_usada)
+                    };
                 } catch (error) {
                     console.error("Error al obtener el ingrediente:", error);
-                    return "N/D";
+                    return null;
                 }
             }));
 
-            document.getElementById("detalle-producto-ingredientes").innerText = 
-                ingredientes.filter(i => i !== "N/D").length > 0 ? ingredientes.join(", ") : "N/D";
+            // Filtrar ingredientes válidos y crear filas de tabla
+            ingredientes.filter(i => i !== null).forEach(ing => {
+                const row = document.createElement("tr");
+                row.className = "border-bottom";
+                row.innerHTML = `
+                    <td class="align-middle">
+                        <span class="fw-semibold">${ing.nombre}</span>
+                    </td>
+                    <td class="text-end align-middle">
+                        <span class="text-muted">${ing.cantidad} ${ing.medida}</span>
+                    </td>
+                    <td class="text-end align-middle">
+                        <span class="badge bg-primary-color rounded-pill px-2 py-1">${ing.costo}</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Calcular total
+            const total = ingredientes.reduce((sum, ing) => {
+                if (ing && ing.costo && ing.costo !== "N/D") {
+                    return sum + parseFloat(ing.costo.replace('$', ''));
+                }
+                return sum;
+            }, 0);
+
+            // Agregar fila de total
+            const totalRow = document.createElement("tr");
+            totalRow.className = "border-top";
+            totalRow.innerHTML = `
+                <td class="fw-bold pt-2">Total</td>
+                <td></td>
+                <td class="text-end fw-bold pt-2">${formatearPrecio(total)}</td>
+            `;
+            tbody.appendChild(totalRow);
+
+            // Ensamblar la tabla
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            collapseDiv.appendChild(table);
+            
+            // Ensamblar todos los elementos
+            ingredientesContainer.appendChild(toggleButton);
+            ingredientesContainer.appendChild(collapseDiv);
+
+            // Animación para el ícono del botón
+            toggleButton.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                if (this.getAttribute('aria-expanded') === 'true') {
+                    icon.classList.remove('fa-chevron-down');
+                    icon.classList.add('fa-chevron-up');
+                } else {
+                    icon.classList.remove('fa-chevron-up');
+                    icon.classList.add('fa-chevron-down');
+                }
+            });
         }
 
         // Mostrar el modal

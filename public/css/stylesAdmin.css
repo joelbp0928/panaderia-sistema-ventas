@@ -796,6 +796,92 @@ canvas {
 }
 
 
+
+/* Estilos para la lista de ingredientes */
+#ingredientesCollapse {
+  margin-top: 10px;
+}
+
+.list-group-item {
+  border-left: none;
+  border-right: none;
+  padding: 0.75rem 1.25rem;
+}
+
+/* Estilo para el botón de toggle */
+.btn-toggle-ingredientes {
+  transition: all 0.3s ease;
+}
+
+.btn-toggle-ingredientes[aria-expanded="true"] i {
+  transform: rotate(90deg);
+}
+
+/* Ajustes para los badges de costo */
+.badge-cost {
+  font-size: 0.85em;
+  min-width: 70px;
+}
+.bg-primary-color {
+  background-color: var(--primary-color);
+}
+
+
+/* Estilos para mejorar la tabla de ingredientes */
+.table-ingredientes {
+  font-size: 0.9rem;
+}
+
+.table-ingredientes th {
+  font-weight: 500;
+  color: #6c757d;
+  background-color: #f8f9fa;
+}
+
+.table-ingredientes td {
+  vertical-align: middle;
+  padding: 0.5rem;
+}
+
+/* Mejoras para el botón de toggle */
+.btn-toggle-ingredientes {
+  transition: all 0.2s ease;
+}
+
+.btn-toggle-ingredientes:hover {
+  background-color: #f8f9fa;
+}
+
+/* Ajustes para los badges */
+.badge-costo {
+  min-width: 70px;
+  font-weight: 500;
+}
+.btn-outline-custom{
+  border: 1px solid;
+  border-color: var(--primary-color-obscuro);
+}
+.alert-no-ingredientes {
+  border: 2px solid var(--primary-color-obscuro);
+}
+
+/* Botón compacto para ingredientes */
+.btn-ingredientes-compact {
+  padding: 0.25rem 0.75rem !important;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  width: fit-content;
+  margin-bottom: 12px;
+}
+
+.btn-ingredientes-compact i {
+  font-size: 0.8rem;
+}
+.btn-ingredientes-compact:hover {
+  border-color: var(--primary-color-obscuro);
+  transform: scale(1.02);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
 /* Ajustar el tamaño de las gráficas de productos y categorías 
 #top-products-chart, #sales-by-category-chart {
   max-width: 100%;
