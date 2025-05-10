@@ -942,7 +942,7 @@ async function mostrarDetallesProducto(idProducto) {
         ingredientesContainer.innerHTML = ''; // Limpiar contenedor
 
         if (!producto.productos_ingredientes || producto.productos_ingredientes.length === 0) {
-            ingredientesContainer.innerHTML = '<div class="alert alert-info mt-3">No hay ingredientes registrados</div>';
+            ingredientesContainer.innerHTML = '<div class="alert btn-outline-custom mt-3">No hay ingredientes registrados</div>';
         } else {
             // Crear botón para mostrar/ocultar ingredientes
             const toggleButton = document.createElement("button");
