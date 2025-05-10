@@ -153,8 +153,9 @@ export async function cargarConfiguracion() {
             .single();
 
         if (error) throw error;
-
-        window.configuracionGlobal = data; // Guarda los datos en una variable global accesible
+        
+        configuracionGlobal = data; 
+        //window.configuracionGlobal = data; // Guarda los datos en una variable global accesible
 
         // Actualizar logo
         document.getElementById('logo-image').src = data.logo_url || ''; // Default logo if not found
