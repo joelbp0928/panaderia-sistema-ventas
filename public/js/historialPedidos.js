@@ -62,11 +62,11 @@ export function inicializarHistorialPedidos() {
           <div id="grupo-${i}" class="grupo-pedidos collapse-fecha mt-2">
             ${lista.map(p => `
               <div class="border-bottom py-2 pedido-item" style="cursor: pointer;" data-id="${p.id}">
+                <div><i class="fa-solid fa-ticket-simple"></i><strong> ${p.codigo_ticket}</strong></div>
                 <div class="d-flex justify-content-between align-items-center">
-                  <div><i class="fa-solid fa-ticket-simple"></i><strong> ${p.codigo_ticket}</strong></div>
-                  <div><span class="badge bg-${obtenerColorEstado(p.estado)} text-capitalize"><i class="fas fa-circle me-1 small"></i>${p.estado}</span></div>
+                    <div class="text-muted small mt-1"><i class="fas fa-clock me-1"></i>${new Date(p.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                    <div><span class="badge bg-${obtenerColorEstado(p.estado)} text-capitalize"><i class="fas fa-circle me-1 small"></i>${p.estado}</span></div>
                 </div>
-                <div class="text-muted small mt-1"><i class="fas fa-clock me-1"></i>${new Date(p.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                 <div class="d-flex justify-content-between mt-1">
                   <div><i class="fas fa-dollar-sign me-1"></i>${p.total}</div>
                   <div><i class="fas fa-boxes me-1"></i>${totalesProductos[p.id] || 0} producto(s)</div>
@@ -344,7 +344,8 @@ async function descargarTicketDesdeHistorial(pedidoId) {
 function obtenerColorEstado(estado) {
     switch (estado.toLowerCase()) {
         case 'pendiente': return 'warning';
-        case 'pagado': return 'success';
+        case 'preparacion': return 'info';
+        case 'empacado': return 'success';
         case 'cancelado': return 'danger';
         default: return 'secondary';
     }
