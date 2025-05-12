@@ -9,6 +9,7 @@ import { registrarCliente } from "./registro-cliente.js";
 import { iniciarSesionCliente, verificarSesionCliente, cerrarSesionCliente } from "./auth-cliente.js"; // ✅ Nuevo auth-cliente
 import { iniciarSesionGeneral } from './auth-general.js';
 import { inicializarHistorialPedidos } from "./historialPedidos.js";
+import { obtenerSugerencia } from './sugerencias.js';
 
 
 import "./forgot-password.js";
@@ -24,6 +25,7 @@ window.onload = async function () {
         if (clienteVerificado) {
            // console.log("Cliente verificado - Inicializando carrito");
             const carritoBtn = document.getElementById("carrito-btn");
+            obtenerSugerencia(); 
 
             if (carritoBtn) {
                 const popover = new bootstrap.Popover(carritoBtn, {
