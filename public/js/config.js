@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Escuchar cambios en tiempo real del input
     const inputBusqueda = document.getElementById("busqueda-productos");
     if (!inputBusqueda) {
-        console.log("Elemento busqueda-productos no encontrado - omitiendo carga de barra de busqueda de productos");
+      //  console.log("Elemento busqueda-productos no encontrado - omitiendo carga de barra de busqueda de productos");
         return;
     }else{
         inputBusqueda.addEventListener("input", async function () {
@@ -40,7 +40,7 @@ async function cargarPromociones() {
 
         // Verificar si los elementos existen
         if (!promotionsSection || !promoCarousel || !promoSlider) {
-            console.log("Elementos de promociones no encontrados - omitiendo carga");
+           // console.log("Elementos de promociones no encontrados - omitiendo carga");
             return;
         }
 
@@ -199,7 +199,7 @@ function aplicarColorPrimario(color) {
 async function cargarCategorias() {
     const categoryButtonsContainer = document.getElementById("category-buttons");
     if (!categoryButtonsContainer) {
-        console.log("Elemento category-buttons no encontrado - omitiendo carga de Categorias");
+      //  console.log("Elemento category-buttons no encontrado - omitiendo carga de Categorias");
         return;
     }
     try {
