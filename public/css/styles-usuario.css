@@ -81,8 +81,8 @@ header {
 
 #seccion-sugerencias{
   background-color: var(--primary-color);
-  padding: 30px 20px;
-  border-radius: 25px;
+  padding: 20px 70px;
+  border-radius: 2% 50%;
   box-shadow:
     0 12px 25px rgba(0, 0, 0, 0.35),
     0 20px 50px rgba(0, 0, 0, 0.25);  /* sombra doble para más profundidad */
@@ -90,21 +90,25 @@ header {
   margin: 60px auto 0 auto;
   text-align: center;
   transition: all 0.3s ease;
+  
 }
 
 #seccion-sugerencias:hover {
   transform: scale(1.05);
   box-shadow: 0 0 50px var(--primary-color);
+  transform: rotate(3deg);
+  transition-timing-function: ease-in-out;
 }
 
 
 #titulo-recomendacion{
   text-align: center;
-  margin-top: 40px;
+  margin-top: 20px;
   font-family: 'Segoe UI', sans-serif;
   box-shadow:
     0 12px 25px rgba(0, 0, 0, 0.35),
     0 20px 50px rgba(0, 0, 0, 0.25);  /* sombra doble para más profundidad */
+  
 }
 
 #titulo-recomendacion {
@@ -114,30 +118,28 @@ header {
   margin: 0 auto;
   background-color: var(--primary-color);
   padding: 10px 20px;
-  border-radius: 16px;
   box-shadow:
     0 12px 25px rgba(0, 0, 0, 0.35),
     0 20px 50px rgba(0, 0, 0, 0.25);  /* sombra doble para más profundidad */
-  font-size: 0.9rem;
-  font-weight: 400;
+  font-size: 0.1rem;
+  font-weight: 200;
   color: #5b3e1d;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   max-width: fit-content;
   transition: background-color 0.3s ease;
   background-color: var(--light-color); /* o tu color actual */
   border: 2px solid white;
-  border-radius: 15px;
+  border-radius: 2% 50%;
   padding: 10px 20px;
   
 }
-
 
 /* sugerencia */
 .tarjeta-horizontal {
   display: flex;
   align-items: center;
   background-color: #fff8dc;
-  border-radius: 12px;
+  border-radius: 2% 20%;
   box-shadow:
     0 12px 25px rgba(0, 0, 0, 0.35),
     0 20px 50px rgba(0, 0, 0, 0.25); /* sombra doble para más profundidad */
@@ -151,15 +153,14 @@ header {
   
 }
 
+.tarjeta-horizontal:hover {
+   border-radius: 2% 20%;
+  transform: rotate(15deg);
+  transition-timing-function: ease-in-out;  
+}
 #tarjeta-sugerencia.mostrar {
   opacity: 1;
   transform: translateY(0);
-}
-
-
-.tarjeta-horizontal:hover {
-  transform: scale(1.01);
-  
 }
 
 .tarjeta-horizontal img {
@@ -168,7 +169,7 @@ header {
   object-fit: cover;
   border-radius: 10px;
   flex-shrink: 0;
-  
+  border-radius: 2% 50%;
 }
 
 .contenido-pan {
@@ -201,6 +202,7 @@ header {
 #btn-carrito:hover {
   background-color: #732d91;
 }
+
 
 /* 📂 Categorías */
 #categories {
