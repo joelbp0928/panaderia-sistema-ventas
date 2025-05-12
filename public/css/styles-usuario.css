@@ -810,3 +810,8 @@ footer {
 .grupo-pedidos {
   overflow-y: auto; /* Habilitar desplazamiento si es necesario */
 }
+@media (max-width: 767.98px) {
+  .popover {
+      display: none !important;
+  }
+}

@@ -23,11 +23,13 @@ window.onload = async function () {
 
         // Solo inicializamos el carrito si hay un cliente verificado
         if (clienteVerificado) {
-           // console.log("Cliente verificado - Inicializando carrito");
+            // console.log("Cliente verificado - Inicializando carrito");
             const carritoBtn = document.getElementById("carrito-btn");
-            obtenerSugerencia(); 
+            obtenerSugerencia();
 
             if (carritoBtn) {
+                // Verificar si el dispositivo tiene un ancho de pantalla mayor a 768px
+                const mediaQuery = window.matchMedia('(min-width: 768px)');
                 const popover = new bootstrap.Popover(carritoBtn, {
                     trigger: 'hover',
                     placement: 'bottom',
@@ -42,7 +44,7 @@ window.onload = async function () {
             inicializarCarrito();
             inicializarHistorialPedidos();
         } else {
-           // console.log("No hay cliente verificado - Carrito no disponible");
+            // console.log("No hay cliente verificado - Carrito no disponible");
         }
 
         cargarProductos();
