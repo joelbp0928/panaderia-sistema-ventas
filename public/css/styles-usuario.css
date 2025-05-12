@@ -153,6 +153,7 @@ header {
   
 }
 
+
 .tarjeta-horizontal:hover {
    border-radius: 2% 20%;
   transform: rotate(15deg);
@@ -162,6 +163,10 @@ header {
   opacity: 1;
   transform: translateY(0);
 }
+
+
+
+
 
 .tarjeta-horizontal img {
   width: 120px;
@@ -201,6 +206,48 @@ header {
 
 #btn-carrito:hover {
   background-color: #732d91;
+}
+
+#btn-otra-sugerencia,#btn-filtro-alergenos {
+  background-color: #fff8dc;
+  color: #6d4c41;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: 20px;
+
+}
+#btn-otra-sugerencia::after,
+#btn-otra-sugerencia::before,
+#btn-filtro-alergenos::after,
+#btn-filtro-alergenos::before{
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, var(--primary-color), #00ffff);
+  bottom: -5px;
+  left: 0;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s ease-out;
+  border-radius: 2% 20%;
+}
+
+
+#btn-otra-sugerencia::before,
+#btn-filtro-alergenos::before{
+  top: -5px;
+  transform-origin: left;
+}
+
+#btn-otra-sugerencia:hover::after,
+#btn-otra-sugerencia:hover::before,
+#btn-filtro-alergenos:hover::after,
+#btn-filtro-alergenos:hover::before {
+  transform: scaleX(1);
+
 }
 
 
