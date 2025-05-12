@@ -78,24 +78,6 @@ header {
 }
 
 /* texto sugerencia */
-#titulo-recomendacion {
-  text-align: center;
-  margin-top: 40px;
-  font-family: 'Segoe UI', sans-serif;
-}
-
-#titulo-recomendacion h2 {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: #6d4c41;
-  background: linear-gradient(90deg, #fff3e0, #ffe0b2);
-  display: inline-block;
-  padding: 10px 24px;
-  border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-/* texto sugerencia */
 
 #seccion-sugerencias{
   background-color: var(--primary-color);
@@ -111,10 +93,10 @@ header {
 }
 
 #seccion-sugerencias:hover {
-  transform: scale(1.01);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-  transition: all 0.3s ease;
+  transform: scale(1.05);
+  box-shadow: 0 0 50px var(--primary-color);
 }
+
 
 #titulo-recomendacion{
   text-align: center;
