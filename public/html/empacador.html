@@ -21,62 +21,79 @@
   <body>
     <!-- Contenedor Principal -->
     <div id="packer-screen">
-      <header id="company-header" class="d-flex justify-content-between align-items-center p-2 shadow-sm" style="background-color: var(--primary-color-obscuro); color: white;">
+      <header
+        id="company-header"
+        class="d-flex justify-content-between align-items-center p-2 shadow-sm"
+        style="background-color: var(--primary-color-obscuro); color: white"
+      >
         <!-- Logo y contador -->
         <div class="d-flex align-items-center gap-3">
           <img src="" alt="Logo de la empresa" id="logo-image" />
-          
-          <span id="contador-pedidos-hoy" class="badge rounded-pill text-bg-light px-3 py-2 shadow-sm">
+
+          <span
+            id="contador-pedidos-hoy"
+            class="badge rounded-pill text-bg-light px-3 py-2 shadow-sm"
+          >
             <i class="fa-solid fa-truck"></i> Hoy: 0 pedidos
           </span>
-          <button id="orders-btn" class="btn btn-danger position-relative d-none">
+          <button
+            id="orders-btn"
+            class="btn btn-danger position-relative d-none"
+          >
             <i class="fa-solid fa-bell"></i> Nuevos pedidos
-            <span id="order-notification" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">
+            <span
+              id="order-notification"
+              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark"
+            >
               ¡1!
             </span>
           </button>
-          
         </div>
-      
+
         <!-- Nombre del empleado -->
         <div class="d-flex align-items-center gap-2">
           <i class="fa-solid fa-user-circle fa-lg"></i>
           <span id="employee-name" class="fw-bold">Sesión: </span>
         </div>
-      
+
         <!-- Botón hamburguesa -->
         <button
           class="btn text-white"
           data-bs-toggle="offcanvas"
           data-bs-target="#menuLateral"
           aria-label="Menú"
-          style="background-color: var(--primary-color);"
+          style="background-color: var(--primary-color)"
         >
           <i class="fa-solid fa-bars"></i>
         </button>
       </header>
       <div class="offcanvas offcanvas-end" tabindex="-1" id="menuLateral">
-        <div class="offcanvas-header">
-          <h5 class="offcanvas-title">
-            <i class="fa-solid fa-gear"></i> Menú
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        <div class="offcanvas-header side-header">
+          <h5 class="offcanvas-title"><i class="fa-solid fa-gear"></i> Menú</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="offcanvas"
+          ></button>
         </div>
         <div class="offcanvas-body">
-          <button class="btn btn-outline-secondary w-100 mb-2" id="open-history-btn">
+          <button
+            class="btn btn-outline-secondary w-100 mb-2"
+            id="open-history-btn"
+          >
             <i class="fa-solid fa-clock-rotate-left"></i> Ver Historial
           </button>
           <button class="btn btn-outline-danger w-100" id="logout-btn">
             <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
           </button>
           <hr />
-        <!--  <small class="text-muted">Más funciones próximamente...</small>-->
+          <!--  <small class="text-muted">Más funciones próximamente...</small>-->
         </div>
       </div>
-      
+
       <!-- Panel lateral -->
       <div id="history-sidebar" class="offcanvas offcanvas-end" tabindex="-1">
-        <div class="offcanvas-header">
+        <div class="offcanvas-header side-header">
           <h5 class="offcanvas-title">
             <i class="fa-solid fa-clock-rotate-left"></i> Historial de Pedidos
           </h5>
@@ -115,11 +132,16 @@
                   class="form-select form-select-sm filtro-animado"
                 >
                   <option value="">Todos</option>
-                  <option value="pendiente">Pendiente</option>
+                  <option value="preparacion">Preparación</option>
+                  <option value="empacado">Empacado</option>
                   <option value="pagado">Pagado</option>
+                  <option value="cancelado">Cancelado</option>
                 </select>
               </div>
-              <button id="btn-aplicar-filtros" class="btn btn-sm btn-primary">
+              <button
+                id="btn-aplicar-filtros"
+                class="btn btn-sm btn-primary category-btn"
+              >
                 <i class="fa-solid fa-magnifying-glass"></i> Buscar
               </button>
             </div>
@@ -137,35 +159,224 @@
           </ul>
         </div>
       </div>
-      <div class="modal fade" id="detallePedidoModal">
-        <div class="modal-dialog modal-sm">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">🧾 Detalle del Pedido</h5>
+
+      <!-- Modal para ver detalles del pedido -->
+      <div
+        class="modal fade"
+        id="detallePedidoModal"
+        tabindex="-1"
+        aria-labelledby="detallePedidoModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content animate__animated animate__fadeIn">
+            <!-- Encabezado del modal -->
+            <div class="modal-header text-white">
+              <h5 class="modal-title" id="detallePedidoModalLabel">
+                <i class="fa-solid fa-box-open"></i> Detalles del Pedido
+              </h5>
               <button
                 type="button"
                 class="btn-close"
                 data-bs-dismiss="modal"
+                aria-label="Close"
               ></button>
             </div>
 
+            <!-- Cuerpo del modal -->
             <div class="modal-body">
-              <table class="table table-sm">
-                <thead>
+              <h6 class="mt-2">
+                <i class="fa-solid fa-receipt"></i> Ticket:
+                <span id="codigo-ticket"></span>
+              </h6>
+              <h6>
+                <i class="fa-solid fa-calendar-days"></i> Fecha del Pedido:
+                <span id="fecha-pedido"></span>
+              </h6>
+              <h6>
+                <i class="fa-solid fa-user"></i> Cliente:
+                <span id="cliente-nombre"></span>
+              </h6>
+              <table class="table table-striped">
+                <thead class="thead-dark">
                   <tr>
                     <th>Producto</th>
-                    <th>Cant</th>
-                    <th>P.Unit</th>
+                    <th>Cant.</th>
+                    <th>Precio Unit.</th>
                     <th>Total</th>
                   </tr>
                 </thead>
-                <tbody id="detalle-pedido-body"></tbody>
+                <tbody id="detalle-pedido-body">
+                  <!-- Los detalles de los productos se llenarán aquí dinámicamente -->
+                </tbody>
               </table>
+            </div>
+
+            <!-- Pie del modal -->
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                <i class="fa-solid fa-times"></i> Cerrar
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                id="btn-reimprimir-ticket"
+              >
+                <i class="fa-solid fa-print"></i> Reimprimir Ticket
+              </button>
             </div>
           </div>
         </div>
       </div>
-      <div id="notifications-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1100; width: 300px;"></div>
+      <!-- Boton de Notificaciones-->
+      <div
+        id="notifications-container"
+        class="position-fixed top-0 end-0 p-3"
+        style="z-index: 1100; width: 300px"
+      ></div>
+      <!-- Sidebar para mostrar los pedidos pendientes -->
+      <div
+        class="offcanvas offcanvas-start"
+        tabindex="-1"
+        id="ordersSidebar"
+        aria-labelledby="ordersSidebarLabel"
+      >
+        <div class="offcanvas-header side-header">
+          <h5 class="offcanvas-title">
+            <i class="fa-solid fa-box-open"></i> Pedidos Pendientes
+          </h5>
+          <button
+            type="button"
+            class="btn-close text-light"
+            data-bs-dismiss="offcanvas"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="offcanvas-body">
+          <div
+            id="badge-pendientes"
+            class="text-muted mb-2"
+            style="display: none"
+          >
+            <i class="fa-solid fa-list-check"></i>
+            <span id="cantidad-pendientes">0</span> pedidos pendientes
+          </div>
+          <ul id="lista-pendientes" class="list-group">
+            <!-- Aquí se cargan los pedidos pendientes -->
+          </ul>
+        </div>
+      </div>
+      <!-- Modal Detalles del Pedido Pendiente -->
+      <div
+        class="modal fade"
+        id="detallePedidoModalPendiente"
+        tabindex="-1"
+        aria-labelledby="detallePedidoModalPendienteLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="detallePedidoModalPendienteLabel">
+                <i class="fa-solid fa-box-open"></i> Detalles del Pedido
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <!-- Información del cliente y fecha -->
+              <div id="pedido-info" class="mb-3">
+                <h6>
+                  <strong><i class="fa-solid fa-user"></i> Cliente:</strong>
+                  <span id="cliente-nombreP"></span>
+                </h6>
+                <h6>
+                  <strong
+                    ><i class="fa-solid fa-calendar-days"></i> Fecha y
+                    Hora:</strong
+                  >
+                  <span id="fecha-hora"></span>
+                </h6>
+              </div>
+
+              <!-- Estado del Pedido -->
+              <div class="mb-3">
+                <strong
+                  ><i class="fa-solid fa-traffic-light"></i> Estado:</strong
+                >
+                <span id="estado-pedido-texto"></span>
+                <i id="estado-pedido-icon" class="fa-2x"></i>
+              </div>
+
+              <!-- Botón para cambiar estado -->
+              <button id="btn-cambiar-estado" class="btn w-100">
+                Cambiar a Preparación
+              </button>
+
+              <!-- Botón para cancelar el pedido -->
+              <button
+                id="btn-cancelar-pedido"
+                class="btn btn-danger ms-2 btn-cancelar"
+              >
+                Cancelar Pedido
+              </button>
+
+              <!-- Tabla de productos -->
+              <div class="table-responsive mt-4">
+                <table class="table table-sm table-striped">
+                  <thead>
+                    <tr>
+                      <th><i class="fa-solid fa-cookie-bite"></i> Producto</th>
+                      <th><i class="fa-solid fa-hashtag"></i> Cantidad</th>
+                      <th>Precio Unitario</th>
+                      <th><i class="fa-solid fa-money-bill-wave"></i> Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="detalle-pedidoP-body">
+                    <!-- Los detalles de los productos se llenarán aquí dinámicamente -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Resumen del pedido -->
+              <div id="pedido-resumen" class="mt-4">
+                <h5>
+                  <strong>Total Productos: </strong
+                  ><span id="total-productos"></span>
+                </h5>
+                <h5>
+                  <strong>Total Pedido: </strong><span id="total-pedido"></span>
+                </h5>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Cerrar
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                id="print-ticket-btnP"
+              >
+                <i class="fa-solid fa-print"></i> Imprimir Ticket
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Contenido Principal -->
       <div id="content">
         <!-- Listado de productos seleccionados -->
@@ -317,13 +528,14 @@
     <footer>
       <p id="footer-company-name"></p>
     </footer>
+    <script type="module" src="../js/empacador.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Importa tinycolor2 desde un CDN -->
     <script src="https://cdn.jsdelivr.net/npm/tinycolor2@1.4.2/dist/tinycolor-min.js"></script>
-
-    <script type="module" src="../js/empacador.js"></script>
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   </body>
 </html>

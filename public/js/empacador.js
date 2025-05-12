@@ -11,6 +11,21 @@ let selectedProductId = null; // ID del producto seleccionado para editar la can
 let editQuantityModal = null; // Variable global para guardar la instancia
 let cantidadPedidosActual = 0; // Para comparar si aumentó
 let realtimeChannel = null;
+let pedidoActual = null;
+let productosDelPedido = [];
+
+// Colores para los estados de los pedidos
+const estadoColores = {
+    'pendiente': 'bg-warning',  // Naranja para pendiente
+    'preparacion': 'bg-info',  // Azul para en preparación
+    'empacado': 'bg-success',  // Verde para empacado
+    'cancelado': 'bg-danger',  // Rojo para cancelado
+};
+
+// Función para aplicar el color y el texto según el estado
+function obtenerColorEstado(estado) {
+    return estadoColores[estado] || 'bg-secondary';  // Predeterminado si no está definido
+}
 
 // Iniciar la aplicación cuando el DOM esté listo
 window.onload = async function () {
@@ -38,13 +53,12 @@ async function initializeApp() {
 // Configurar event listeners
 function setupEventListeners() {
     document.getElementById("logout-btn").addEventListener("click", cerrarSesion);
-    document.getElementById("orders-btn").addEventListener("click", () => {
-        mostrarToast("Hay pedidos nuevos. ¡Revísalos!", "info");
+    // Función para manejar el clic en el botón de nuevos pedidos
+    document.getElementById('orders-btn').addEventListener('click', async () => {
+        await mostrarPedidosPendientes();
     });
-    // ... otros event listeners
 }
 
-// Configura el canal de suscripción
 // Configura el canal de suscripción
 function setupRealtime() {
     if (realtimeChannel) {
@@ -62,14 +76,14 @@ function setupRealtime() {
                 filter: 'estado=eq.pendiente'
             },
             (payload) => {
-              //  console.log('Nuevo pedido pendiente detectado:', payload);
+                //  console.log('Nuevo pedido pendiente detectado:', payload);
                 if (payload.new?.origen === 'cliente') {
                     handleNewOrder(payload.new);
                 }
             }
         )
         .subscribe((status, err) => {
-           // console.log('Estado de suscripción:', status);
+            // console.log('Estado de suscripción:', status);
             if (err) {
                 console.error('Error en la suscripción:', err);
                 // Reconectar después de 5 segundos si hay error
@@ -95,13 +109,90 @@ const handleNewOrder = (pedido) => {
     // 4. Muestra alerta en la interfaz
     displayOrderAlert(pedido);
 };
+// Función auxiliar para obtener la cantidad de productos
+async function obtenerCantidadProductos(pedidoId) {
+    const { data: productos, error } = await supabase
+        .from('pedido_productos')
+        .select('cantidad')
+        .eq('pedido_id', pedidoId);
 
-const showNotification = (pedido) => {
-    if (Notification.permission === 'granted') {
-        new Notification('Nuevo Pedido', {
-            body: `Ticket ${pedido.codigo_ticket} - $${pedido.total}`,
-            icon: `${configuracionGlobal.logo_url}`
-        });
+    if (error) throw error;
+    return productos?.reduce((total, item) => total + item.cantidad, 0) || 0;
+}
+
+// Función de alerta modificada
+async function displayOrderAlert(pedido) {
+    const container = document.getElementById('notifications-container');
+    if (!container) return;
+
+    try {
+        const cantidadProductos = await obtenerCantidadProductos(pedido.id);
+
+        const alertId = `alert-${Date.now()}`;
+        const alertHTML = `
+            <div id="${alertId}" class="alert alert-warning alert-dismissible fade show">
+                <strong>Nuevo Pedido</strong>
+                <p>Ticket: ${pedido.codigo_ticket}</p>
+                <p>Productos: ${cantidadProductos}</p>
+                <p>Total: $${pedido.total?.toFixed(2) || '0.00'}</p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+
+        container.insertAdjacentHTML('afterbegin', alertHTML);
+
+        setTimeout(() => {
+            const alertElement = document.getElementById(alertId);
+            if (alertElement) {
+                const bsAlert = new bootstrap.Alert(alertElement);
+                bsAlert.close();
+            }
+        }, 10000);
+
+    } catch (error) {
+        console.error('Error al mostrar alerta:', error);
+        // Mostrar versión básica sin cantidad de productos
+        const alertId = `alert-${Date.now()}`;
+        container.insertAdjacentHTML('afterbegin', `
+            <div id="${alertId}" class="alert alert-warning alert-dismissible fade show">
+                <strong>Nuevo Pedido</strong>
+                <p>Ticket: ${pedido.codigo_ticket}</p>
+                <p>Total: $${pedido.total?.toFixed(2) || '0.00'}</p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `);
+
+        setTimeout(() => {
+            const alertElement = document.getElementById(alertId);
+            if (alertElement) {
+                const bsAlert = new bootstrap.Alert(alertElement);
+                bsAlert.close();
+            }
+        }, 10000);
+    }
+}
+
+const showNotification = async (pedido) => {
+    try {
+        console.log("Pedido recibido para notificación:", pedido);
+
+        const cantidadProductos = await obtenerCantidadProductos(pedido.id);
+
+        if (Notification.permission === 'granted') {
+            new Notification('Nuevo Pedido', {
+                body: `Ticket ${pedido.codigo_ticket} - ${cantidadProductos} producto${cantidadProductos !== 1 ? 's' : ''} - Total: $${pedido.total.toFixed(2)}`,
+                icon: `${configuracionGlobal.logo_url || ''}`
+            });
+        }
+    } catch (error) {
+        console.error("Error al mostrar notificación:", error);
+        // Notificación alternativa si falla la consulta
+        if (Notification.permission === 'granted') {
+            new Notification('Nuevo Pedido', {
+                body: `Ticket ${pedido.codigo_ticket} - Total: $${pedido.total.toFixed(2)}`,
+                icon: `${configuracionGlobal.logo_url || ''}`
+            });
+        }
     }
 };
 
@@ -109,6 +200,28 @@ const playNotificationSound = () => {
     const audio = new Audio('../sounds/notificacionM.mp3');
     audio.play().catch(e => console.log('Error al reproducir sonido:', e));
 };
+
+// Función para actualizar el contador de pedidos pendientes hoy
+async function actualizarContadorPedidosHoy() {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session.user.id;
+    const hoy = getLocalDateString(); // → "2025-04-13"
+    const { count, error: countError } = await supabase
+        .from("pedidos")
+        .select("*", { count: "exact", head: true })
+        .eq("empleado_id", userId)
+     //   .eq("origen", "empacador")
+        .gte("fecha", `${hoy}T00:00:00`)
+        .lte("fecha", `${hoy}T23:59:59`);
+
+    if (countError) {
+        console.warn("❌ No se pudo contar pedidos:", countError.message);
+        return;
+    }
+
+    const badge = document.getElementById("contador-pedidos-hoy");
+    badge.innerHTML = `<i class="fa-solid fa-truck me-1"></i> Hoy: ${count} pedido${count === 1 ? "" : "s"}`;
+}
 
 // Mostrar modal para editar cantidad
 function showEditQuantityModal(productId, currentQuantity) {
@@ -163,8 +276,6 @@ async function cargarCategorias() {
 
 async function cargarProductosPorCategoria(categoriaId) {
     try {
-        console.log("Cargando productos de categoría: ", categoriaId);
-
         // Obtener productos filtrados por categoría desde Supabase
         const { data, error } = await supabase
             .from("productos")
@@ -188,10 +299,10 @@ async function cargarProductosPorCategoria(categoriaId) {
         backCard.style.cursor = "pointer";
         backCard.style.fontSize = "20px"; // Ajustamos el tamaño del texto y el icono
         backCard.innerHTML = `
-            <div class="product">
-                <i class="fa-solid fa-rotate-left" style="font-size: 24px;"></i> <!-- Ícono de regresar -->
-            </div>
-        `;
+                <div class="product">
+                    <i class="fa-solid fa-rotate-left" style="font-size: 24px;"></i> <!-- Ícono de regresar -->
+                </div>
+            `;
         backCard.onclick = () => {
             // Limpiar los productos y volver a mostrar las categorías
             productList.innerHTML = "";
@@ -213,12 +324,12 @@ async function cargarProductosPorCategoria(categoriaId) {
                 productCard.classList.add("product-card");
 
                 productCard.innerHTML = `
-                    <div class="product">
-                        <img src="${producto.imagen_url}" alt="${producto.nombre}" class="img-fluid" />
-                        <h3>${producto.nombre}</h3>
-                        <p>$${producto.precio}</p>
-                    </div>
-                `;
+                        <div class="product">
+                            <img src="${producto.imagen_url}" alt="${producto.nombre}" class="img-fluid" />
+                            <h3>${producto.nombre}</h3>
+                            <p>$${producto.precio}</p>
+                        </div>
+                    `;
                 // Agregar el evento de clic a cada producto
                 productCard.querySelector('.product').addEventListener('click', () => {
                     agregarProducto(producto.id, producto.nombre, producto.precio); // Llamar a agregarProducto
@@ -263,10 +374,10 @@ function actualizarTabla() {
     // Si no hay productos seleccionados, mostrar mensaje
     if (productosSeleccionados.length === 0) {
         tablaProductos.innerHTML = `
-        <tr class="empty">
-            <td colspan="4">No hay productos seleccionados</td>
-        </tr>
-    `;
+            <tr class="empty">
+                <td colspan="4">No hay productos seleccionados</td>
+            </tr>
+        `;
         document.getElementById("delete-btn").style.display = "none"; // Mostrar el botón de eliminar
         // Actualizar el total en la sección de totales
         document.getElementById("total").textContent = "$0.00";
@@ -429,78 +540,73 @@ document.getElementById("finalize-btn").addEventListener("click", async function
     const codigoTicket = pedidoGuardado.codigo_ticket;
 
     actualizarContadorPedidosHoy();
-    mostrarTicket(codigoTicket); // ✅ se muestra bien con el ticket real
+    mostrarTicket(codigoTicket, false, pedidoGuardado.fecha);
 });
 
-
-
 // En mostrarTicket()
-function mostrarTicket(codigoTicket) {
+function mostrarTicket(codigoTicket, esReimpresion = false, fechaDelPedido = null) {
     const ticketContent = document.getElementById("ticket-content");
     let totalGeneral = 0;
     let totalItems = 0;
+
+    // Comienza el HTML del ticket
     let ticketHTML = `
-<div style="max-width: 300px; font-family: monospace; font-size: 16px; text-align: center; color: #000;">
-    <img src="${configuracionGlobal.logo_url || ''}" alt="Logo" style="max-width: 80px; margin-bottom: 5px;" />
-    <h2 style="margin: 4px 0;">${configuracionGlobal.nombre_empresa || 'Tu Tienda'}</h2>
-    <hr style="border-top: 1px dashed #aaa;" />
-    
-    <p style="margin: 2px 0;"><i class="fa-solid fa-calendar-days"></i> ${new Date().toLocaleString()}</p>
-    <p style="margin: 2px 0;"><i class="fa-solid fa-user"></i> ${document.getElementById("employee-name").textContent.replace("Sesión: ", "")}</p>
-    <p style="margin: 2px 0;"><i class="fa-solid fa-ticket"></i> ${codigoTicket}</p>
+    <div style="max-width: 300px; font-family: monospace; font-size: 16px; text-align: center; color: #000;">
+        ${esReimpresion ? '<p><strong>REIMPRESIÓN</strong></p>' : ''}
+        <img src="${configuracionGlobal.logo_url || ''}" alt="Logo" style="max-width: 80px; margin-bottom: 5px;" />
+        <h2 style="margin: 4px 0;">${configuracionGlobal.nombre_empresa || 'Tu Tienda'}</h2>
+        <hr style="border-top: 1px dashed #aaa;" />
+        <p style="margin: 2px 0;"><i class="fa-solid fa-calendar-days"></i> ${new Date(fechaDelPedido || Date.now()).toLocaleString()}</p>
+        <p style="margin: 2px 0;"><i class="fa-solid fa-user"></i> ${document.getElementById("employee-name").textContent.replace("Sesión: ", "")}</p>
+        <p style="margin: 2px 0;"><i class="fa-solid fa-ticket"></i> ${codigoTicket}</p>
+        <hr style="border-top: 1px dashed #aaa;" />
+        <table style="width: 100%; font-size: 16px; margin-top: 5px; text-align: left;">
+            <thead>
+                <tr>
+                    <th style="padding-bottom: 3px;">Producto</th>
+                    <th style="text-align: center;">Cant</th>
+                    <th style="text-align: right;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
 
-    <hr style="border-top: 1px dashed #aaa;" />
-
-    <table style="width: 100%; font-size: 16px; margin-top: 5px; text-align: left;">
-        <thead>
-            <tr>
-                <th style="padding-bottom: 3px;">Producto</th>
-                <th style="text-align: center;">Cant</th>
-                <th style="text-align: right;">Total</th>
-            </tr>
-        </thead>
-        <tbody>
-`;
-
-
+    // Agregar cada producto al ticket
     productosSeleccionados.forEach(producto => {
         const total = (producto.precio * producto.cantidad).toFixed(2);
         totalGeneral += parseFloat(total);
         totalItems += producto.cantidad;
 
         ticketHTML += `
-        <tr>
-            <td>${producto.nombre}</td>
-            <td style="text-align: center;">${producto.cantidad}</td>
-            <td style="text-align: right;">$${total}</td>
-        </tr>
-    `;
+            <tr>
+                <td>${producto.nombre}</td>
+                <td style="text-align: center;">${producto.cantidad}</td>
+                <td style="text-align: right;">$${total}</td>
+            </tr>
+        `;
     });
 
+    // Finalizar el ticket
     ticketHTML += `
-        </tbody>
-    </table>
-
-    <hr style="border-top: 2px dashed #aaa;" />
-
-    <p style="margin: 4px 0; font-size: 16px;"><strong><i class="fa-solid fa-boxes-stacked"></i> Productos:</strong> ${totalItems}</p>
-    <p style="margin: 4px 0; font-size: 16px;"><strong><i class="fa-solid fa-cash-register"></i> Total:</strong> $${totalGeneral.toFixed(2)}</p>
-
-    <div style="margin-top: 10px;">
-        <svg id="barcode"></svg>
+            </tbody>
+        </table>
+        <hr style="border-top: 2px dashed #aaa;" />
+        <p style="margin: 4px 0; font-size: 16px;"><strong><i class="fa-solid fa-boxes-stacked"></i> Productos:</strong> ${totalItems}</p>
+        <p style="margin: 4px 0; font-size: 16px;"><strong><i class="fa-solid fa-cash-register"></i> Total:</strong> $${totalGeneral.toFixed(2)}</p>
+        <div style="margin-top: 10px;">
+            <svg id="barcode"></svg>
+        </div>
+        <p style="margin-top: 8px;"><i class="fa-solid fa-circle-info"></i> Pendiente de pago</p>
+        <p style="margin: 6px 0;">Conserva este ticket para cualquier aclaración.</p>
+        <hr style="border-top: 1px dashed #aaa;" />
+        <p style="font-style: italic;">Gracias por tu compra <i class="fa-solid fa-heart"></i></p>
     </div>
+    `;
 
-    <p style="margin-top: 8px;"><i class="fa-solid fa-circle-info"></i> Pendiente de pago</p>
-    <p style="margin: 6px 0;">Conserva este ticket para cualquier aclaración.</p>
-
-    <hr style="border-top: 1px dashed #aaa;" />
-    <p style="font-style: italic;">Gracias por tu compra <i class="fa-solid fa-heart"></i></p>
-</div>
-`;
-
+    // Insertar el HTML del ticket en el contenedor
     ticketContent.innerHTML = ticketHTML;
 
-    // Renderizar código de barras
+    // Renderizar el código de barras
     setTimeout(() => {
         JsBarcode("#barcode", `T-${Date.now()}`, {
             format: "CODE128",
@@ -510,6 +616,7 @@ function mostrarTicket(codigoTicket) {
         });
     }, 100);
 
+    // Mostrar el modal para imprimir el ticket
     new bootstrap.Modal(document.getElementById('ticketModal')).show();
 }
 
@@ -534,60 +641,60 @@ document.getElementById("print-ticket-btn").addEventListener("click", function (
     const ticketContent = document.getElementById("ticket-content").innerHTML;
     const printWindow = window.open('', '', 'height=500, width=500');
     printWindow.document.write(`
-        <html>
-          <head>
-            <title>Ticket</title>
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
-            <style>
-               body {
-    font-family: monospace;
-    font-size: 16px; /* AUMENTADO */
-    color: #000;
-    text-align: center;
-    margin: 0;
-    padding: 10px;
-  }
-
-  table {
-    width: 100%;
-    font-size: 15px; /* AUMENTADO */
-    text-align: left;
-    border-collapse: collapse;
-  }
-
-  td, th {
-    padding: 6px; /* MÁS ESPACIO */
-  }
-
-  svg {
-    margin-top: 15px;
-  }
-
-  h2 {
-    font-size: 18px; /* MÁS GRANDE EL TÍTULO */
-    margin: 6px 0;
-  }
-
-  p {
-    margin: 6px 0;
-    font-size: 15px;
-  }
-
-  hr {
-    border: none;
-    border-top: 1px dashed #aaa;
-    margin: 10px 0;
-  }
-
-  @media print {
-    body {
-      width: 80mm;
+            <html>
+            <head>
+                <title>Ticket</title>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+                <style>
+                body {
+        font-family: monospace;
+        font-size: 16px; /* AUMENTADO */
+        color: #000;
+        text-align: center;
+        margin: 0;
+        padding: 10px;
     }
-  }
-            </style>
-          </head>
-          <body>
-        `);
+
+    table {
+        width: 100%;
+        font-size: 15px; /* AUMENTADO */
+        text-align: left;
+        border-collapse: collapse;
+    }
+
+    td, th {
+        padding: 6px; /* MÁS ESPACIO */
+    }
+
+    svg {
+        margin-top: 15px;
+    }
+
+    h2 {
+        font-size: 18px; /* MÁS GRANDE EL TÍTULO */
+        margin: 6px 0;
+    }
+
+    p {
+        margin: 6px 0;
+        font-size: 15px;
+    }
+
+    hr {
+        border: none;
+        border-top: 1px dashed #aaa;
+        margin: 10px 0;
+    }
+
+    @media print {
+        body {
+        width: 80mm;
+        }
+    }
+                </style>
+            </head>
+            <body>
+            `);
     printWindow.document.write(ticketContent);
     printWindow.document.write('</body></html>');
     printWindow.document.close();
@@ -601,7 +708,7 @@ document.getElementById("print-ticket-btn").addEventListener("click", function (
 });
 
 
-
+/*
 async function actualizarContadorPedidosHoy() {
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     if (sessionError || !sessionData.session) return;
@@ -626,105 +733,39 @@ async function actualizarContadorPedidosHoy() {
 
 
 }
-
-// Función para manejar el clic en "Pedidos"
-function showOrders() {
-    mostrarToast("Mostrando los pedidos pendientes.");
-}
-
+*/
+// Función principal que maneja la apertura del historial
 document.getElementById("open-history-btn").addEventListener("click", async () => {
     new bootstrap.Offcanvas(document.getElementById("history-sidebar")).show();
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData.session.user.id;
-    // Obtener fecha actual en formato YYYY-MM-DD
-    const hoy = getLocalDateString();
-    // Establecer valores por defecto en los inputs de fecha
-    // document.getElementById("filtro-fecha-desde").value = `${hoy}T00:00:00`;
-    // document.getElementById("filtro-fecha-hasta").value = `${hoy}T00:00:00`;
+    const hoy = getLocalDateString(); // Asumo que esto devuelve 'YYYY-MM-DD'
 
-    const { data: pedidos, error } = await supabase
-        .from("pedidos")
-        .select("id, fecha, total, codigo_ticket, estado")
-        .eq("empleado_id", userId)
-        .gte("fecha", `${hoy}T00:00:00`)
-        .lte("fecha", `${hoy}T23:59:59`)
-        .order("fecha", { ascending: false });
+    // Establecer valores por defecto en los inputs de fecha (SOLO FECHA, sin hora)
+    document.getElementById("filtro-fecha-desde").value = hoy;
+    document.getElementById("filtro-fecha-hasta").value = hoy;
 
-    const badgeResultados = document.getElementById("badge-resultados");
-    const cantidadPedidos = document.getElementById("cantidad-pedidos");
-
-    const lista = document.getElementById("lista-historial");
-
-    if (!pedidos.length) {
-        badgeResultados.style.display = "none";
-        lista.innerHTML = `<li class="list-group-item text-muted">No se encontraron pedidos con los filtros.</li>`;
-        return;
-    }
-    // Si hay pedidos, actualiza el badge
-    cantidadPedidos.textContent = pedidos.length;
-    badgeResultados.style.display = "block";
-    setTimeout(() => badgeResultados.classList.add("show"), 50);
-
-    lista.innerHTML = ""; // Limpiar primero
-
-    if (error) {
-        lista.innerHTML = `<li class="list-group-item text-danger">Error al cargar pedidos</li>`;
-        return;
-    }
-
-    if (!pedidos.length) {
-        lista.innerHTML = `<li class="list-group-item text-muted">No hay pedidos registrados.</li>`;
-        return;
-    }
-
-    pedidos.forEach(pedido => {
-        const item = document.createElement("li");
-        item.classList.add("list-group-item", "list-group-item-action", "fade-in");
-        item.innerHTML = `
-        <div>
-          <strong><i class="fa-solid fa-ticket"></i> ${pedido.codigo_ticket}</strong><br>
-          <small><i class="fa-solid fa-calendar-day"></i> ${new Date(pedido.fecha).toLocaleString()}</small><br>
-          <small><i class="fa-solid fa-dollar-sign"></i> $${pedido.total}</small> · 
-          <span class="badge bg-${pedido.estado === 'pendiente' ? 'warning' : 'success'}">${pedido.estado}</span>
-        </div>
-      `;
-        item.onclick = () => verDetallePedido(pedido.id);
-        lista.appendChild(item);
+    // Cargar pedidos del día actual (aquí SÍ usamos fecha+hora para la consulta)
+    await cargarPedidos({
+        desde: `${hoy}T00:00:00`,
+        hasta: `${hoy}T23:59:59`
     });
-
 });
 
-async function verDetallePedido(pedidoId) {
-    const { data, error } = await supabase
-        .from("pedido_productos")
-        .select("cantidad, precio_unitario, productos(nombre)")
-        .eq("pedido_id", pedidoId);
-
-    if (error) return mostrarToast("Error al cargar detalles", "error");
-
-    const detalleHTML = data.map(item => `
-      <tr>
-        <td>${item.productos.nombre}</td>
-        <td>${item.cantidad}</td>
-        <td>$${item.precio_unitario.toFixed(2)}</td>
-        <td>$${(item.cantidad * item.precio_unitario).toFixed(2)}</td>
-      </tr>
-    `).join("");
-
-    // Mostrar en modal
-    document.getElementById("detalle-pedido-body").innerHTML = detalleHTML;
-    new bootstrap.Modal(document.getElementById("detallePedidoModal")).show();
-}
-
-document.getElementById("btn-aplicar-filtros").addEventListener("click", cargarHistorialPedidos);
-
-async function cargarHistorialPedidos() {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData.session.user.id;
-
+// Manejador del botón de filtros
+document.getElementById("btn-aplicar-filtros").addEventListener("click", async () => {
     const desde = document.getElementById("filtro-fecha-desde").value;
     const hasta = document.getElementById("filtro-fecha-hasta").value;
-    const estado = document.getElementById("filtro-estado").value;
+
+    await cargarPedidos({
+        desde: desde ? `${desde}T00:00:00` : null,
+        hasta: hasta ? `${hasta}T23:59:59` : null,
+        estado: document.getElementById("filtro-estado").value || null
+    });
+});
+
+// Función modularizada para cargar pedidos
+async function cargarPedidos(filtros = {}) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session.user.id;
 
     let query = supabase
         .from("pedidos")
@@ -732,62 +773,229 @@ async function cargarHistorialPedidos() {
         .eq("empleado_id", userId)
         .order("fecha", { ascending: false });
 
-    if (desde) query = query.gte("fecha", `${desde}T00:00:00`);
-    if (hasta) query = query.lte("fecha", `${hasta}T23:59:59`);
-    if (estado) query = query.eq("estado", estado);
+    // Aplicar filtros si existen
+    if (filtros.desde) query = query.gte("fecha", filtros.desde);
+    if (filtros.hasta) query = query.lte("fecha", filtros.hasta);
+    if (filtros.estado) query = query.eq("estado", filtros.estado);
 
     const { data: pedidos, error } = await query;
+
+    // Manejo de UI común
     const badgeResultados = document.getElementById("badge-resultados");
     const cantidadPedidos = document.getElementById("cantidad-pedidos");
-
     const lista = document.getElementById("lista-historial");
+
+    // Limpiar lista
     lista.innerHTML = "";
 
-    if (!pedidos.length) {
+    // Manejo de errores y casos vacíos
+    if (error) {
+        lista.innerHTML = `<li class="list-group-item text-danger">Error al cargar pedidos</li>`;
         badgeResultados.style.display = "none";
-        lista.innerHTML = `<li class="list-group-item text-muted">No se encontraron pedidos con los filtros.</li>`;
         return;
     }
 
-    // Si hay pedidos, actualiza el badge
+    if (!pedidos.length) {
+        badgeResultados.style.display = "none";
+        lista.innerHTML = `<li class="list-group-item text-muted"><i class="fa-solid fa-magnifying-glass"></i> No se encontraron pedidos</li>`;
+        return;
+    }
+
+    // Actualizar badge de resultados
     cantidadPedidos.textContent = pedidos.length;
     badgeResultados.style.display = "block";
     setTimeout(() => badgeResultados.classList.add("show"), 50);
 
+    // Renderizar pedidos (función separada para mayor claridad)
+    renderizarPedidos(pedidos, lista);
+}
 
-
-    if (error) {
-        lista.innerHTML = `<li class="list-group-item text-danger">Error al cargar pedidos</li>`;
-        return;
-    }
-
-    if (!pedidos.length) {
-        lista.innerHTML = `<li class="list-group-item text-muted"><i class="fa-solid fa-magnifying-glass"></i>No se encontraron pedidos con los filtros.</li>`;
-        return;
-    }
+// Función para renderizar los pedidos de forma consistente
+function renderizarPedidos(pedidos, contenedor) {
+    // Agrupar pedidos por fecha
+    const pedidosPorDia = {};
 
     pedidos.forEach(pedido => {
-        const item = document.createElement("li");
-        item.classList.add("list-group-item", "list-group-item-action", "fade-in");
-        item.innerHTML = `
-      <div>
-        <strong><i class="fa-solid fa-ticket"></i> ${pedido.codigo_ticket}</strong><br>
-        <small><i class="fa-solid fa-calendar-day"></i> ${new Date(pedido.fecha).toLocaleString()}</small><br>
-        <small><i class="fa-solid fa-dollar-sign"></i> $${pedido.total}</small> · 
-        <span class="badge bg-${pedido.estado === 'pendiente' ? 'warning' : 'success'}">${pedido.estado}</span>
-      </div>
-    `;
-        item.onclick = () => verDetallePedido(pedido.id);
-        lista.appendChild(item);
+        const fechaPedido = new Date(pedido.fecha);
+        const fechaKey = fechaPedido.toLocaleDateString('es-MX', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        if (!pedidosPorDia[fechaKey]) {
+            pedidosPorDia[fechaKey] = [];
+        }
+        pedidosPorDia[fechaKey].push(pedido);
+    });
+
+    // Crear contenedor de acordeón
+    const accordion = document.createElement('div');
+    accordion.className = 'accordion';
+    accordion.id = 'pedidos-accordion';
+    contenedor.appendChild(accordion);
+
+    // Renderizar cada grupo de fecha como un ítem del acordeón
+    Object.entries(pedidosPorDia).forEach(([fecha, pedidosDelDia], index) => {
+        // Crear elemento del acordeón
+        const accordionItem = document.createElement('div');
+        accordionItem.className = 'accordion-item';
+
+        // Crear encabezado del acordeón
+        const accordionHeader = document.createElement('h2');
+        accordionHeader.className = 'accordion-header';
+        accordionHeader.id = `heading-${index}`;
+
+        const accordionButton = document.createElement("button");
+        accordionButton.className = 'accordion-button collapsed';
+        accordionButton.type = 'button';
+        accordionButton.dataset.bsToggle = 'collapse';
+        accordionButton.dataset.bsTarget = `#collapse-${index}`;
+        accordionButton.setAttribute('aria-expanded', 'false');
+        accordionButton.setAttribute('aria-controls', `collapse-${index}`);
+        accordionButton.innerHTML = `
+            <span class="fw-bold">${fecha}</span>
+            <span class="badge bg-secondary ms-2">${pedidosDelDia.length} pedidos</span>
+        `;
+
+        accordionHeader.appendChild(accordionButton);
+
+        // Crear cuerpo del acordeón
+        const accordionCollapse = document.createElement('div');
+        accordionCollapse.id = `collapse-${index}`;
+        accordionCollapse.className = 'accordion-collapse collapse';
+        accordionCollapse.setAttribute('aria-labelledby', `heading-${index}`);
+        accordionCollapse.dataset.bsParent = '#pedidos-accordion';
+
+        const accordionBody = document.createElement('div');
+        accordionBody.className = 'accordion-body p-0';
+
+        // Renderizar pedidos dentro del cuerpo del acordeón
+        pedidosDelDia.forEach(pedido => {
+            const item = document.createElement('div');
+            item.className = 'list-group-item list-group-item-action border-0 rounded-0';
+
+            const badgeClass = obtenerColorEstado(pedido.estado);  // Usamos la función para el color
+            const badgeText = pedido.estado.charAt(0).toUpperCase() + pedido.estado.slice(1);  // Capitalizar el estado
+
+            item.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong><i class="fa-solid fa-ticket"></i> ${pedido.codigo_ticket}</strong>
+                        <span class="badge ${badgeClass} ms-2">${badgeText}</span>
+                    </div>
+                    <small class="text-muted">${new Date(pedido.fecha).toLocaleTimeString()}</small>
+                </div>
+                <div class="mt-1">
+                    <small><i class="fa-solid fa-dollar-sign"></i> ${pedido.total}</small>
+                </div>
+            `;
+            item.onclick = (e) => {
+                e.stopPropagation(); // Evitar que se cierre el acordeón
+                verDetallePedido(pedido.id);
+            };
+            accordionBody.appendChild(item);
+        });
+
+        accordionCollapse.appendChild(accordionBody);
+        accordionItem.appendChild(accordionHeader);
+        accordionItem.appendChild(accordionCollapse);
+        accordion.appendChild(accordionItem);
+    });
+
+    // Inicializar acordeón de Bootstrap
+    new bootstrap.Collapse(document.getElementById('pedidos-accordion'), {
+        toggle: false
     });
 }
+
+async function verDetallePedido(pedidoId) {
+    const { data, error } = await supabase
+        .from("pedido_productos")
+        .select("cantidad, precio_unitario, productos(nombre)")
+        .eq("pedido_id", pedidoId);
+
+    if (error) {
+        return mostrarToast("Error al cargar detalles", "error");
+    }
+
+    const detalleHTML = data.map(item => `
+        <tr>
+            <td><i class="fa-solid fa-cookie-bite"></i> ${item.productos?.nombre || 'N/D'}</td>
+            <td>${item.cantidad}</td>
+            <td>$${item.precio_unitario.toFixed(2)}</td>
+            <td>$${(item.cantidad * item.precio_unitario).toFixed(2)}</td>
+        </tr>
+    `).join("");
+
+    // Mostrar los detalles en el modal
+    document.getElementById("detalle-pedido-body").innerHTML = detalleHTML;
+
+    // Obtener la fecha del pedido y el nombre del cliente
+    const { data: pedido, error: errorPedido } = await supabase
+        .from('pedidos')
+        .select(`
+      *,
+      pedido_productos(
+        cantidad,
+        precio_unitario,
+        productos(nombre)
+      ),
+      clientes(
+        usuario_id,
+        usuarios:clientes_usuario_id_fkey(nombre)
+      )
+    `)
+        .eq('id', pedidoId)
+        .single();
+
+
+    if (errorPedido || !pedido) {
+        console.error("Error al obtener el pedido:", errorPedido);
+        Swal.fire({
+            icon: 'warning',
+            title: 'Pedido no encontrado',
+            text: 'Este pedido no existe o fue eliminado.',
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Entendido'
+        });
+        return;
+    }
+
+    const fecha = new Date(pedido.fecha);
+    document.getElementById("codigo-ticket").textContent = pedido.codigo_ticket || "N/D";
+    document.getElementById("fecha-pedido").textContent = fecha.toLocaleString();
+    document.getElementById("cliente-nombre").textContent = pedido.clientes?.usuarios?.nombre || "N/D";
+
+    // Guardamos para reimpresión
+    pedidoActual = pedido;
+    productosDelPedido = data.map(item => ({
+        nombre: item.productos?.nombre || "N/D",
+        cantidad: item.cantidad,
+        precio: item.precio_unitario,
+        total: item.cantidad * item.precio_unitario
+    }));
+
+    // Mostrar el modal con los detalles
+    const detallesModal = new bootstrap.Modal(document.getElementById("detallePedidoModal"));
+    detallesModal.show();
+}
+
+document.getElementById("btn-reimprimir-ticket").addEventListener("click", () => {
+    if (!pedidoActual || !productosDelPedido.length) {
+        return mostrarToast("No se puede imprimir el ticket", "error");
+    }
+
+    productosSeleccionados = [...productosDelPedido];
+    mostrarTicket(pedidoActual.codigo_ticket, true, pedidoActual.fecha);
+});
 
 
 async function inicializarPedidosPendientes() {
     const { data: pedidos, error } = await supabase
         .from("pedidos")
         .select("id")
-        .eq("estado", "pendiente")
+        .or('estado.eq.pendiente,estado.eq.preparacion') // Filtra por ambos estados
         .eq("origen", "cliente");
 
     if (error || !pedidos) return;
@@ -796,23 +1004,6 @@ async function inicializarPedidosPendientes() {
 
     if (cantidadPedidosActual > 0) {
         mostrarBotonPedidos(cantidadPedidosActual);
-    }
-}
-
-async function verificarNuevosPedidos() {
-    const { data: pedidos, error } = await supabase
-        .from("pedidos")
-        .select("id")
-        .eq("estado", "pendiente")
-        .eq("origen", "cliente");
-
-    if (error || !pedidos) return;
-
-    if (pedidos.length > cantidadPedidosActual) {
-        cantidadPedidosActual = pedidos.length;
-        mostrarBotonPedidos(pedidos.length, true);
-    } else {
-        cantidadPedidosActual = pedidos.length;
     }
 }
 
@@ -836,95 +1027,516 @@ function mostrarBotonPedidos(cantidad, notificar = false) {
     }
 }
 
-
-
-
-function mostrarNotificacionPedido(pedido) {
-    // Notificación en el navegador
-    if (Notification.permission === "granted") {
-        const notif = new Notification("🛍 Nuevo Pedido Pendiente", {
-            body: `Ticket: ${pedido.codigo_ticket}\nTotal: $${pedido.total}`,
-            icon: configuracionGlobal?.logo_url || '/icon.png',
-            tag: 'nuevo-pedido'
-        });
-        notif.onclick = () => window.focus();
-    }
-
-    // Notificación visual en la interfaz
-    const notifContainer = document.getElementById('notifications-container');
-    const notifId = `notif-${Date.now()}`;
-
-    const notifElement = document.createElement('div');
-    notifElement.id = notifId;
-    notifElement.className = 'alert alert-warning alert-dismissible fade show';
-    notifElement.innerHTML = `
-        <strong>Nuevo pedido!</strong> 
-        <div>Ticket: ${pedido.codigo_ticket}</div>
-        <div>Total: $${pedido.total}</div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-
-    notifContainer.appendChild(notifElement);
-
-    // Sonido de notificación
-    new Audio('../sounds/notificacionM.mp3').play().catch(e => console.log('Error al reproducir sonido:', e));
-
-    // Eliminar notificación después de 10 segundos
-    setTimeout(() => {
-        const element = document.getElementById(notifId);
-        if (element) {
-            const bsAlert = new bootstrap.Alert(element);
-            bsAlert.close();
-        }
-    }, 10000);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function displayOrderAlert(pedido) {
-    const container = document.getElementById('notifications-container');
-    if (!container) return;
-
-    const alertId = `alert-${Date.now()}`;
-    const alertHTML = `
-        <div id="${alertId}" class="alert alert-warning alert-dismissible fade show">
-            <strong>Nuevo Pedido</strong>
-            <p>Ticket: ${pedido.codigo_ticket}</p>
-            <p>Total: $${pedido.total}</p>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
-
-    container.insertAdjacentHTML('afterbegin', alertHTML);
-
-    // Eliminar después de 10 segundos
-    setTimeout(() => {
-        const alertElement = document.getElementById(alertId);
-        if (alertElement) {
-            const bsAlert = new bootstrap.Alert(alertElement);
-            bsAlert.close();
-        }
-    }, 10000);
-}
-
-function updatePendingOrdersCount() {
+// Función para actualizar el contador de pedidos pendientes hoy (restando)
+async function updatePendingOrdersCount(isIncrement = true) {
     const badge = document.getElementById('order-notification');
     if (badge) {
-        cantidadPedidosActual++;
+        // Si isIncrement es false, restamos el contador
+        if (isIncrement) {
+            cantidadPedidosActual++;
+        } else {
+            cantidadPedidosActual--;
+        }
+
+        // Actualizamos el contador en el badge
         badge.textContent = `¡${cantidadPedidosActual}!`;
     }
 }
+
+// Función para mostrar los pedidos pendientes en el sidebar
+async function mostrarPedidosPendientes() {
+    const { data: pedidos, error } = await supabase
+        .from("pedidos")
+        .select("id, fecha, total, codigo_ticket, estado, pedido_productos(cantidad)")
+        .or('estado.eq.pendiente,estado.eq.preparacion') // Filtra por ambos estados
+        .eq("origen", "cliente")
+        .order("fecha", { ascending: false });
+
+    if (error || !pedidos) {
+        console.error("Error al cargar los pedidos pendientes:", error);
+        return;
+    }
+
+    const contenedor = document.getElementById("lista-pendientes");
+    contenedor.innerHTML = "";
+
+    if (!pedidos.length) {
+        document.getElementById("badge-pendientes").style.display = "none";
+        contenedor.innerHTML = `<li class="list-group-item text-muted">
+        <i class="fa-solid fa-magnifying-glass"></i> No hay pedidos pendientes/en preparación
+      </li>`;
+        return;
+    }
+
+    document.getElementById("cantidad-pendientes").textContent = pedidos.length;
+    document.getElementById("badge-pendientes").style.display = "block";
+
+    const pedidosPorDia = {};
+    pedidos.forEach(pedido => {
+        const fechaKey = new Date(pedido.fecha).toLocaleDateString("es-MX", {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        });
+        if (!pedidosPorDia[fechaKey]) pedidosPorDia[fechaKey] = [];
+        pedidosPorDia[fechaKey].push(pedido);
+    });
+
+    const accordion = document.createElement("div");
+    accordion.className = "accordion";
+    accordion.id = "pendientes-accordion";
+    contenedor.appendChild(accordion);
+
+    Object.entries(pedidosPorDia).forEach(([fecha, pedidosDelDia], index) => {
+        const item = document.createElement("div");
+        item.className = "accordion-item";
+
+        const header = document.createElement("h2");
+        header.className = "accordion-header";
+        header.id = `pendiente-heading-${index}`;
+
+        const button = document.createElement("button");
+        button.className = "accordion-button collapsed";
+        button.type = "button";
+        button.dataset.bsToggle = "collapse";
+        button.dataset.bsTarget = `#pendiente-collapse-${index}`;
+        button.setAttribute("aria-expanded", "false");
+        button.setAttribute("aria-controls", `pendiente-collapse-${index}`);
+        button.innerHTML = `<span class="fw-bold">${fecha}</span>
+        <span class="badge bg-warning ms-2">${pedidosDelDia.length} pedidos</span>`;
+
+        header.appendChild(button);
+        item.appendChild(header);
+
+        const collapse = document.createElement("div");
+        collapse.className = "accordion-collapse collapse";
+        collapse.id = `pendiente-collapse-${index}`;
+        collapse.setAttribute("aria-labelledby", `pendiente-heading-${index}`);
+        collapse.dataset.bsParent = "#pendientes-accordion";
+
+        const body = document.createElement("div");
+        body.className = "accordion-body p-0";
+
+        pedidosDelDia.forEach(pedido => {
+            const cantidad = pedido.pedido_productos.reduce((t, p) => t + p.cantidad, 0);
+            const div = document.createElement("div");
+            div.className = "list-group-item list-group-item-action border-0 rounded-0";
+
+            // Determinar el color del badge según el estado
+            const badgeClass = obtenerColorEstado(pedido.estado);  // Usamos la función para el color
+            const badgeText = pedido.estado.charAt(0).toUpperCase() + pedido.estado.slice(1);  // Capitalizar el estado
+    
+            div.innerHTML = `
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <strong><i class="fa-solid fa-ticket"></i> ${pedido.codigo_ticket}</strong>
+              <span class="badge ${badgeClass} ms-2">${badgeText}</span>
+            </div>
+            <small class="text-muted">${new Date(pedido.fecha).toLocaleTimeString()}</small>
+          </div>
+          <div class="mt-1">
+            <small><i class="fa-solid fa-cookie-bite"></i> ${cantidad} productos - <i class="fa-solid fa-dollar-sign"></i> ${pedido.total}</small>
+          </div>
+        `;
+            div.onclick = () => mostrarModalDetallesPedido(pedido.id);
+            body.appendChild(div);
+        });
+
+        collapse.appendChild(body);
+        item.appendChild(collapse);
+        accordion.appendChild(item);
+    });
+
+    // Mostrar el sidebar con los pedidos
+    const sidebar = new bootstrap.Offcanvas(document.getElementById('ordersSidebar'));
+    sidebar.show();
+}
+
+// Función para mostrar el modal con los detalles del pedido pendiente
+async function mostrarModalDetallesPedido(pedidoId) {
+    try {
+        const { data: pedido, error } = await supabase
+            .from('pedidos')
+            .select(`
+                *,
+                pedido_productos(
+                    cantidad,
+                    precio_unitario,
+                    productos(nombre, imagen_url)
+                ),
+                clientes:cliente_id(
+                    *,
+                    usuarios:usuario_id(nombre, telefono)
+                ),
+                empleados:empleado_id(nombre)
+            `)
+            .eq('id', pedidoId)
+            .single();
+
+        if (error) throw error;
+        if (!pedido) throw new Error("Pedido no encontrado");
+
+        // Mostrar información básica
+        document.getElementById('cliente-nombreP').textContent =
+            pedido.clientes?.usuarios?.nombre || "N/D";
+        document.getElementById('fecha-hora').textContent =
+            new Date(pedido.fecha).toLocaleString();
+
+        // Configurar el estado del pedido
+        const estadoPedidoElem = document.getElementById('estado-pedido-texto');
+        const estadoIconoElem = document.getElementById('estado-pedido-icon');
+        const cambiarEstadoBtn = document.getElementById('btn-cambiar-estado');
+
+        // Limpiar event listeners previos
+        cambiarEstadoBtn.replaceWith(cambiarEstadoBtn.cloneNode(true));
+        const nuevoBoton = document.getElementById('btn-cambiar-estado');
+
+        // Configurar el estado actual
+        configurarEstadoPedido(pedido.estado, nuevoBoton, estadoPedidoElem, estadoIconoElem);
+
+        // Agregar nuevo event listener
+        nuevoBoton.addEventListener('click', async () => {
+            await manejarCambioEstado(pedidoId, pedido.estado, estadoPedidoElem, estadoIconoElem, nuevoBoton);
+        });
+
+        // Generar tabla de productos
+        const tbody = document.getElementById('detalle-pedidoP-body');
+        tbody.innerHTML = '';
+
+        let totalProductos = 0;
+        let totalPedido = 0;
+
+        (pedido.pedido_productos || []).forEach(item => {
+            const subtotal = item.cantidad * (item.precio_unitario || 0);
+            totalProductos += item.cantidad;
+            totalPedido += subtotal;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <div class="d-flex align-items-center">
+                        ${item.productos?.imagen_url ?
+                    `<img src="${item.productos.imagen_url}" alt="${item.productos.nombre}" 
+                            class="me-2 rounded" style="width:40px;height:40px;object-fit:cover;">` :
+                    `<i class="fas fa-box me-2"></i>`}
+                        ${item.productos?.nombre || 'Producto desconocido'}
+                    </div>
+                </td>
+                <td class="text-center">${item.cantidad}</td>
+                <td class="text-end">$${(item.precio_unitario || 0).toFixed(2)}</td>
+                <td class="text-end">$${subtotal.toFixed(2)}</td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        // Actualizar totales
+        document.getElementById('total-productos').textContent = totalProductos;
+        document.getElementById('total-pedido').textContent = `$${totalPedido.toFixed(2)}`;
+
+        // Guardar datos para impresión
+        pedidoActual = pedido;
+        productosDelPedido = (pedido.pedido_productos || []).map(item => ({
+            nombre: item.productos?.nombre || 'N/D',
+            cantidad: item.cantidad,
+            precio: item.precio_unitario || 0,
+            total: item.cantidad * (item.precio_unitario || 0)
+        }));
+
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('detallePedidoModalPendiente'));
+        modal.show();
+
+    } catch (error) {
+        console.error('Error al cargar pedido:', error);
+        mostrarToast('Error al cargar detalles del pedido', 'error');
+    }
+}
+
+// Función para configurar el estado visual del pedido
+function configurarEstadoPedido(estado, boton, textoElem, iconoElem) {
+    boton.disabled = false; // Asegurarse que el botón esté habilitado
+
+    // Limpiar clases previas
+    boton.classList.remove('pendiente', 'preparacion', 'empacado');
+    boton.classList.add(estado); // Añadir la clase correspondiente al estado
+
+    switch (estado) {
+        case 'pendiente':
+            textoElem.textContent = 'Pendiente';
+            textoElem.className = "text-warning";
+            iconoElem.className = "fa-solid fa-clock";
+            boton.textContent = 'Cambiar a Preparación';
+            boton.classList.add('btn-primary');
+            break;
+
+        case 'preparacion':
+            textoElem.textContent = 'En preparación';
+            textoElem.className = "text-primary";
+            iconoElem.className = "fa-solid fa-cogs";
+            boton.textContent = 'Cambiar a Empacado';
+            boton.classList.add('btn-success');
+            break;
+
+        case 'empacado':
+            textoElem.textContent = 'Empacado';
+            textoElem.className = "text-success";
+            iconoElem.className = "fa-solid fa-box";
+            boton.disabled = true;
+            boton.classList.add('btn-secondary');
+            break;
+
+        default:
+            textoElem.textContent = estado;
+            boton.disabled = true;
+    }
+}
+
+// Función para manejar el cambio de estado
+async function manejarCambioEstado(pedidoId, estadoActual, textoElem, iconoElem, boton) {
+    let nuevoEstado;
+
+    // Determinar el nuevo estado
+    if (estadoActual === 'pendiente') {
+        nuevoEstado = 'preparacion';
+    } else if (estadoActual === 'preparacion') {
+        nuevoEstado = 'empacado';
+    } else {
+        return;
+    }
+
+    // Obtener el empleado_id desde la sesión actual
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !sessionData.session) {
+        mostrarToast('Error al obtener la sesión del empleado', 'error');
+        return;
+    }
+    const empleadoId = sessionData.session.user.id; // Aquí asumimos que el `user.id` es el `empleado_id`
+
+    // Actualizar el estado del pedido en la base de datos
+    const { error } = await supabase
+        .from('pedidos')
+        .update({
+            estado: nuevoEstado,
+            empleado_id: empleadoId // Asignar el `empleado_id`
+        })
+        .eq('id', pedidoId);
+
+    if (error) {
+        mostrarToast('Error al actualizar el estado', 'error');
+        return;
+    }
+
+    // Actualizar la UI
+    configurarEstadoPedido(nuevoEstado, boton, textoElem, iconoElem);
+
+    // Actualizar contador si es necesario
+    if (nuevoEstado === 'empacado') {
+        await updatePendingOrdersCount(false);
+    }
+
+    // Cerrar modales si el pedido fue empacado
+    const modal = bootstrap.Modal.getInstance(document.getElementById('detallePedidoModalPendiente'));
+    modal?.hide();
+    const sidebar = bootstrap.Offcanvas.getInstance(document.getElementById('ordersSidebar'));
+    sidebar?.hide();
+
+    // Mostrar un mensaje de éxito
+    mostrarToast(`Estado cambiado a ${nuevoEstado}`, 'success');
+}
+
+// Función para cancelar el pedido
+async function cancelarPedido(pedidoId) {
+    // Mostrar mensaje de confirmación con SweetAlert
+    const { isConfirmed } = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡Este pedido será cancelado y no podrá ser recuperado!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, cancelar pedido',
+        cancelButtonText: 'Cancelar'
+    });
+    // Si el usuario confirma, proceder con la cancelación
+    if (isConfirmed) {
+        // Obtener el empleado_id desde la sesión actual
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !sessionData.session) {
+            mostrarToast('Error al obtener la sesión del empleado', 'error');
+            return;
+        }
+        const empleadoId = sessionData.session.user.id;
+
+        // Actualizar el estado del pedido a "cancelado"
+        const { error } = await supabase
+            .from('pedidos')
+            .update({
+                estado: 'cancelado',
+                empleado_id: empleadoId // Registrar quien está cancelando el pedido
+            })
+            .eq('id', pedidoId.id);
+
+        if (error) {
+            mostrarToast('Error al cancelar el pedido', 'error');
+            return;
+        }
+
+        // Actualizar la UI
+        const estadoPedidoElem = document.getElementById('estado-pedido-texto');
+        const estadoIconoElem = document.getElementById('estado-pedido-icon');
+        const cambiarEstadoBtn = document.getElementById('btn-cambiar-estado');
+
+        // Cambiar visualmente el estado
+        configurarEstadoPedido('cancelado', cambiarEstadoBtn, estadoPedidoElem, estadoIconoElem);
+
+        // Cerrar modal y sidebar
+        const modal = bootstrap.Modal.getInstance(document.getElementById('detallePedidoModalPendiente'));
+        modal?.hide();
+        const sidebar = bootstrap.Offcanvas.getInstance(document.getElementById('ordersSidebar'));
+        sidebar?.hide();
+
+        // Mostrar mensaje de éxito
+        Swal.fire(
+            'Cancelado',
+            `El pedido ${pedidoId.codigo_ticket} ha sido cancelado.`,
+            'success'
+        );
+    } else {
+        // Si el usuario cancela, no hacer nada
+       // console.log("Cancelación del pedido cancelada.");
+    }
+}
+
+// Agregar event listener al botón de cancelar pedido
+document.getElementById('btn-cancelar-pedido').addEventListener('click', async () => {
+    const pedidoId = pedidoActual.id;
+    await cancelarPedido(pedidoActual);  // Llamar a la función que cancela el pedido
+});
+
+// Función para imprimir ticket pendiente
+document.getElementById('print-ticket-btnP').addEventListener('click', function () {
+    if (!pedidoActual || !productosDelPedido.length) {
+        mostrarToast('No hay datos para imprimir', 'error');
+        return;
+    }
+
+    // Preparar el contenido del ticket
+    const fecha = new Date(pedidoActual.fecha);
+
+    const ticketHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Ticket ${pedidoActual.codigo_ticket}</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    width: 80mm;  /* Establecer el tamaño para la impresora térmica de 80mm */
+                    margin: 0;
+                    padding: 10px;
+                }
+                .header {
+                    text-align: center;
+                    margin-bottom: 10px;
+                }
+                .logo {
+                    max-width: 60px;
+                    max-height: 60px;
+                }
+                .info {
+                    margin: 5px 0;
+                    font-size: 14px;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 10px 0;
+                    font-size: 12px;  /* Reducimos el tamaño de la fuente */
+                }
+                th, td {
+                    padding: 3px 0;
+                }
+                th {
+                    text-align: left;
+                    border-bottom: 1px dashed #000;
+                }
+                .total {
+                    font-weight: bold;
+                    margin-top: 10px;
+                }
+                .footer {
+                    margin-top: 15px;
+                    text-align: center;
+                    font-size: 12px;
+                }
+                @media print {
+                    body {
+                        width: 80mm; /* Para asegurar que se ajuste al ancho de la impresora */
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <img src="${configuracionGlobal?.logo_url || ''}" class="logo" alt="Logo">
+                <h2>${configuracionGlobal?.nombre_empresa || 'Tienda'}</h2>
+            </div>
+            
+            <div class="info">
+                <strong>Ticket:</strong> ${pedidoActual.codigo_ticket}<br>
+                <strong>Fecha:</strong> ${fecha.toLocaleString()}<br>
+                <strong>Cliente:</strong> ${pedidoActual.clientes?.usuarios?.nombre || 'N/D'}<br>
+                <strong>Estado:</strong> ${pedidoActual.estado}
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Validar</th>
+                        <th>Producto</th>
+                        <th>Cant</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${productosDelPedido.map(item => `
+                        <tr>
+                            <td style="text-align: center;">
+                                <input type="checkbox" class="product-checkbox">
+                            </td>
+                            <td>${item.nombre}</td>
+                            <td>${item.cantidad}</td>
+                            <td>$${item.total.toFixed(2)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            
+            <div class="total">
+                <strong>Total Productos: </strong> ${productosDelPedido.reduce((sum, item) => sum + item.cantidad, 0)}<br>
+                <strong>Total: </strong> $${productosDelPedido.reduce((sum, item) => sum + item.total, 0).toFixed(2)}
+            </div>
+            
+            <div class="footer">
+                ${pedidoActual.notas ? `<p>Notas: ${pedidoActual.notas}</p>` : ''}
+                <p>Gracias por su compra</p>
+            </div>
+        </body>
+        </html>
+    `;
+
+    // Abrir la ventana de impresión y mostrar el contenido
+    const printWindow = window.open('', '_blank', 'height=500,width=500');
+    printWindow.document.write(ticketHTML);
+    printWindow.document.close();  // Cierra el documento para asegurarse de que todo esté cargado
+
+    // Esperar a que el contenido esté completamente cargado antes de imprimir
+    printWindow.onload = function () {
+        printWindow.print();  // Imprimir el ticket
+        printWindow.close();  // Cerrar la ventana después de imprimir
+    };
+
+    // Cerrar el modal después de imprimir
+    bootstrap.Modal.getInstance(document.getElementById('detallePedidoModalPendiente')).hide();
+});
+

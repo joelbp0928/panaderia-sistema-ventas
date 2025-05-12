@@ -521,7 +521,9 @@ header img {
     transform: translateY(0);
   }
 }
-
+.bg-orange {
+  background-color: #ff8b06 !important;
+}
 /* ⬅️ Retroceso suave */
 .fade-slide-out {
   animation: fadeSlideOut 0.3s ease-in forwards;
@@ -603,4 +605,461 @@ header button.btn:hover {
 @keyframes blink {
   0%, 100% { transform: scale(1); background-color: #ffc107; }
   50% { transform: scale(1.1); background-color: #ff5722; }
+}
+
+@media screen and (max-width: 768px) {
+  /* Ajustar el header para que ocupe toda la pantalla y sea más compacta */
+  #company-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  /* Aseguramos que las categorías y productos se muestren de manera flexible */
+  #product-categories,
+  #selected-products,
+  #totals {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  /* La tabla de productos se adapta al tamaño de la pantalla */
+  #product-table th,
+  #product-table td {
+    font-size: 0.9rem;
+  }
+
+  #product-table thead th {
+    font-size: 1rem;
+  }
+
+  #product-table tbody {
+    font-size: 0.85rem;
+  }
+
+  /* Los botones dentro del panel de categorías se adaptan a pantallas pequeñas */
+  .category-btn {
+    font-size: 0.9rem;
+    padding: 0.8rem;
+  }
+
+  /* Ajustar el panel lateral de productos seleccionados */
+  #selected-products {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+
+  /* La tabla de productos seleccionados también se hace más compacta */
+  #product-table {
+    font-size: 0.8rem;
+  }
+
+  /* El footer se adapta para ocupar el espacio sin estar fijo */
+  footer {
+    display: block;
+    margin-top: 20px;
+  }
+}
+
+/* Estilo para el modal */
+#detallePedidoModal .modal-content {
+  background-color: var(--light-color);
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+#detallePedidoModal .modal-header {
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: 600;
+}
+
+#detallePedidoModal .modal-header i {
+  margin-right: 10px;
+}
+
+#detallePedidoModal .modal-body {
+  padding: 20px;
+}
+
+#detallePedidoModal table {
+  width: 100%;
+  margin-top: 20px;
+}
+
+
+
+#detalle-pedido-body td {
+  vertical-align: middle;
+}
+
+/* Aumentar el tamaño de la imagen en la tabla */
+#detallePedidoModal img {
+  width: 100px; /* Aumentar el tamaño de la imagen */
+  height: 100px;
+  object-fit: cover;
+  margin-right: 15px; /* Separación entre la imagen y el nombre del producto */
+  border-radius: 8px; /* Opcional: hace que las imágenes sean redondeadas */
+}
+
+
+#pedido-resumen h5 {
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+#pedido-resumen span {
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: var(--primary-color-obscuro);
+}
+
+/* Resaltar las cantidades */
+#detalle-pedido-body .table td:nth-child(2) {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #d9534f; /* Color de la cantidad */
+}
+
+/* Estilo de los iconos */
+#detallePedidoModal i {
+  font-size: 1.3rem;
+}
+
+.side-header{
+  background-color: var(--primary-color);
+  color: var(--light-color)
+}
+
+/* Estilos para la agrupación por días */
+.dia-encabezado {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Efecto fade-in para los items */
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mejoras visuales para los items */
+.list-group-item {
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.list-group-item:hover {
+  border-left-color: var(--primary-color-obscuro);
+  background-color: #bfc3c7 !important;
+}
+
+.list-group-item-warning{
+  color: #007bff !important;
+}
+
+/* Animación de entrada */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate__fadeIn {
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* Estilo para los iconos en el encabezado */
+.modal-header .modal-title i {
+  margin-right: 10px;
+}
+
+/* Estilo para la tabla del detalle del pedido */
+.table th, .table td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.table-striped tbody tr:nth-child(odd) {
+  background-color: #f9f9f9;
+}
+
+/* Botones de acción */
+.modal-footer .btn {
+  transition: background-color 0.3s ease;
+}
+
+.modal-footer .btn:hover {
+  background-color: var(--primary-color-obscuro);
+}
+
+/* Ajustes para la fecha y el cliente */
+h6 {
+  font-size: 1rem;
+  color: #495057;
+}
+
+#fecha-pedido, #cliente-nombre {
+  font-weight: 600;
+}
+
+@media print {
+    body {
+        width: 80mm;  /* Asegúrate de que el ancho sea de 80mm */
+        margin: 0;
+        padding: 10px;
+    }
+
+    table {
+        width: 100%; 
+        font-size: 14px; /* Ajustar el tamaño de la fuente para adaptarse */
+        text-align: left;
+        border-collapse: collapse;
+    }
+
+    td, th {
+        padding: 3px;  /* Espaciado para que no se vea apretado */
+    }
+
+    .logo {
+        max-width: 60px; /* Ajustar el tamaño del logo */
+        max-height: 60px;
+    }
+
+    .footer {
+        font-size: 12px;  /* Ajuste en la fuente del pie de página */
+        text-align: center;
+    }
+}
+
+/* Mejorar el diseño general del modal */
+.modal-content {
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Mejorar la tabla de productos */
+table.table-sm th,
+table.table-sm td {
+    padding: 10px;
+    text-align: center;
+}
+
+/* Colores de los estados del pedido */
+#estado-pedido {
+    font-weight: bold;
+    color: #f39c12; /* Naranja por defecto */
+}
+
+.btn-warning {
+    background-color: #f39c12;
+}
+
+.btn-primary {
+    background-color: #2980b9;
+}
+
+.btn-success {
+    background-color: #27ae60;
+}
+
+/* Para cuando el botón cambia de estado */
+#btn-cambiar-estado {
+    transition: all 0.3s ease;
+    font-size: 16px;
+    padding: 12px;
+    font-weight: bold;
+}
+
+/* Agregar iconos a los productos */
+.table td img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+/* Resaltar las celdas */
+.table-sm tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Hacer la tabla responsiva */
+@media (max-width: 768px) {
+    .table-sm th, .table-sm td {
+        font-size: 12px;
+        padding: 8px;
+    }
+    .modal-dialog {
+        max-width: 100%;
+        margin: 0;
+    }
+}
+
+/* Estilos para el resumen del pedido */
+#pedido-resumen h5 {
+    font-size: 18px;
+    color: #2c3e50;
+}
+
+/* Iconos al lado de la información */
+#pedido-info h6 i {
+  font-size: 20px;
+}
+
+/* Mejorar la apariencia de los botones */
+.btn {
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: bold;
+}
+
+#pedido-info {
+    font-size: 16px;
+}
+
+/* Mejorar el diseño general del modal */
+.modal-content {
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Cambiar el color del texto según el estado */
+#estado-pedido-texto {
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+#estado-pedido-icon {
+  transition: color 0.3s ease;
+}
+
+/* Estados de pedido con diferentes colores */
+#estado-pedido-pendiente {
+  color: #f39c12; /* Amarillo */
+}
+
+#estado-pedido-preparacion {
+  color: #2980b9; /* Azul */
+}
+
+#estado-pedido-empacado {
+  color: #27ae60; /* Verde */
+}
+
+/* Botón dinámico para cambiar el estado */
+#btn-cambiar-estado {
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  padding: 12px;
+}
+
+/* Mejorar la tabla de productos */
+.table-sm th,
+.table-sm td {
+  padding: 10px;
+  text-align: center;
+}
+
+/* Hacer la tabla responsiva */
+@media (max-width: 768px) {
+  .table-sm th, .table-sm td {
+      font-size: 12px;
+      padding: 8px;
+  }
+}
+
+/* Estilos para el botón de estado */
+#btn-cambiar-estado {
+  border-radius: 15px; /* Bordes redondeados */
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Sombra suave */
+  transition: all 0.3s ease; /* Suaviza la transición */
+}
+
+/* Transición de cambio de color y tamaño al pasar el mouse */
+#btn-cambiar-estado:hover {
+  transform: scale(1.05); /* Aumenta un poco el tamaño */
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2); /* Aumenta la sombra */
+}
+
+/* Colores para cada estado con animación */
+#btn-cambiar-estado:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Botón de pendiente */
+#btn-cambiar-estado.pendiente {
+  background-color: #f1c40f;
+  color: #fff;
+}
+
+/* Botón de preparación */
+#btn-cambiar-estado.preparacion {
+  background-color: #3498db;
+  color: #fff;
+}
+
+/* Botón de empacado */
+#btn-cambiar-estado.empacado {
+  background-color: #2ecc71;
+  color: #fff;
+}
+
+/* Agregar efectos a los iconos */
+#estado-pedido-icon {
+  transition: color 0.3s ease;
+}
+
+#btn-cambiar-estado:hover #estado-pedido-icon {
+  color: #fff; /* Cambiar el color del ícono al pasar el mouse */
+}
+
+/* Estilo para el botón de cancelar pedido */
+.btn-cancelar {
+  background-color: #d33; /* Rojo fuerte para hacerlo más visible */
+  border: 2px solid #9e0000; /* Borde rojo oscuro */
+  color: white;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.3s ease-in-out; /* Suaviza la transición al pasar el mouse */
+  box-shadow: 0 4px 8px rgba(255, 0, 0, 0.5); /* Sombra roja para resaltar */
+}
+
+/* Efecto de hover: cambia el color y agrega la sombra */
+.btn-cancelar:hover {
+  background-color: #9e0000; /* Color más oscuro al pasar el mouse */
+  border-color: #c9302c; /* Borde más claro al pasar el mouse */
+  transform: scale(1.1); /* Efecto de contracción al presionar */
+  box-shadow: 0 4px 12px rgba(255, 0, 0, 0.7); /* Aumenta la sombra roja */
+}
+
+/* Efecto de focus: cuando el botón recibe foco */
+.btn-cancelar:focus {
+  outline: none; /* Quitamos el contorno predeterminado */
+  box-shadow: 0 0 10px 3px rgba(255, 0, 0, 0.7); /* Sombra intensa cuando está enfocado */
+}
+
+/* Animación cuando el botón es presionado */
+.btn-cancelar:active {
+  transform: scale(0.98); /* Efecto de contracción al presionar */
+  box-shadow: 0 4px 6px rgba(255, 0, 0, 0.4); /* Menos sombra al presionar */
 }
