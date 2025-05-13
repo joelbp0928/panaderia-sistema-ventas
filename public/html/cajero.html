@@ -67,6 +67,9 @@
           >
             <i class="fa-solid fa-clock-rotate-left"></i> Ver Historial
           </button>
+          <button class="btn btn-outline-success w-100 mb-2" id="corte-caja-btn">
+            <i class="fa-solid fa-cash-register"></i> Realizar Corte de Caja
+          </button>
           <button class="btn btn-outline-danger w-100" id="logout-btn">
             <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
           </button>
@@ -108,7 +111,10 @@
                   class="form-control form-control-sm filtro-animado"
                 />
               </div>
-              <button id="btn-aplicar-filtros" class="btn btn-sm btn-primary">
+              <button
+                id="btn-aplicar-filtros"
+                class="btn btn-sm btn-primary category-btn"
+              >
                 <i class="fa-solid fa-magnifying-glass"></i> Buscar
               </button>
             </div>
@@ -126,7 +132,7 @@
           </ul>
         </div>
       </div>
-      <!--Modal detalles del pedido-->
+      <!-- Modal detalles del pedido -->
       <div class="modal fade" id="detallePedidoModal">
         <div class="modal-dialog modal-lg">
           <div class="modal-content">
@@ -142,17 +148,47 @@
             </div>
 
             <div class="modal-body">
+              <!-- Código del ticket -->
               <p>
-                <strong>Código del Ticket:</strong>
+                <strong
+                  ><i class="fa-solid fa-qrcode"></i> Código del Ticket:</strong
+                >
                 <span id="codigo-ticket"></span>
               </p>
+
+              <!-- Empacador -->
               <p>
-                <strong>Empacador:</strong> <span id="empleado-nombre"></span>
+                <strong><i class="fa-solid fa-user-tie"></i> Empacador:</strong>
+                <span id="empleado-nombre"></span>
               </p>
+
+              <!-- Fecha de Empaque -->
               <p>
-                <strong>Fecha de Empaque:</strong>
+                <strong
+                  ><i class="fa-solid fa-calendar-day"></i> Fecha de
+                  Empaque:</strong
+                >
                 <span id="fecha-empaque"></span>
               </p>
+
+              <!-- Origen del Pedido -->
+              <p>
+                <strong
+                  ><i class="fa-solid fa-truck"></i> Origen del Pedido:</strong
+                >
+                <span id="origen-pedido"></span>
+              </p>
+
+              <!-- Cantidad de productos -->
+              <p>
+                <strong
+                  ><i class="fa-solid fa-cogs"></i> Cantidad de
+                  Productos:</strong
+                >
+                <span id="cantidad-productos"></span>
+              </p>
+
+              <!-- Tabla de productos -->
               <table class="table table-sm">
                 <thead>
                   <tr>
@@ -176,52 +212,58 @@
           </div>
         </div>
       </div>
+
       <!-- NUEVA ESTRUCTURA INTERFAZ FACHERITA -->
       <div id="main-content">
         <!-- Sección de productos -->
         <div id="products-section">
-          <!--   <h2>Productos</h2>-->
           <div
             id="ticket-status"
             style="text-align: right; font-size: 14px; margin-bottom: 5px"
-          ></div>
+          >
+            <i class="fa-solid fa-ticket-alt"></i>
+            <span id="estado-texto"></span>
+          </div>
 
-          <table id="ticket-details">
-            <thead>
-              <tr>
-                <th>Producto</th>
-                <th>Cantidad</th>
-                <th>Precio Unitario</th>
-                <th>Subtotal</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+          <!-- Contenedor de la tabla -->
+          <div id="ticket-container">
+            <table id="ticket-details">
+              <thead>
+                <tr>
+                  <th><i class="fa-solid fa-cake-candles"></i> Producto</th>
+                  <th><i class="fa-solid fa-hashtag"></i> Cantidad</th>
+                  <th>
+                    <i class="fa-solid fa-dollar-sign"></i> Precio Unitario
+                  </th>
+                  <th><i class="fa-solid fa-calculator"></i> Subtotal</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
 
-        <!-- NUEVO CONTENEDOR DE PAGO COMPACTO -->
+        <!-- Sección de totales (Pago) -->
         <div id="totals-section">
-          <!--   <h2 class="box-title">Totales</h2>-->
           <div class="payment-summary">
             <div class="info-box">
-              <label>Total:</label>
-              <span id="total-amount">$0.00</span>
+              <label><i class="fa-solid fa-dollar-sign"></i>Total:</label>
+              <span id="total-amount">$00.00</span>
             </div>
             <div class="info-box">
-              <label>Pagado:</label>
+              <label><i class="fa-solid fa-credit-card"></i>Pagado:</label>
               <input id="amount-input" type="text" placeholder="$0.00" />
             </div>
             <div class="info-box">
-              <label>Cambio:</label>
+              <label><i class="fa-solid fa-exchange-alt"></i>Cambio:</label>
               <span id="change">$0.00</span>
             </div>
           </div>
           <button id="submit-payment">Confirmar Pago</button>
         </div>
-        <!-- Teclado Numérico -->
-        <div id="payment-box">
-          <!--    <h2 class="box-title">Cobro y Pago</h2>-->
 
+        <!-- Teclado Numérico en la esquina inferior derecha -->
+        <div id="payment-box">
           <div class="keypad-row">
             <button class="keypad-btn" data-num="7">7</button>
             <button class="keypad-btn" data-num="8">8</button>
@@ -229,14 +271,12 @@
             <button class="keypad-btn" data-num="backspace">
               <i class="fa-solid fa-delete-left"></i>
             </button>
-            <!-- Borrar por carácter -->
           </div>
           <div class="keypad-row">
             <button class="keypad-btn" data-num="4">4</button>
             <button class="keypad-btn" data-num="5">5</button>
             <button class="keypad-btn" data-num="6">6</button>
             <button class="keypad-btn" data-num="C">C</button>
-            <!-- Borrar todo -->
           </div>
           <div class="keypad-row">
             <button class="keypad-btn" data-num="1">1</button>
@@ -246,7 +286,6 @@
           </div>
           <div class="keypad-row">
             <button class="keypad-btn" data-num=".">.</button>
-            <!-- Botón de punto -->
           </div>
 
           <div class="payment-grid">

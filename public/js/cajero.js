@@ -3,6 +3,8 @@ import { verificarSesion, cerrarSesion } from './auth-check.js';
 import { getCDMXISOString } from './dateLocalDate.js'; // Asegúrate de que la ruta sea correcta
 import { supabase } from './supabase-config.js';
 import { getLocalDateString } from "./dateLocalDate.js";
+import { registrarCorteCaja, cargarHistorialCortes, verDetalleCorte } from './corteCaja.js';
+
 // Variable para almacenar los productos del ticket
 let productosTicket = [];
 let ticketActual = null;
@@ -45,10 +47,9 @@ function actualizarCambio() {
   cambioElement.classList.add('fade-change');
 }
 
-
-
 input.addEventListener("input", actualizarCambio);
 input.addEventListener("change", actualizarCambio);
+
 document.getElementById("codigo-ticket-input").addEventListener("keypress", async (e) => {
   if (e.key === "Enter") {
     const codigo = e.target.value.trim();
@@ -71,12 +72,49 @@ document.getElementById("codigo-ticket-input").addEventListener("keypress", asyn
 
     ticketActual = data;
     const estado = ticketActual.estado || 'desconocido';
-    const estadoTexto = (estado === 'pagado')
-      ? '<span style="color:green;font-weight:bold;">PAGADO</span>'
-      : '<span style="color:red;font-weight:bold;">PENDIENTE DE PAGO</span>';
 
-    document.getElementById('ticket-status').innerHTML = `Estado: ${estadoTexto}`;
+    // Cambiar el texto y el color según el estado
+    let estadoTexto = '';
+    let color = '';
 
+    switch (estado) {
+      case 'pendiente':
+        estadoTexto = 'Pendiente';
+        color = 'yellow';
+        break;
+      case 'preparacion':
+        estadoTexto = 'En Preparación';
+        color = 'blue';
+        break;
+      case 'empacado':
+        estadoTexto = 'Empacado';
+        color = 'green';
+        break;
+      case 'pagado':
+        estadoTexto = 'Pagado';
+        color = 'purple';
+        break;
+      case 'cancelado':
+        estadoTexto = 'Cancelado';
+        color = 'red';
+        break;
+      default:
+        estadoTexto = 'Estado desconocido';
+        color = 'gray';
+    }
+
+    // Mostrar el estado con color
+    document.getElementById('ticket-status').innerHTML = `
+      <span style="font-weight: bold;" class="estado-${estado}">Estado: ${estadoTexto}</span>
+    `;
+
+    // Habilitar o deshabilitar el cobro según el estado
+    /*  if (estado === 'empacado') {
+        document.getElementById("submit-payment").disabled = false;
+      } else {
+        document.getElementById("submit-payment").disabled = true;
+      }
+  */
     await cargarProductosTicket();
     actualizarTablaProductos();
     document.getElementById("amount-input").value = "";
@@ -96,16 +134,8 @@ window.onload = async function () {
   await verificarSesion();
   cargarConfiguracion();
 
-  // Si hay un ticket, cargar sus productos
-  /* if (ticketActual) {
-       await cargarProductosTicket();
-       actualizarTablaProductos();
-   }*/
-
   document.getElementById("logout-btn").addEventListener("click", cerrarSesion);
 
-  // Configurar teclado numérico
-  // configurarTecladoNumerico();
   configurarBotonesPago();
 };
 
@@ -220,8 +250,81 @@ function configurarBotonesPago() {
 }
 
 async function procesarPago() {
+  // Validar si no hay ticket ingresado
+  if (!ticketActual || !ticketActual.estado) {
+    Swal.fire({
+      icon: 'error',
+      title: '¡No hay ticket!',
+      text: 'Por favor, escanea o ingresa un código de ticket primero.',
+      confirmButtonText: 'Entendido',
+      background: '#f8d7da',
+      iconColor: '#dc3545',
+      confirmButtonColor: '#dc3545'
+    });
+    return;
+  }
+
   const total = calcularTotal();
   const montoPagado = parseFloat(document.getElementById('amount-input').value) || 0;
+
+  // Mostrar alerta según el estado
+  switch (ticketActual.estado) {
+    case 'pagado':
+      Swal.fire({
+        icon: 'info',
+        title: '¡Ticket ya pagado! 🛑',
+        text: 'Este ticket ya ha sido pagado, no es posible realizar otro cobro.',
+        confirmButtonText: 'Entendido',
+        background: '#f8f9fa',
+        iconColor: '#28a745',
+        confirmButtonColor: '#28a745',
+        footer: '<small>No se puede procesar el pago dos veces para el mismo ticket.</small>',
+      });
+      return; // Detenemos la ejecución si ya está pagado
+
+    case 'preparacion':
+      Swal.fire({
+        icon: 'warning',
+        title: 'En Preparación ⚙️',
+        text: 'El pedido está en preparación. No puedes realizar el pago hasta que esté empacado.',
+        confirmButtonText: 'Entendido',
+      });
+      return; // Detenemos la ejecución si está en preparación
+
+    case 'pendiente':
+      Swal.fire({
+        icon: 'warning',
+        title: 'Pendiente ⏳',
+        text: 'Este pedido aún está pendiente. Por favor, espera a que sea procesado antes de pagar.',
+        confirmButtonText: 'Entendido',
+      });
+      return; // Detenemos la ejecución si está pendiente
+
+    case 'empacado':
+      // Si el estado es "empacado", procesamos el pago
+      break;
+
+    case 'cancelado':
+      Swal.fire({
+        icon: 'error',
+        title: '¡Ticket Cancelado! 🚫',
+        text: 'Este ticket ha sido cancelado, no se puede realizar el pago.',
+        confirmButtonText: 'Entendido',
+        background: '#f8d7da', // Color de fondo rojo claro para alertas
+        iconColor: '#dc3545', // Rojo
+        confirmButtonColor: '#dc3545', // Rojo
+      });
+      return; // Detenemos la ejecución si está cancelado
+
+    default:
+      Swal.fire({
+        icon: 'error',
+        title: 'Estado desconocido 🚨',
+        text: 'El estado del ticket es desconocido. No se puede procesar el pago.',
+        confirmButtonText: 'Entendido',
+      });
+      return;
+  }
 
   if (montoPagado < total) {
     Swal.fire({
@@ -253,19 +356,17 @@ async function procesarPago() {
   try {
     // Registrar el cobro en la tabla de pedidos
     const { data: sessionData } = await supabase.auth.getSession();
-    const empleadoCobroId = sessionData.session.user.id; // Obtener el empleado que hizo el cobro
+    const empleadoCobroId = sessionData.session.user.id;
 
     const { error } = await supabase
       .from('historial_cobros')
-      .insert([
-        {
-          pedido_id: ticketActual.id,
-          empleado_cobro_id: empleadoCobroId,
-          monto_cobrado: montoPagado,
-          fecha_cobro: getCDMXISOString(), // Usamos la función aquí
-          estado: 'pagado'  // Puedes agregar más estados según necesites
-        }
-      ]);
+      .insert([{
+        pedido_id: ticketActual.id,
+        empleado_cobro_id: empleadoCobroId,
+        monto_cobrado: montoPagado,
+        fecha_cobro: getCDMXISOString(), // Usamos la función aquí
+        estado: 'pagado'
+      }]);
 
     if (error) throw error;
 
@@ -273,15 +374,14 @@ async function procesarPago() {
       .from('pedidos')
       .update({
         estado: 'pagado',
-        empleado_cobro_id: empleadoCobroId // Guardamos el empleado que realizó el cobro
+        empleado_cobro_id: empleadoCobroId
       })
       .eq('id', ticketActual.id);
 
     if (errorpedidos) throw error;
 
-    // 🔔 Reproducir sonido al confirmar pago
     const sonido = new Audio('../sounds/success.mp3');
-    sonido.volume = 0.8; // volumen opcional
+    sonido.volume = 0.8;
     sonido.play().catch(err => console.error("No se pudo reproducir el sonido:", err));
 
     Swal.fire({
@@ -291,6 +391,7 @@ async function procesarPago() {
       timer: 2000,
       showConfirmButton: false,
     });
+
 
     // Generar e imprimir ticket
     const ticketHTML = generarTicketHTML(ticketActual, productosTicket, montoPagado, cambio);
@@ -307,6 +408,7 @@ async function procesarPago() {
       // Cerrar después de imprimir (con retraso para navegadores lentos)
       setTimeout(() => ventana.close(), 1000);
     }, 500); // 500ms debería ser suficiente para cargar todo
+
 
     // Reset visual
     productosTicket = [];
@@ -325,6 +427,7 @@ async function procesarPago() {
     });
   }
 }
+
 
 function calcularTotal() {
   return productosTicket.reduce((sum, producto) => sum + producto.subtotal, 0);
@@ -466,8 +569,6 @@ async function cargarHistorialCobros() {
   const desde = document.getElementById("filtro-fecha-desde").value;
   const hasta = document.getElementById("filtro-fecha-hasta").value;
 
-  console.log("Fechas filtro:", { desde, hasta });
-
   try {
     let query = supabase
       .from("historial_cobros")
@@ -489,15 +590,13 @@ async function cargarHistorialCobros() {
     if (hasta) query = query.lte("fecha_cobro", `${hasta}T23:59:59`);
 
     const { data: cobros, error } = await query;
-    
-    console.log("Resultados consulta:", cobros); // Verifica qué datos estás recibiendo
 
     const badgeResultados = document.getElementById("badge-resultados");
     const cantidadPedidos = document.getElementById("cantidad-pedidos");
     const lista = document.getElementById("lista-historial");
 
     lista.innerHTML = "";
-    
+
     if (error) {
       console.error("Error en consulta:", error);
       badgeResultados.style.display = "none";
@@ -523,14 +622,12 @@ async function cargarHistorialCobros() {
         month: 'long',
         day: 'numeric'
       });
-      
+
       if (!cobrosPorDia[fechaKey]) {
         cobrosPorDia[fechaKey] = [];
       }
       cobrosPorDia[fechaKey].push(cobro);
     });
-
-    console.log("Cobros agrupados por día:", cobrosPorDia); // Verifica la agrupación
 
     // Decidir cómo mostrar los resultados
     if (Object.keys(cobrosPorDia).length > 1) {
@@ -538,7 +635,7 @@ async function cargarHistorialCobros() {
     } else {
       mostrarCobrosListaSimple(cobros, lista);
     }
-    
+
   } catch (err) {
     console.error("Error inesperado:", err);
     const lista = document.getElementById("lista-historial");
@@ -554,45 +651,45 @@ function mostrarCobrosAgrupados(cobrosPorDia, contenedor) {
   contenedor.appendChild(accordion);
 
   Object.entries(cobrosPorDia).forEach(([fecha, cobrosDelDia], index) => {
-      const totalDia = cobrosDelDia.reduce((sum, cobro) => sum + cobro.pedidos.total, 0);
-      const totalPedidosDia = cobrosDelDia.length;
+    const totalDia = cobrosDelDia.reduce((sum, cobro) => sum + cobro.pedidos.total, 0);
+    const totalPedidosDia = cobrosDelDia.length;
 
-      const accordionItem = document.createElement('div');
-      accordionItem.className = 'accordion-item';
+    const accordionItem = document.createElement('div');
+    accordionItem.className = 'accordion-item';
 
-      const accordionHeader = document.createElement('h2');
-      accordionHeader.className = 'accordion-header';
-      accordionHeader.id = `heading-${index}`;
+    const accordionHeader = document.createElement('h2');
+    accordionHeader.className = 'accordion-header';
+    accordionHeader.id = `heading-${index}`;
 
-      const accordionButton = document.createElement('button');
-      accordionButton.className = 'accordion-button collapsed';
-      accordionButton.type = 'button';
-      accordionButton.dataset.bsToggle = 'collapse';
-      accordionButton.dataset.bsTarget = `#collapse-${index}`;
-      accordionButton.innerHTML = `
+    const accordionButton = document.createElement('button');
+    accordionButton.className = 'accordion-button collapsed';
+    accordionButton.type = 'button';
+    accordionButton.dataset.bsToggle = 'collapse';
+    accordionButton.dataset.bsTarget = `#collapse-${index}`;
+    accordionButton.innerHTML = `
           <span class="fw-bold">${fecha}</span>
           <span class="badge bg-primary ms-2">${totalPedidosDia} pedidos</span>
           <span class="badge bg-success ms-2">$${totalDia.toFixed(2)}</span>
       `;
 
-      accordionHeader.appendChild(accordionButton);
-      accordionItem.appendChild(accordionHeader);
+    accordionHeader.appendChild(accordionButton);
+    accordionItem.appendChild(accordionHeader);
 
-      const accordionCollapse = document.createElement('div');
-      accordionCollapse.id = `collapse-${index}`;
-      accordionCollapse.className = 'accordion-collapse collapse';
-      accordionCollapse.setAttribute('aria-labelledby', `heading-${index}`);
+    const accordionCollapse = document.createElement('div');
+    accordionCollapse.id = `collapse-${index}`;
+    accordionCollapse.className = 'accordion-collapse collapse';
+    accordionCollapse.setAttribute('aria-labelledby', `heading-${index}`);
 
-      const accordionBody = document.createElement('div');
-      accordionBody.className = 'accordion-body p-0';
+    const accordionBody = document.createElement('div');
+    accordionBody.className = 'accordion-body p-0';
 
-      cobrosDelDia.forEach(cobro => {
-          // Obtener la cantidad de productos del pedido
-          const cantidadProductos = cobro.pedidos.pedido_productos[0]?.count || 0;
-          
-          const item = document.createElement('div');
-          item.className = 'list-group-item list-group-item-action border-0';
-          item.innerHTML = `
+    cobrosDelDia.forEach(cobro => {
+      // Obtener la cantidad de productos del pedido
+      const cantidadProductos = cobro.pedidos.pedido_productos[0]?.count || 0;
+
+      const item = document.createElement('div');
+      item.className = 'list-group-item list-group-item-action border-0';
+      item.innerHTML = `
               <div class="d-flex justify-content-between align-items-start">
                   <div>
                       <strong><i class="fa-solid fa-ticket"></i> ${cobro.pedidos.codigo_ticket}</strong>
@@ -605,29 +702,29 @@ function mostrarCobrosAgrupados(cobrosPorDia, contenedor) {
                 <small class="ms-2"><i class="fa-solid fa-receipt"></i> Total: $${cobro.pedidos.total.toFixed(2)}</small>
               </div>
           `;
-          item.onclick = (e) => {
-              e.stopPropagation();
-              verDetalleCobro(cobro.id);
-          };
-          accordionBody.appendChild(item);
-      });
+      item.onclick = (e) => {
+        e.stopPropagation();
+        verDetalleCobro(cobro.id);
+      };
+      accordionBody.appendChild(item);
+    });
 
-      accordionCollapse.appendChild(accordionBody);
-      accordionItem.appendChild(accordionCollapse);
-      accordion.appendChild(accordionItem);
+    accordionCollapse.appendChild(accordionBody);
+    accordionItem.appendChild(accordionCollapse);
+    accordion.appendChild(accordionItem);
   });
 
   new bootstrap.Collapse(document.getElementById('cobros-accordion'), {
-      toggle: false
+    toggle: false
   });
 }
 
 function mostrarCobrosListaSimple(cobros, contenedor) {
   cobros.forEach(cobro => {
-      const cantidadProductos = cobro.pedidos.pedido_productos[0]?.count || 0;
-      const item = document.createElement('div');
-      item.className = 'list-group-item list-group-item-action fade-in';
-      item.innerHTML = `
+    const cantidadProductos = cobro.pedidos.pedido_productos[0]?.count || 0;
+    const item = document.createElement('div');
+    item.className = 'list-group-item list-group-item-action fade-in';
+    item.innerHTML = `
           <div class="d-flex justify-content-between align-items-start">
               <div>
                   <strong><i class="fa-solid fa-ticket"></i> ${cobro.pedidos.codigo_ticket}</strong>
@@ -640,20 +737,19 @@ function mostrarCobrosListaSimple(cobros, contenedor) {
               <small class="ms-2"><i class="fa-solid fa-receipt"></i> Total: $${cobro.pedidos.total.toFixed(2)}</small>
           </div>
       `;
-      item.onclick = () => verDetalleCobro(cobro.id);
-      contenedor.appendChild(item);
+    item.onclick = () => verDetalleCobro(cobro.id);
+    contenedor.appendChild(item);
   });
 }
 // Event listeners
 document.getElementById("open-history-btn").addEventListener("click", async () => {
   new bootstrap.Offcanvas(document.getElementById("history-sidebar")).show();
-  
+
   // Establecer fechas por defecto (hoy)
   const hoy = getLocalDateString();
-  console.log(hoy)
   document.getElementById("filtro-fecha-desde").value = hoy;
   document.getElementById("filtro-fecha-hasta").value = hoy;
-  
+
   await cargarHistorialCobros();
 });
 
@@ -673,28 +769,29 @@ async function verDetalleCobro(cobroId) {
   const { data, error } = await supabase
     .from("historial_cobros")
     .select(`
-    id,
-    pedido_id,
-    monto_cobrado,
-    fecha_cobro,
-    estado,
-    pedidos (
-      codigo_ticket,
+      id,
+      pedido_id,
+      monto_cobrado,
+      fecha_cobro,
       estado,
-      total,
-      fecha,
-      empleado_id,
-      empleado:empleado_id(nombre),
-      pedido_productos (
-        producto_id,
-        cantidad,
-        precio_unitario,
-        productos (
-          nombre
+      pedidos (
+        codigo_ticket,
+        estado,
+        total,
+        fecha,
+        empleado_id,
+        empleado:empleado_id(nombre),
+        origen,
+        pedido_productos (
+          producto_id,
+          cantidad,
+          precio_unitario,
+          productos (
+            nombre
+          )
         )
       )
-    )
-  `)
+    `)
     .eq("id", cobroId); // Asegúrate de que 'pedido_id' está bien relacionado.
   if (error) {
     console.error("Error al cargar detalles del cobro:", error);
@@ -705,6 +802,7 @@ async function verDetalleCobro(cobroId) {
     });
     return;
   }
+
   // Comprobamos si hay datos del cobro
   if (!data || data.length === 0) {
     Swal.fire({
@@ -718,32 +816,37 @@ async function verDetalleCobro(cobroId) {
   // Extraemos los detalles del cobro (productos y cantidades)
   const cobro = data[0];  // Asumimos que 'data' contiene solo un cobro
 
+  // Generar la tabla de productos
   const detalleHTML = cobro.pedidos.pedido_productos.map(item => `
-  <tr>
-    <td>${item.productos.nombre}</td>
-    <td>${item.cantidad}</td>
-    <td>$${item.precio_unitario.toFixed(2)}</td>
-    <td>$${(item.cantidad * item.precio_unitario).toFixed(2)}</td>
-  </tr>
-`).join("");
+    <tr>
+      <td>${item.productos.nombre}</td>
+      <td>${item.cantidad}</td>
+      <td>$${item.precio_unitario.toFixed(2)}</td>
+      <td>$${(item.cantidad * item.precio_unitario).toFixed(2)}</td>
+    </tr>
+  `).join("");
 
-  // Mostrar el nombre del empleado
+  // Información adicional del pedido
   const nombreEmpleado = cobro.pedidos.empleado ? cobro.pedidos.empleado.nombre : "Empleado no disponible";
   const codigoTicket = cobro.pedidos.codigo_ticket;
-  // Mostrar el total del ticket y la fecha de empaque
   const totalTicket = cobro.pedidos.total.toFixed(2);
   const fechaEmpaque = new Date(cobro.pedidos.fecha).toLocaleString("es-MX");
+  const origenPedido = cobro.pedidos.origen.charAt(0).toUpperCase() + cobro.pedidos.origen.slice(1); // Capitalizar la primera letra
+  const cantidadProductos = cobro.pedidos.pedido_productos.reduce((total, item) => total + item.cantidad, 0);
 
   // Mostrar los detalles en el modal
   document.getElementById("detalle-pedido-body").innerHTML = detalleHTML;
-  document.getElementById("codigo-ticket").textContent = `${codigoTicket}`
+  document.getElementById("codigo-ticket").textContent = `${codigoTicket}`;
   document.getElementById("empleado-nombre").textContent = `${nombreEmpleado}`;
   document.getElementById("total-pedido").textContent = `$${totalTicket}`;
   document.getElementById("fecha-empaque").textContent = `${fechaEmpaque}`;
+  document.getElementById("origen-pedido").textContent = `${origenPedido}`;
+  document.getElementById("cantidad-productos").textContent = `${cantidadProductos}`;
 
   // Mostrar modal
   new bootstrap.Modal(document.getElementById("detallePedidoModal")).show();
 }
+
 
 document.getElementById("btn-aplicar-filtros").addEventListener("click", cargarHistorialCobros);
 /*

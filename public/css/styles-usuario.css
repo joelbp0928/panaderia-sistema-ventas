@@ -205,7 +205,7 @@ header {
 }
 
 #btn-carrito:hover {
-  background-color: #732d91;
+  background-color: var(--primary-color-obscuro);
 }
 
 #btn-otra-sugerencia,#btn-filtro-alergenos {

@@ -71,21 +71,20 @@ footer {
 #main-content {
   display: flex;
   justify-content: space-between; /* Distribuye el espacio */
-
   padding: 1rem;
 }
 
 /* Sección de productos */
 #products-section {
+  flex: 2;
   border: 2px solid var(--primary-color);
   border-radius: var(--border-radius);
   background-color: white;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  max-width: 30%; /* Reducimos un poco el tamaño para que no ocupe tanto */
+  padding: 1.5rem;
+  max-height: calc(100vh - 2rem); /* Asegura que la tabla no desborde */
+  overflow-y: auto;
 }
+
 #products-section,
 #totals-section,
 #payment-box {
@@ -117,64 +116,116 @@ footer {
 
 /* Sección de totales */
 #totals-section {
-  max-width: 30%; /* Lo hacemos más pequeño para que quepa bien con el resto */
+  flex: 1;
+  background-color: white;
   border: 2px solid var(--primary-color);
   border-radius: var(--border-radius);
-  background-color: white;
-  padding: 1rem;
+  padding: 1.5rem;
+  position: sticky;
+  top: 0; /* Mantiene esta sección en la parte superior */
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .payment-summary {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.8rem;
-  padding: 0.8rem;
-  background: #f9f9f9;
-  border-radius: var(--border-radius);
-  border: 1px dashed var(--primary-color);
 }
 
 .info-box {
   display: flex;
   flex-direction: column;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #333;
 }
 
 .info-box label {
-  font-size: 0.9rem;
-  color: #555;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
+.info-box label i {
+  margin-right: 0.5rem; /* Separación entre el icono y el texto */
+}
+
+/* Montos: más grandes y con color destacado */
 .info-box span,
 .info-box input {
-  font-size: 1.1rem;
+  font-size: 1.4rem;
   font-weight: bold;
-  color: var(--primary-color);
+  color: #007bff; /* Azul brillante */
+  display: flex;
+  align-items: center;
 }
 
+.info-box span i,
+.info-box input i {
+  margin-right: 0.5rem; /* Separación entre el icono y el monto */
+}
+
+/* Estilo del input de pago */
 #amount-input {
   border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 0.5rem;
+  border-radius: 8px;
+  padding: 0.8rem;
+  font-size: 1.4rem;
+  color: #333;
+  text-align: center;
 }
 
+/* Botón de Confirmar Pago */
 #submit-payment {
-  background-color: var(--primary-color);
+  background-color: #28a745; /* Verde brillante */
   color: white;
   border: none;
-  padding: 0.8rem;
-  border-radius: var(--border-radius);
+  padding: 1rem;
+  font-size: 1.2rem;
   font-weight: bold;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background 0.3s ease, transform 0.3s ease;
+  margin-top: 1rem;
 }
 
 #submit-payment:hover {
-  background-color: var(--primary-color-obscuro);
-  transform: scale(0.95);
+  background-color: #218838; /* Verde más oscuro */
+  transform: scale(1.05); /* Efecto de escala */
 }
+
+/* Efecto de animación pulso para el botón */
+#submit-payment:focus {
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Input de cambio */
+#change {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #e74c3c; /* Rojo para mostrar cambios negativos */
+}
+
+/* Botón de pago deshabilitado */
+button:disabled {
+  background-color: #dcdcdc;
+  cursor: not-allowed;
+}
+
 /* Input de código de ticket */
 #scan-input-wrapper {
   flex: 1;
@@ -189,17 +240,19 @@ footer {
   border: 1px solid #ddd;
 }
 
-/* Sección de botones de pago */
+/* Teclado flotante en la esquina inferior derecha */
 #payment-box {
-  max-width: 35%; /* Un tamaño perfecto para que no se vea desbordado */
-  border: 2px solid var(--primary-color);
+  position: relative;
+  bottom: 1rem;
+  right: 1rem;
+  background-color: #fff;
   border-radius: var(--border-radius);
-  background: white;
   padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  overflow: hidden;
+  max-width: 250px;
 }
 
 .payment-grid {
@@ -219,11 +272,11 @@ footer {
 }
 
 .payment-btn img {
-  width: 100%;
+  width: 80%;
   height: auto;
-  max-width: 80px;
-  border-radius: 4px;
-  transition: transform 0.2s;
+  /* max-width: 80px;*/
+  border-radius: 8px;
+  transition: transform 0.2s ease;
 }
 
 .payment-btn:hover img {
@@ -240,18 +293,18 @@ footer {
 
 .keypad-row {
   display: flex;
-  grid-template-columns: repeat(4, 1fr); /* Asegura 4 botones por fila */
+  /* grid-template-columns: repeat(4, 1fr); /* Asegura 4 botones por fila */
   gap: 0.5rem;
 }
 
 /* Estilo de los botones del teclado */
+
 .keypad-btn {
-  width: 60%; /* Hace que el botón ocupe el 100% de la celda */
-  height: 60px; /* Ajusta la altura de los botones */
-  font-size: 2rem; /* Aumenta el tamaño de la fuente */
-  aspect-ratio: 1;
+  width: 100%;
+  height: 60px;
+  font-size: 2rem;
   border: 1px solid var(--primary-color);
-  border-radius: var(--border-radius);
+  border-radius: 8px;
   background: #f0f0f0;
   cursor: pointer;
   display: flex;
@@ -309,6 +362,10 @@ footer {
 
   .payment-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+  /* Estilo del input de pago */
+  #amount-input {
+    width: 100%;
   }
 }
 
@@ -401,7 +458,7 @@ footer {
   font-size: 1.2rem;
 }
 
-.header-tittle{
+.header-tittle {
   background-color: var(--primary-color-obscuro) !important;
   color: var(--light-color) !important;
 }
@@ -411,10 +468,10 @@ footer {
 }
 
 /* BOTÓN HAMBURGUESA */
-#open-history-btn:hover, #logout-btn:hover {
+#open-history-btn:hover,
+#logout-btn:hover {
   transform: scale(0.95);
 }
-
 
 /* Asegurarse que la tabla en el modal tenga buen aspecto */
 #detallePedidoModal table {
@@ -422,7 +479,8 @@ footer {
   border-collapse: collapse;
 }
 
-#detallePedidoModal th, #detallePedidoModal td {
+#detallePedidoModal th,
+#detallePedidoModal td {
   padding: 8px;
   text-align: center;
   border-bottom: 1px solid #ddd;
@@ -454,10 +512,15 @@ footer {
 }
 
 @keyframes fadeIn {
-  0% { opacity: 0; transform: translateY(10px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-
 
 /* Estilo para mejorar la tabla */
 #detalle-pedido-body tr:nth-child(odd) {
@@ -479,7 +542,8 @@ table {
   margin-bottom: 20px; /* Espaciado abajo de la tabla */
 }
 
-table td, table th {
+table td,
+table th {
   padding: 10px; /* Mayor espacio dentro de las celdas */
   border: 1px solid wheat; /* Borde sutil en las celdas */
 }
@@ -505,6 +569,25 @@ table td {
   font-size: 1.1rem;
 }
 
+/* Botones de categoría */
+.category-btn {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  text-align: center;
+  font-weight: 600;
+  transition: background-color 0.3s ease, transform 0.3s ease; /* Transición completa */
+}
+
+.category-btn:hover {
+  background-color: var(--primary-color-obscuro);
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
 
 @media (max-width: 768px) {
   #main-content {
@@ -517,4 +600,258 @@ table td {
     max-width: 100%; /* Asegura que todo ocupe el espacio completo en pantallas pequeñas */
     margin-bottom: 10px;
   }
+
+  /* Los botones dentro del panel de categorías se adaptan a pantallas pequeñas */
+  .category-btn {
+    font-size: 0.9rem;
+    padding: 0.8rem;
+  }
 }
+
+/* Ajustes generales */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: var(--light-color);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#company-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--primary-color);
+  padding: 0.5rem 1rem;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+#logo-image {
+  height: 50px;
+  width: auto;
+}
+
+#scan-input-wrapper {
+  max-width: 300px;
+  margin: 0 1rem;
+}
+
+/* Contenedor principal */
+#cashier-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+#main-content {
+  display: flex;
+  justify-content: space-between; /* Espaciado entre los elementos */
+  padding: 2rem;
+  gap: 1rem;
+  position: relative; /* Para que el teclado pueda flotar en la esquina */
+}
+
+/* Ajustes de botones */
+.payment-btn img {
+  width: 100%;
+  height: auto;
+  max-width: 80px;
+  border-radius: 4px;
+  transition: transform 0.2s;
+}
+
+/* Media Queries */
+@media (max-width: 992px) {
+  #main-content {
+    flex-direction: column;
+  }
+
+  #payment-box,
+  #products-section,
+  #totals-section {
+    max-width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .payment-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .payment-btn img {
+    max-width: 70px;
+  }
+
+  #scan-input-wrapper {
+    width: 100%;
+    margin: 0.5rem 0;
+  }
+
+  /* Ajuste en el botón de búsqueda */
+  .category-btn {
+    font-size: 0.9rem;
+    padding: 0.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  #company-header {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 0.5rem;
+  }
+
+  #scan-input-wrapper {
+    order: 3;
+    width: 100%;
+    max-width: none;
+    margin: 0.5rem 0;
+  }
+
+  .payment-summary {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .keypad-btn {
+    font-size: 1.5rem;
+  }
+
+  #ticket-details th,
+  #ticket-details td {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  #ticket-details th,
+  #ticket-details td {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .payment-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .keypad-btn {
+    font-size: 1rem;
+  }
+
+  .payment-btn img {
+    max-width: 60px;
+  }
+
+  .category-btn {
+    font-size: 0.8rem;
+    padding: 0.7rem;
+  }
+}
+
+/* Menú Lateral */
+.sidebar {
+  position: absolute;
+  top: 0;
+  right: -250px;
+  width: 250px;
+  height: 100%;
+  background-color: #333;
+  color: white;
+  transition: right 0.3s ease;
+  padding: 1rem;
+}
+
+.sidebar.open {
+  right: 0;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+}
+
+/* Responsive para teclado numérico */
+#numeric-keypad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.keypad-row {
+  display: flex;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+#ticket-details {
+  width: 100%; /* Asegura que la tabla ocupe todo el ancho disponible */
+  border-collapse: collapse;
+  margin-top: 1rem;
+  overflow-y: auto; /* Permite desplazamiento horizontal si la tabla es muy ancha */
+}
+
+#ticket-details th,
+#ticket-details td {
+  padding: 0.5rem; /* Reducir el espacio dentro de las celdas */
+  font-size: 0.9rem; /* Reducir el tamaño de la fuente */
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+  white-space: nowrap; /* Evita que el texto se divida */
+}
+
+#ticket-details th {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+/* Añadir un contenedor con overflow para permitir el desplazamiento */
+#ticket-container {
+  width: 100%;
+}
+
+/* Estilos para los estados */
+#ticket-status {
+  font-size: 14px;
+  margin-bottom: 5px;
+  text-align: right;
+}
+
+.estado-pendiente {
+  color: rgb(250, 213, 4);
+  font-weight: bold;
+}
+
+.estado-preparacion {
+  color: rgb(0, 204, 255);
+  font-weight: bold;
+}
+
+.estado-empacado {
+  color: green;
+  font-weight: bold;
+}
+
+.estado-pagado {
+  color: rgb(180, 6, 180);
+  font-weight: bold;
+}
+
+.estado-cancelado {
+  color: rgb(230, 8, 8);
+  font-weight: bold;
+}
+/* Botón de pago deshabilitado */
+button:disabled {
+  background-color: #dcdcdc;
+  cursor: not-allowed;
+}
+
