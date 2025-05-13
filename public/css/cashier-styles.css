@@ -444,7 +444,7 @@ footer {
 
 /* Hover en lista de pedidos */
 .list-group-item:hover {
-  background-color: #f1f1f1;
+  background-color: #cacaca !important;
   transition: background-color 0.2s ease;
 }
 

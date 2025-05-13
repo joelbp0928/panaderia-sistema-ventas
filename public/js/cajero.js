@@ -2,7 +2,7 @@ import { cargarConfiguracion, configuracionGlobal } from "./config.js";
 import { verificarSesion, cerrarSesion } from './auth-check.js';
 import { getCDMXISOString } from './dateLocalDate.js'; // Asegúrate de que la ruta sea correcta
 import { supabase } from './supabase-config.js';
-
+import { getLocalDateString } from "./dateLocalDate.js";
 // Variable para almacenar los productos del ticket
 let productosTicket = [];
 let ticketActual = null;
@@ -458,69 +458,206 @@ function generarTicketHTML(ticket, productos, pagado, cambio) {
     `;
 }
 
-document.getElementById("open-history-btn").addEventListener("click", async () => {
-  new bootstrap.Offcanvas(document.getElementById("history-sidebar")).show();
-
+// Modifica la consulta inicial para incluir los productos del pedido
+async function cargarHistorialCobros() {
   const { data: sessionData } = await supabase.auth.getSession();
   const userId = sessionData.session.user.id;
 
-  // Obtener los valores de los filtros de fecha
   const desde = document.getElementById("filtro-fecha-desde").value;
   const hasta = document.getElementById("filtro-fecha-hasta").value;
 
-  // Crear la consulta con los filtros de fecha
-  let query = supabase
-    .from("historial_cobros")
-    .select("id, fecha_cobro, monto_cobrado, pedidos(codigo_ticket, total)")
-    .eq("empleado_cobro_id", userId)
-    .order("fecha_cobro", { ascending: false });
+  console.log("Fechas filtro:", { desde, hasta });
 
-  if (desde) {
-    query = query.gte("fecha_cobro", `${desde}T00:00:00`);
+  try {
+    let query = supabase
+      .from("historial_cobros")
+      .select(`
+        id,
+        fecha_cobro,
+        monto_cobrado,
+        pedidos(
+          codigo_ticket,
+          total,
+          pedido_productos(count)
+        )
+      `)
+      .eq('empleado_cobro_id', userId)
+      .order('fecha_cobro', { ascending: false });
+
+    // Convertir las fechas a un formato sin horas
+    if (desde) query = query.gte("fecha_cobro", `${desde}T00:00:00`);
+    if (hasta) query = query.lte("fecha_cobro", `${hasta}T23:59:59`);
+
+    const { data: cobros, error } = await query;
+    
+    console.log("Resultados consulta:", cobros); // Verifica qué datos estás recibiendo
+
+    const badgeResultados = document.getElementById("badge-resultados");
+    const cantidadPedidos = document.getElementById("cantidad-pedidos");
+    const lista = document.getElementById("lista-historial");
+
+    lista.innerHTML = "";
+    
+    if (error) {
+      console.error("Error en consulta:", error);
+      badgeResultados.style.display = "none";
+      lista.innerHTML = `<li class="list-group-item text-danger">Error al cargar cobros: ${error.message}</li>`;
+      return;
+    }
+
+    if (!cobros || cobros.length === 0) {
+      badgeResultados.style.display = "none";
+      lista.innerHTML = `<li class="list-group-item text-muted">No se encontraron cobros</li>`;
+      return;
+    }
+
+    cantidadPedidos.textContent = cobros.length;
+    badgeResultados.style.display = "block";
+    setTimeout(() => badgeResultados.classList.add("show"), 50);
+
+    // Agrupar cobros por día
+    const cobrosPorDia = {};
+    cobros.forEach(cobro => {
+      const fechaKey = new Date(cobro.fecha_cobro).toLocaleDateString('es-MX', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      
+      if (!cobrosPorDia[fechaKey]) {
+        cobrosPorDia[fechaKey] = [];
+      }
+      cobrosPorDia[fechaKey].push(cobro);
+    });
+
+    console.log("Cobros agrupados por día:", cobrosPorDia); // Verifica la agrupación
+
+    // Decidir cómo mostrar los resultados
+    if (Object.keys(cobrosPorDia).length > 1) {
+      mostrarCobrosAgrupados(cobrosPorDia, lista);
+    } else {
+      mostrarCobrosListaSimple(cobros, lista);
+    }
+    
+  } catch (err) {
+    console.error("Error inesperado:", err);
+    const lista = document.getElementById("lista-historial");
+    lista.innerHTML = `<li class="list-group-item text-danger">Error inesperado: ${err.message}</li>`;
   }
+}
 
-  if (hasta) {
-    query = query.lte("fecha_cobro", `${hasta}T23:59:59`);
-  }
 
-  const { data: cobros, error } = await query;
-  const badgeResultados = document.getElementById("badge-resultados");
-  const cantidadPedidos = document.getElementById("cantidad-pedidos");
+function mostrarCobrosAgrupados(cobrosPorDia, contenedor) {
+  const accordion = document.createElement('div');
+  accordion.className = 'accordion';
+  accordion.id = 'cobros-accordion';
+  contenedor.appendChild(accordion);
 
-  const lista = document.getElementById("lista-historial");
-  lista.innerHTML = ""; // Limpiar la lista antes de agregar elementos
+  Object.entries(cobrosPorDia).forEach(([fecha, cobrosDelDia], index) => {
+      const totalDia = cobrosDelDia.reduce((sum, cobro) => sum + cobro.pedidos.total, 0);
+      const totalPedidosDia = cobrosDelDia.length;
 
-  if (error) {
-    badgeResultados.style.display = "none";
-    lista.innerHTML = `<li class="list-group-item text-danger">Error al cargar cobros</li>`;
-    return;
-  }
+      const accordionItem = document.createElement('div');
+      accordionItem.className = 'accordion-item';
 
-  if (!cobros.length) {
-    lista.innerHTML = `<li class="list-group-item text-muted">No se encontraron cobros con los filtros seleccionados.</li>`;
-    return;
-  }
+      const accordionHeader = document.createElement('h2');
+      accordionHeader.className = 'accordion-header';
+      accordionHeader.id = `heading-${index}`;
 
-  // Si hay pedidos, actualiza el badge
-  cantidadPedidos.textContent = cobros.length;
-  badgeResultados.style.display = "block";
-  setTimeout(() => badgeResultados.classList.add("show"), 50);
+      const accordionButton = document.createElement('button');
+      accordionButton.className = 'accordion-button collapsed';
+      accordionButton.type = 'button';
+      accordionButton.dataset.bsToggle = 'collapse';
+      accordionButton.dataset.bsTarget = `#collapse-${index}`;
+      accordionButton.innerHTML = `
+          <span class="fw-bold">${fecha}</span>
+          <span class="badge bg-primary ms-2">${totalPedidosDia} pedidos</span>
+          <span class="badge bg-success ms-2">$${totalDia.toFixed(2)}</span>
+      `;
 
-  cobros.forEach(cobro => {
-    const item = document.createElement("li");
-    item.classList.add("list-group-item", "list-group-item-action", "fade-in");
-    item.innerHTML = `
-      <div>
-        <strong><i class="fa-solid fa-ticket"></i> ${cobro.pedidos.codigo_ticket}</strong><br>
-        <small><i class="fa-solid fa-calendar-day"></i> ${new Date(cobro.fecha_cobro).toLocaleString()}</small><br>
-        <small><i class="fa-solid fa-dollar-sign"></i>${cobro.pedidos.total}</small> · 
-        <span class="badge bg-success">Cobrado</span>
-      </div>
-    `;
-    item.onclick = () => verDetalleCobro(cobro.id);
-    lista.appendChild(item);
+      accordionHeader.appendChild(accordionButton);
+      accordionItem.appendChild(accordionHeader);
+
+      const accordionCollapse = document.createElement('div');
+      accordionCollapse.id = `collapse-${index}`;
+      accordionCollapse.className = 'accordion-collapse collapse';
+      accordionCollapse.setAttribute('aria-labelledby', `heading-${index}`);
+
+      const accordionBody = document.createElement('div');
+      accordionBody.className = 'accordion-body p-0';
+
+      cobrosDelDia.forEach(cobro => {
+          // Obtener la cantidad de productos del pedido
+          const cantidadProductos = cobro.pedidos.pedido_productos[0]?.count || 0;
+          
+          const item = document.createElement('div');
+          item.className = 'list-group-item list-group-item-action border-0';
+          item.innerHTML = `
+              <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                      <strong><i class="fa-solid fa-ticket"></i> ${cobro.pedidos.codigo_ticket}</strong>
+                      <span class="badge bg-success ms-2">Cobrado</span>
+                  </div>
+                  <small class="text-muted">${new Date(cobro.fecha_cobro).toLocaleTimeString()}</small>
+              </div>
+              <div class="mt-2">
+                <small><i class="fa-solid fa-boxes"></i> Productos: ${cantidadProductos}</small>
+                <small class="ms-2"><i class="fa-solid fa-receipt"></i> Total: $${cobro.pedidos.total.toFixed(2)}</small>
+              </div>
+          `;
+          item.onclick = (e) => {
+              e.stopPropagation();
+              verDetalleCobro(cobro.id);
+          };
+          accordionBody.appendChild(item);
+      });
+
+      accordionCollapse.appendChild(accordionBody);
+      accordionItem.appendChild(accordionCollapse);
+      accordion.appendChild(accordionItem);
   });
+
+  new bootstrap.Collapse(document.getElementById('cobros-accordion'), {
+      toggle: false
+  });
+}
+
+function mostrarCobrosListaSimple(cobros, contenedor) {
+  cobros.forEach(cobro => {
+      const cantidadProductos = cobro.pedidos.pedido_productos[0]?.count || 0;
+      const item = document.createElement('div');
+      item.className = 'list-group-item list-group-item-action fade-in';
+      item.innerHTML = `
+          <div class="d-flex justify-content-between align-items-start">
+              <div>
+                  <strong><i class="fa-solid fa-ticket"></i> ${cobro.pedidos.codigo_ticket}</strong>
+                  <span class="badge bg-success ms-2">Cobrado</span>
+              </div>
+              <small class="text-muted">${new Date(cobro.fecha_cobro).toLocaleString()}</small>
+          </div>
+          <div class="mt-2">
+              <small><i class="fa-solid fa-boxes"></i> Productos: ${cantidadProductos}</small>
+              <small class="ms-2"><i class="fa-solid fa-receipt"></i> Total: $${cobro.pedidos.total.toFixed(2)}</small>
+          </div>
+      `;
+      item.onclick = () => verDetalleCobro(cobro.id);
+      contenedor.appendChild(item);
+  });
+}
+// Event listeners
+document.getElementById("open-history-btn").addEventListener("click", async () => {
+  new bootstrap.Offcanvas(document.getElementById("history-sidebar")).show();
+  
+  // Establecer fechas por defecto (hoy)
+  const hoy = getLocalDateString();
+  console.log(hoy)
+  document.getElementById("filtro-fecha-desde").value = hoy;
+  document.getElementById("filtro-fecha-hasta").value = hoy;
+  
+  await cargarHistorialCobros();
 });
+
+document.getElementById("btn-aplicar-filtros").addEventListener("click", cargarHistorialCobros);
 
 async function verDetalleCobro(cobroId) {
   if (!cobroId) {
@@ -608,9 +745,8 @@ async function verDetalleCobro(cobroId) {
   new bootstrap.Modal(document.getElementById("detallePedidoModal")).show();
 }
 
-
-document.getElementById("btn-aplicar-filtros").addEventListener("click", cargarHistorialPedidos);
-
+document.getElementById("btn-aplicar-filtros").addEventListener("click", cargarHistorialCobros);
+/*
 async function cargarHistorialPedidos() {
   const { data: sessionData } = await supabase.auth.getSession();
   const userId = sessionData.session.user.id;
@@ -652,10 +788,10 @@ async function cargarHistorialPedidos() {
     lista.innerHTML = `<li class="list-group-item text-muted">No se encontraron cobros con los filtros seleccionados.</li>`;
     return;
   }
-    // Si hay pedidos, actualiza el badge
-    cantidadPedidos.textContent = cobros.length;
-    badgeResultados.style.display = "block";
-    setTimeout(() => badgeResultados.classList.add("show"), 50);
+  // Si hay pedidos, actualiza el badge
+  cantidadPedidos.textContent = cobros.length;
+  badgeResultados.style.display = "block";
+  setTimeout(() => badgeResultados.classList.add("show"), 50);
 
   cobros.forEach(cobro => {
     const item = document.createElement("li");
@@ -671,4 +807,4 @@ async function cargarHistorialPedidos() {
     item.onclick = () => verDetalleCobro(cobro.id);
     lista.appendChild(item);
   });
-}
+}*/
