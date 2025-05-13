@@ -32,7 +32,7 @@ export async function obtenerSugerencia() {
       const faltan = Math.max(0, 5 - totalAgregados);
 
       seccion.innerHTML = `
-        <div style="background-color: var(--gris-claro); padding: 30px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center;">
+        <div style="background-color: var(--gris-claro); padding: 30px; border-radius: 2% 40%; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center;">
           <h2 style="color: #2c6580; font-size: 1.6rem; margin-bottom: 10px;">
             <i class="fas fa-search"></i> Aún no hay recomendaciones
           </h2>
