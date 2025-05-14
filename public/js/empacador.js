@@ -109,6 +109,7 @@ const handleNewOrder = (pedido) => {
     // 4. Muestra alerta en la interfaz
     displayOrderAlert(pedido);
 };
+
 // Función auxiliar para obtener la cantidad de productos
 async function obtenerCantidadProductos(pedidoId) {
     const { data: productos, error } = await supabase
@@ -210,7 +211,7 @@ async function actualizarContadorPedidosHoy() {
         .from("pedidos")
         .select("*", { count: "exact", head: true })
         .eq("empleado_id", userId)
-     //   .eq("origen", "empacador")
+        //   .eq("origen", "empacador")
         .gte("fecha", `${hoy}T00:00:00`)
         .lte("fecha", `${hoy}T23:59:59`);
 
@@ -343,75 +344,94 @@ async function cargarProductosPorCategoria(categoriaId) {
 }
 
 // Función para agregar productos a la tabla de la izquierda
-function agregarProducto(id, nombre, precio) {
+// Función para agregar productos con promociones
+async function agregarProducto(id, nombre, precio) {
     // Verificar si el producto ya está en la lista
     const productoExistente = productosSeleccionados.find(p => p.id === id);
 
     if (productoExistente) {
-        // Si el producto ya existe, solo aumentamos la cantidad
+        // Incrementar cantidad
         productoExistente.cantidad += 1;
-        productoExistente.total = productoExistente.cantidad * productoExistente.precio;
     } else {
-        // Si el producto no existe, lo agregamos a la lista
+        // Agregar nuevo producto
         productosSeleccionados.push({
             id,
             nombre,
             precio,
             cantidad: 1,
-            total: precio
+            descuento: 0, // Nuevo campo para almacenar descuentos
+            promocionAplicada: null // Nuevo campo para referencia de promoción
         });
     }
 
-    // Actualizar la tabla de productos seleccionados
+    // Verificar y aplicar promociones
+    await aplicarPromociones(id);
+
+    // Actualizar la tabla
     actualizarTabla();
 }
 
 // Función para actualizar la tabla con los productos seleccionados
+// Función actualizarTabla modificada para mostrar promociones
 function actualizarTabla() {
     const tablaProductos = document.getElementById("product-table").getElementsByTagName('tbody')[0];
-    tablaProductos.innerHTML = ''; // Limpiar la tabla antes de agregar nuevos productos
+    tablaProductos.innerHTML = '';
 
-    // Si no hay productos seleccionados, mostrar mensaje
     if (productosSeleccionados.length === 0) {
-        tablaProductos.innerHTML = `
-            <tr class="empty">
-                <td colspan="4">No hay productos seleccionados</td>
-            </tr>
-        `;
-        document.getElementById("delete-btn").style.display = "none"; // Mostrar el botón de eliminar
-        // Actualizar el total en la sección de totales
+        tablaProductos.innerHTML = `<tr class="empty"><td colspan="4">No hay productos seleccionados</td></tr>`;
         document.getElementById("total").textContent = "$0.00";
-    } else {
-        let totalGeneral = 0; // Para calcular el total general
-
-        // Agregar cada producto a la tabla
-        productosSeleccionados.forEach(producto => {
-            const row = tablaProductos.insertRow();
-
-            // Crear las celdas de la tabla
-            const cellNombre = row.insertCell(0);
-            const cellCantidad = row.insertCell(1);
-            const cellPrecio = row.insertCell(2);
-            const cellTotal = row.insertCell(3);
-
-            // Insertar los valores en las celdas
-            cellNombre.textContent = producto.nombre;
-            cellCantidad.textContent = producto.cantidad;
-            cellPrecio.textContent = `$${producto.precio.toFixed(2)}`;
-            cellTotal.textContent = `$${producto.total.toFixed(2)}`;
-
-            // Agregar evento para seleccionar la fila
-            row.addEventListener('click', () => seleccionarFila(row, producto));
-
-            // Sumar al total general
-            totalGeneral += producto.total;
-        });
-
-        // Actualizar el total en la sección de totales
-        document.getElementById("total").textContent = `$${totalGeneral.toFixed(2)}`;
-        actualizarEstadoBotonFinalizar(); // 🟩 actualiza el botón dinámicamente
+        return;
     }
 
+    let totalGeneral = 0;
+    let totalDescuentos = 0;
+
+    productosSeleccionados.forEach(producto => {
+        const row = tablaProductos.insertRow();
+
+        // Celda de nombre con indicador de promoción
+        const cellNombre = row.insertCell(0);
+        let nombreHTML = producto.nombre;
+        if (producto.promocionAplicada) {
+            const icono = producto.promocionAplicada.tipo === 'bogo' ?
+                'fa-badge-percent' : 'fa-tag';
+            nombreHTML += ` <i class="fas ${icono} text-success" title="${producto.promocionAplicada.nombre}"></i>`;
+        }
+        cellNombre.innerHTML = nombreHTML;
+
+        // Otras celdas
+        const cellCantidad = row.insertCell(1);
+        const cellPrecio = row.insertCell(2);
+        const cellTotal = row.insertCell(3);
+
+        cellCantidad.textContent = producto.cantidad;
+        cellPrecio.textContent = `$${producto.precio.toFixed(2)}`;
+
+        // Mostrar precio original y con descuento si aplica
+        if (producto.descuento > 0) {
+            const precioOriginal = (producto.precio * producto.cantidad).toFixed(2);
+            cellTotal.innerHTML = `
+                <span class="text-muted text-decoration-line-through">$${precioOriginal}</span>
+                <br>$${producto.total.toFixed(2)}
+            `;
+        } else {
+            cellTotal.textContent = `$${producto.total.toFixed(2)}`;
+        }
+
+        // Evento para seleccionar fila
+        row.addEventListener('click', () => seleccionarFila(row, producto));
+
+        // Sumar a totales
+        totalGeneral += producto.total;
+        totalDescuentos += producto.descuento;
+    });
+
+    // Actualizar total general
+    document.getElementById("total").innerHTML = `
+        $${totalGeneral.toFixed(2)}
+        ${totalDescuentos > 0 ?
+            `<small class="text-success">(Ahorro: $${totalDescuentos.toFixed(2)})</small>` : ''}
+    `;
 }
 
 // Función para seleccionar una fila y marcarla para eliminar
@@ -492,15 +512,15 @@ document.querySelectorAll(".num-btn").forEach(button => {
 });
 
 // Función para actualizar la cantidad del producto en la lista de productos seleccionados
-function updateProductQuantity(productId, newQuantity) {
+async function updateProductQuantity(productId, newQuantity) {
     // Buscar el producto seleccionado en la lista
     const producto = productosSeleccionados.find(p => p.id === productId);
 
     // Si el producto se encuentra, actualizar la cantidad
     if (producto) {
         producto.cantidad = newQuantity;
-        producto.total = producto.cantidad * producto.precio; // Actualizar el total del producto
-
+        //   producto.total = producto.cantidad * producto.precio; // Actualizar el total del producto
+        await aplicarPromociones(productId); // Re-aplicar promociones
         // Actualizar la tabla de productos seleccionados
         actualizarTabla();
     } else {
@@ -548,11 +568,11 @@ function mostrarTicket(codigoTicket, esReimpresion = false, fechaDelPedido = nul
     const ticketContent = document.getElementById("ticket-content");
     let totalGeneral = 0;
     let totalItems = 0;
+    let descuentoTotal = 0;
+    let promocionesAplicadas = [];
 
-    // Comienza el HTML del ticket
     let ticketHTML = `
     <div style="max-width: 300px; font-family: monospace; font-size: 16px; text-align: center; color: #000;">
-        ${esReimpresion ? '<p><strong>REIMPRESIÓN</strong></p>' : ''}
         <img src="${configuracionGlobal.logo_url || ''}" alt="Logo" style="max-width: 80px; margin-bottom: 5px;" />
         <h2 style="margin: 4px 0;">${configuracionGlobal.nombre_empresa || 'Tu Tienda'}</h2>
         <hr style="border-top: 1px dashed #aaa;" />
@@ -573,30 +593,69 @@ function mostrarTicket(codigoTicket, esReimpresion = false, fechaDelPedido = nul
 
     // Agregar cada producto al ticket
     productosSeleccionados.forEach(producto => {
-        const total = (producto.precio * producto.cantidad).toFixed(2);
-        totalGeneral += parseFloat(total);
-        totalItems += producto.cantidad;
+        let precioOriginal = producto.precio * producto.cantidad;
+        let totalProducto = precioOriginal;
+        
+        if (producto.descuento) {
+            totalProducto -= producto.descuento;
+            descuentoTotal += producto.descuento;
+            
+            if (producto.promocionAplicada && !promocionesAplicadas.includes(producto.promocionAplicada.nombre)) {
+                promocionesAplicadas.push(producto.promocionAplicada.nombre);
+            }
+        }
 
-        ticketHTML += `
+        totalGeneral += totalProducto;
+        totalItems += producto.cantidad;
+        
+        ticketHTML += ` 
             <tr>
                 <td>${producto.nombre}</td>
                 <td style="text-align: center;">${producto.cantidad}</td>
-                <td style="text-align: right;">$${total}</td>
+                <td style="text-align: right;">$${totalProducto.toFixed(2)}</td>
             </tr>
         `;
+
+        // Mostrar descuento si aplica
+        if (producto.descuento > 0) {
+            ticketHTML += `
+            <tr>
+                <td colspan="2" style="text-align: right;"><small class="text-success">${producto.promocionAplicada?.nombre || 'Descuento'}</small></td>
+                <td style="text-align: right;"><small class="text-success">-$${producto.descuento.toFixed(2)}</small></td>
+            </tr>
+            `;
+        }
     });
 
-    // Finalizar el ticket
+    // Mostrar resumen de promociones si hay
+    if (promocionesAplicadas.length > 0) {
+        ticketHTML += `
+            <tr><td colspan="3"><hr style="border-top: 1px dashed #aaa; margin: 5px 0;" /></td></tr>
+            <tr>
+                <td colspan="3"><small class="text-success"><strong>Promociones aplicadas:</strong> ${promocionesAplicadas.join(', ')}</small></td>
+            </tr>
+        `;
+    }
+
     ticketHTML += `
             </tbody>
         </table>
         <hr style="border-top: 2px dashed #aaa;" />
         <p style="margin: 4px 0; font-size: 16px;"><strong><i class="fa-solid fa-boxes-stacked"></i> Productos:</strong> ${totalItems}</p>
+    `;
+
+    if (descuentoTotal > 0) {
+        ticketHTML += `
+            <p style="margin: 4px 0; font-size: 16px;"><strong><i class="fa-solid fa-tag"></i> Descuento total:</strong> <span class="text-success">-$${descuentoTotal.toFixed(2)}</span></p>
+        `;
+    }
+
+    ticketHTML += `
         <p style="margin: 4px 0; font-size: 16px;"><strong><i class="fa-solid fa-cash-register"></i> Total:</strong> $${totalGeneral.toFixed(2)}</p>
         <div style="margin-top: 10px;">
             <svg id="barcode"></svg>
         </div>
-        <p style="margin-top: 8px;"><i class="fa-solid fa-circle-info"></i> Pendiente de pago</p>
+        <p style="margin-top: 8px;"><i class="fa-solid fa-circle-info"></i> ${esReimpresion ? 'Pedido reimpreso' : 'Pendiente de pago'}</p>
         <p style="margin: 6px 0;">Conserva este ticket para cualquier aclaración.</p>
         <hr style="border-top: 1px dashed #aaa;" />
         <p style="font-style: italic;">Gracias por tu compra <i class="fa-solid fa-heart"></i></p>
@@ -619,8 +678,6 @@ function mostrarTicket(codigoTicket, esReimpresion = false, fechaDelPedido = nul
     // Mostrar el modal para imprimir el ticket
     new bootstrap.Modal(document.getElementById('ticketModal')).show();
 }
-
-
 
 function actualizarEstadoBotonFinalizar() {
     const botonFinalizar = document.getElementById("finalize-btn");
@@ -912,7 +969,7 @@ function renderizarPedidos(pedidos, contenedor) {
 async function verDetallePedido(pedidoId) {
     const { data, error } = await supabase
         .from("pedido_productos")
-        .select("cantidad, precio_unitario, productos(nombre)")
+        .select("cantidad, precio_unitario, total, productos(nombre)")
         .eq("pedido_id", pedidoId);
 
     if (error) {
@@ -924,7 +981,7 @@ async function verDetallePedido(pedidoId) {
             <td><i class="fa-solid fa-cookie-bite"></i> ${item.productos?.nombre || 'N/D'}</td>
             <td>${item.cantidad}</td>
             <td>$${item.precio_unitario.toFixed(2)}</td>
-            <td>$${(item.cantidad * item.precio_unitario).toFixed(2)}</td>
+            <td>$${item.total.toFixed(2)}</td>  <!-- Aquí usamos el total desde la DB -->
         </tr>
     `).join("");
 
@@ -973,7 +1030,9 @@ async function verDetallePedido(pedidoId) {
         nombre: item.productos?.nombre || "N/D",
         cantidad: item.cantidad,
         precio: item.precio_unitario,
-        total: item.cantidad * item.precio_unitario
+        total: item.total,
+        descuento: item.descuento || 0,
+        promocion: item. promociones
     }));
 
     // Mostrar el modal con los detalles
@@ -1125,7 +1184,7 @@ async function mostrarPedidosPendientes() {
             // Determinar el color del badge según el estado
             const badgeClass = obtenerColorEstado(pedido.estado);  // Usamos la función para el color
             const badgeText = pedido.estado.charAt(0).toUpperCase() + pedido.estado.slice(1);  // Capitalizar el estado
-    
+
             div.innerHTML = `
           <div class="d-flex justify-content-between align-items-start">
             <div>
@@ -1403,7 +1462,7 @@ async function cancelarPedido(pedidoId) {
         );
     } else {
         // Si el usuario cancela, no hacer nada
-       // console.log("Cancelación del pedido cancelada.");
+        // console.log("Cancelación del pedido cancelada.");
     }
 }
 
@@ -1540,3 +1599,95 @@ document.getElementById('print-ticket-btnP').addEventListener('click', function 
     bootstrap.Modal.getInstance(document.getElementById('detallePedidoModalPendiente')).hide();
 });
 
+// Función para aplicar promociones
+async function aplicarPromociones(productoId) {
+    const producto = productosSeleccionados.find(p => p.id === productoId);
+    if (!producto) return;
+    // Obtener promociones válidas para este producto
+    const promociones = await verificarPromocion(productoId, producto.cantidad);
+
+    // Resetear descuentos antes de aplicar nuevas promociones
+    producto.descuento = 0;
+    producto.promocionAplicada = null;
+
+    if (promociones && promociones.length > 0) {
+        promociones.forEach(promocion => {
+            if (promocion.promocion.tipo === 'percentage') {
+                // Descuento porcentual
+                producto.descuento = (producto.precio * producto.cantidad * promocion.promocion.porcentaje) / 100;
+                producto.promocionAplicada = promocion.promocion;
+            } else if (promocion.promocion.tipo === 'bogo' && producto.cantidad >= 2) {
+                // Promoción 2x1
+                const pares = Math.floor(producto.cantidad / 2);
+                producto.descuento = pares * producto.precio;
+                producto.promocionAplicada = promocion.promocion;
+            }
+        });
+    }
+
+    // Calcular el total final del producto
+    producto.total = (producto.precio * producto.cantidad) - producto.descuento;
+}
+
+async function verificarPromocion(productoId, cantidad) {
+    // Obtener las promociones activas para el producto
+    const { data: promociones, error } = await supabase
+        .from('productos_promocion')
+        .select('promocion_id')
+        .eq('producto_id', productoId);
+
+    if (error) {
+        console.error("Error al obtener promociones:", error);
+        return null;
+    }
+
+    // Si el producto no tiene promociones, no hacer nada
+    if (!promociones || promociones.length === 0) return null;
+
+    // Verificar si alguna de las promociones está activa y si es 2x1
+    const promocionesActivas = await Promise.all(promociones.map(async (promo) => {
+        const { data: promocion, error } = await supabase
+            .from('promociones')
+            .select('*')
+            .eq('id', promo.promocion_id)
+            .single();
+
+        if (error) {
+            console.error("Error al obtener la promoción:", error);
+            return null;
+        }
+
+        // Comprobar si la promoción está activa y dentro del rango de fechas
+        const fechaActual = new Date();
+        const fechaInicio = new Date(promocion.fecha_inicio);
+        const fechaExpiracion = new Date(promocion.fecha_expiracion);
+
+        if (promocion.activa && fechaActual >= fechaInicio && fechaActual <= fechaExpiracion) {
+            // Verificar si la promoción es un 2x1
+            if (promocion.tipo === 'bogo') {
+                // Solo aplicar 2x1 si la cantidad es 2 o mayor
+                if (cantidad >= 2) {
+                    // Solo aplicar 1 descuento, no más
+                    const cantidadAplicada = Math.floor(cantidad / 2);  // Se aplica 1 descuento por cada par de productos
+                    mostrarNotificacionPromocion(promocion.nombre)
+                    console.log(promocion.nombre)
+                    return { promocion, cantidadAplicada };
+                }
+            }
+            return null; // No aplicar promoción si no es 2x1 o no se cumple la condición de cantidad
+        }
+
+        return null; // Promoción no activa
+    }));
+
+    // Filtrar las promociones válidas que se puedan aplicar
+    return promocionesActivas.filter(promo => promo !== null);
+}
+
+function mostrarNotificacionPromocion(promocion) {
+    const mensaje = promocion.tipo === 'percentage'
+        ? `¡Descuento del ${promocion.porcentaje}% aplicado!`
+        : `¡${promocion.nombre} aplicado!`;
+
+    mostrarToast(mensaje, 'success');
+}

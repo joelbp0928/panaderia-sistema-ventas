@@ -148,6 +148,7 @@ async function cargarProductosTicket() {
       .select(`
                 cantidad,
                 precio_unitario,
+                total,
                 productos:producto_id (id, nombre, imagen_url)
             `)
       .eq('pedido_id', ticketActual.id);
@@ -160,7 +161,7 @@ async function cargarProductosTicket() {
       imagen: item.productos.imagen_url,
       cantidad: item.cantidad,
       precioUnitario: item.precio_unitario,
-      subtotal: item.cantidad * item.precio_unitario
+      subtotal: item.total
     }));
 
     // Aquí obtenemos el total directamente desde la tabla 'pedidos'

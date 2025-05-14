@@ -32,13 +32,16 @@ export async function guardarPedido(productosSeleccionados, userId, origen = "em
 
     if (error) throw error;
 
+    // Insertar los productos en la tabla de pedido_productos
     const productosDB = productosSeleccionados.map(prod => ({
       pedido_id: pedido.id,
       producto_id: prod.id,
       cantidad: prod.cantidad,
       precio_unitario: prod.precio,
+      descuento: prod.descuento || 0, // El descuento que aplica la promoción
+      total: prod.total // Total después de aplicar descuento
     }));
-
+console.log(productosDB)
     const { error: errorProductos } = await supabase
       .from("pedido_productos")
       .insert(productosDB);
@@ -65,7 +68,7 @@ export async function guardarPedido(productosSeleccionados, userId, origen = "em
  */
 export async function generarCodigoTicket(origen = "empacador", userId) {
   const hoy = getLocalDateString();
-  
+
   // Configuración de filtros
   const filters = {
     gte: `${hoy}T00:00:00`,

@@ -925,11 +925,7 @@ table.table-sm td {
 }
 
 /* Mejorar la apariencia de los botones */
-.btn {
-    border-radius: 8px;
-    padding: 10px 20px;
-    font-weight: bold;
-}
+
 
 #pedido-info {
     font-size: 16px;
