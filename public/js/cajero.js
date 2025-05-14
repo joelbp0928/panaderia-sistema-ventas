@@ -105,7 +105,7 @@ document.getElementById("codigo-ticket-input").addEventListener("keypress", asyn
 
     // Mostrar el estado con color
     document.getElementById('ticket-status').innerHTML = `
-      <span style="font-weight: bold;" class="estado-${estado}">Estado: ${estadoTexto}</span>
+       <span style="font-weight: bold;" class="estado-${estado}"><i class="fa-solid fa-traffic-light"></i> ${estadoTexto}</span>
     `;
 
     // Habilitar o deshabilitar el cobro según el estado
@@ -163,6 +163,23 @@ async function cargarProductosTicket() {
       subtotal: item.cantidad * item.precio_unitario
     }));
 
+    // Aquí obtenemos el total directamente desde la tabla 'pedidos'
+    const { data: totalData, error: totalError } = await supabase
+      .from('pedidos')
+      .select('total')
+      .eq('id', ticketActual.id)
+      .single();  // 'single' porque solo esperamos un único registro
+
+    if (totalError || !totalData) throw totalError;
+
+    document.getElementById('total-amount').classList.add('updated');
+    setTimeout(() => {
+      document.getElementById('total-amount').classList.remove('updated');
+    }, 500);  // El efecto dura medio segundo
+
+    // Actualizar el total en el frontend con el valor obtenido de la DB
+    document.getElementById('total-amount').textContent = `$${totalData.total.toFixed(2)}`;
+
   } catch (error) {
     console.error("Error al cargar productos del ticket:", error);
   }
@@ -189,7 +206,7 @@ function actualizarTablaProductos() {
   });
 
   // Actualizar total
-  document.getElementById('total-amount').textContent = `$${total.toFixed(2)}`;
+  // document.getElementById('total-amount').textContent = `$${total.toFixed(2)}`;
 }
 
 
@@ -264,7 +281,29 @@ async function procesarPago() {
     return;
   }
 
-  const total = calcularTotal();
+  // Obtener el total directamente desde la base de datos
+  let total = 0;
+  try {
+    const { data: totalData, error: totalError } = await supabase
+      .from('pedidos')
+      .select('total')
+      .eq('id', ticketActual.id)
+      .single();  // 'single' porque solo esperamos un único registro
+
+    if (totalError || !totalData) {
+      throw totalError;
+    }
+    total = totalData.total;
+  } catch (error) {
+    console.error("Error al obtener el total del pedido:", error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al obtener el total',
+      text: 'Hubo un problema al obtener el total del pedido desde la base de datos.',
+    });
+    return;
+  }
+
   const montoPagado = parseFloat(document.getElementById('amount-input').value) || 0;
 
   // Mostrar alerta según el estado
@@ -415,6 +454,7 @@ async function procesarPago() {
     ticketActual = null;
     actualizarTablaProductos();
     document.getElementById('amount-input').value = '';
+     document.getElementById('total-amount').textContent = '00.00';
     document.getElementById('change').textContent = '0.00';
     document.getElementById('codigo-ticket-input').value = '';
 
