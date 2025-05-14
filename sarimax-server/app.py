@@ -3,6 +3,7 @@ import pandas as pd
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from flask_cors import CORS
 import requests
+#import psycopg2
 from config import SUPABASE_URL, SUPABASE_API_KEY
 from urllib.parse import urlencode
 
@@ -100,6 +101,11 @@ def sugerencia():
     print(f"📌 Cliente ID recibido en backend: {cliente_id}")
     if not cliente_id:
         return jsonify({"error": "Falta el cliente_id"}), 400
+    
+    productos = obtener_productos()
+
+    mapeo_producto_global = {p["id"]: i for i, p in enumerate(productos)}
+    mapeo_inverso_global = {i: p["id"] for i, p in enumerate(productos)}
 
     historial = obtener_historial_cliente(cliente_id)
 
@@ -119,39 +125,117 @@ def sugerencia():
     producto_ids = [x['producto_id'] for x in historial]
 
     # Paso 2: Mapeo UUID → número
-    uuid_unicos = list(set(producto_ids))
-    mapeo_producto = {uuid: i for i, uuid in enumerate(uuid_unicos)}
-    producto_ids_numericos = [mapeo_producto[pid] for pid in producto_ids]
+    
+    
+    producto_ids_numericos = [
+        mapeo_producto_global[pid] for pid in producto_ids if pid in mapeo_producto_global
+    ]
+
     
     print("📦 Mapeo de producto (UUID → número):")
-    for k, v in mapeo_producto.items():
+    for k, v in mapeo_producto_global.items():
         print(f"{k} => {v}")
 
     # Paso 3: Serie con fechas como índice y producto como número
     serie = pd.Series(producto_ids_numericos, index=fechas)
+    print("Serie: ", serie)
 
     # SARIMAX con la serie
     modelo = SARIMAX(serie, order=(1, 1, 0), seasonal_order=(0, 0, 0, 0))
     resultado = modelo.fit(disp=False)
-    prediccion = resultado.forecast(steps=1).iloc[0]
-    predicho_redondeado = round(prediccion)
+    
+    predicciones = resultado.forecast(steps=3).round().astype(int).tolist()
+    #predicho_redondeado = round(prediccion)
 
     # Paso 4: Inverso del mapeo (número → UUID)
-    mapeo_inverso = {v: k for k, v in mapeo_producto.items()}
-    producto_uuid_predicho = mapeo_inverso.get(predicho_redondeado)
+    producto_uuids_predichos = [
+        mapeo_inverso_global.get(p) for p in predicciones if p in mapeo_inverso_global
+]
+
     
     print("\n🔄 Mapeo inverso (número → UUID):")
-    for k, v in mapeo_inverso.items():
+    for k, v in mapeo_inverso_global.items():
         print(f"{k} => {v}")
+    
+    print("🎯 Predicciones UUIDs:", producto_uuids_predichos)
 
     # Obtener todos los productos de Supabase para mostrar datos
-    productos = obtener_productos()
-    producto_sugerido = next((p for p in productos if p['id'] == producto_uuid_predicho), None)
+    #productos = obtener_productos()
+    
+    # Filtrar productos seguros
+    sugerencias_seguras = []
+    for uuid in producto_uuids_predichos:
+        if pan_es_seguro(uuid, cliente_id):
+            sugerido = next((p for p in productos if p['id'] == uuid), None)
+            if sugerido:
+                sugerencias_seguras.append(sugerido)
+            
+            
+    sugerencias_seguras_unicas = []
+    uuids_agregados = set()
+       
+    if len(sugerencias_seguras_unicas) < 3:
+        for producto in productos:
+            if producto["id"] in uuids_agregados:
+                continue  # ya lo tienes
+            if not pan_es_seguro(producto["id"], cliente_id):
+                continue  # no es seguro
+            sugerencias_seguras_unicas.append(producto)
+            uuids_agregados.add(producto["id"])
+            if len(sugerencias_seguras_unicas) >= 3:
+             break
 
-    if producto_sugerido:
-        return jsonify(producto_sugerido)
+    # Enviar solo los primeros 3 únicos y seguros
+    print("🔍 Sugerencias después del filtrado:", sugerencias_seguras_unicas)        
+            
+
+    if sugerencias_seguras:
+        return jsonify({"sugerencias": sugerencias_seguras})
+        
     else:
-        return jsonify({"sugerencia": "Pan sorpresa 🎁"})
+        return jsonify({
+            "sugerencias": [],
+            "mensaje": "No se encontraron productos seguros según tus preferencias."
+        })
+        
+    
+
+    
+    #producto_sugerido = next((p for p in productos if p['id'] == producto_uuid_predicho), None)
+
+    #if producto_sugerido:
+    #    return jsonify(producto_sugerido)
+    #else:
+     #   return jsonify({"sugerencia": "Pan sorpresa 🎁"})
+    
+def pan_es_seguro(producto_id, cliente_id):
+    # Headers base para la API
+    headers = {
+        "apikey": SUPABASE_API_KEY,
+        "Authorization": f"Bearer {SUPABASE_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    # 1. Obtener ingredientes del producto
+    url_ingredientes = f"{SUPABASE_URL}/rest/v1/productos_ingredientes"
+    params_ing = {
+        "producto_id": f"eq.{producto_id}",
+        "select": "ingrediente_id"
+    }
+    res_ing = requests.get(url_ingredientes, headers=headers, params=params_ing)
+    ingredientes_producto = [r['ingrediente_id'] for r in res_ing.json()]
+
+    # 2. Obtener alergias del cliente
+    url_alergias = f"{SUPABASE_URL}/rest/v1/alergias"
+    params_al = {
+        "cliente_id": f"eq.{cliente_id}",
+        "select": "ingrediente_id"
+    }
+    res_al = requests.get(url_alergias, headers=headers, params=params_al)
+    ingredientes_alergicos = [r['ingrediente_id'] for r in res_al.json()]
+
+    # 3. Comparar
+    return not set(ingredientes_producto) & set(ingredientes_alergicos)
 
 
 
@@ -164,5 +248,6 @@ def mostrar_productos():
 # === Correr servidor ===
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
+
 
 
