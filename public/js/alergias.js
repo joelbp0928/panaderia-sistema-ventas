@@ -1,5 +1,3 @@
-// 1. Mostrar el modal al dar clic en el botón de preferencias
-
 const PROJECT_URL = "https://kicwgxkkayxneguidsxe.supabase.co"; // ← tu URL real
 const API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpY3dneGtrYXl4bmVndWlkc3hlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwNjc2NDgsImV4cCI6MjA1NjY0MzY0OH0.0d-ON6kBYU3Wx3L7-jP-n0wcLYD9Uj0GcxAYULqsDRg"; // ← tu key anon real
 
@@ -37,7 +35,7 @@ document.getElementById('btn-filtro-alergenos').addEventListener('click', functi
 
   Promise.all([fetchIngredientes, fetchAlergias])
     .then(([ingredientes, alergias]) => {
-      alergiasActuales = alergias.map(a => a.ingrediente_id); // Guardar para comparar después
+      alergiasActuales = alergias.map(a => a.ingrediente_id); // Guardar para comparar después ss
 
       ingredientes.forEach(ingrediente => {
         const checked = alergiasActuales.includes(ingrediente.id) ? 'checked' : '';
@@ -56,6 +54,7 @@ document.getElementById('btn-filtro-alergenos').addEventListener('click', functi
 // 2. Cerrar el modal al dar clic en la "X"
 document.getElementById('cerrar-modal').addEventListener('click', function () {
   document.getElementById('modal-alergias').style.display = 'none';
+  
 });
 
 // 3. Cerrar el modal si se da clic fuera del contenido
@@ -64,7 +63,9 @@ window.addEventListener('click', function (event) {
   if (event.target === modal) {
     modal.style.display = 'none';
   }
+  
 });
+
 
 // 4. Enviar ingredientes seleccionados al backend
 document.getElementById('form-alergias').addEventListener('submit', function (e) {
@@ -115,9 +116,9 @@ document.getElementById('form-alergias').addEventListener('submit', function (e)
 
   alert('Preferencias actualizadas.');
   document.getElementById('modal-alergias').style.display = 'none';
+
+  import('./sugerencias.js').then(modulo => {
+    modulo.obtenerSugerencia(); // recarga automáticamente el nuevo estado
+  });
 });
 
-document.getElementById('mensaje-exito').style.display = 'block';
-setTimeout(() => {
-  document.getElementById('mensaje-exito').style.display = 'none';
-}, 3000);
