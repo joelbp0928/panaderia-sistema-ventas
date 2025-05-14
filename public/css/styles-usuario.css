@@ -147,22 +147,24 @@ header {
   max-width: 300px; /* 🔽 Esto reduce el ancho */
   margin: auto;
   transition: transform 0.2s ease;
-  opacity: 0;
+  opacity: 1;
   transform: translateY(20px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition: opacity 0.6s ease, transform 0.5s ease;
   
 }
-
 
 .tarjeta-horizontal:hover {
    border-radius: 2% 20%;
   transform: rotate(15deg);
-  transition-timing-function: ease-in-out;  
 }
 #tarjeta-sugerencia.mostrar {
   opacity: 1;
   transform: translateY(0);
 }
+#tarjeta-sugerencia.oculto {
+  opacity: 0;
+} 
+
 
 
 
