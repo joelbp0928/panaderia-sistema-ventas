@@ -18,6 +18,28 @@ export async function obtenerSugerencia() {
     //const res = await fetch(`http://localhost:5000/?cliente_id=${cliente_id}`);
     const data = await res.json();
 
+    console.log("Estado: ", data.estado);
+
+     if (data.estado === "sin_historial") {
+      const tarjeta = document.getElementById("tarjeta-sugerencia");
+      tarjeta.classList.add("oculto");
+
+    setTimeout(() => {
+      tarjeta.innerHTML = `
+        <div style="padding: 10px; text-align: center;">
+          <h3 style="margin-bottom: 10px;"> Aún no hay recomendaciones</h3>
+          <p>Compra minimo 5 panes para poder darte sugerencias deliciosas</p>
+          <i class="fas fa-bread-slice" style="font-size: 40px; color: #a67847;"></i>
+        </div>
+        <br>
+      `;
+    tarjeta.classList.remove("oculto");
+    tarjeta.style.display = "flex";
+  }, 300);
+
+  return;
+}
+
     // Verifica que venga con el nombre correcto desde el backend
     sugerencias = data.sugerencias || [];// <-- asegúrate que el backend regrese esto
     indiceActual = 0;
