@@ -7,22 +7,27 @@ export async function aplicarPromociones(productoId, productosSeleccionados) {
     const producto = productosSeleccionados.find(p => p.id === productoId);
     if (!producto) return;
 
-    // Calcular el total actual del pedido (sin descuentos)
-    const totalPedido = calcularTotalPedido(productosSeleccionados);
+    // Calcular el subtotal del pedido (sin descuentos)
+    const subtotal = calcularSubtotalPedido(productosSeleccionados);
 
     // Obtener promociones válidas para este producto
-    const promociones = await verificarPromocion(productoId, producto.cantidad, totalPedido);
+    const promociones = await verificarPromocion(productoId, producto.cantidad, subtotal);
 
     // Resetear descuentos antes de aplicar nuevas promociones
     producto.descuento = 0;
     producto.promocionAplicada = null;
-
+    console.log(promociones)
     if (promociones && promociones.length > 0) {
         promociones.forEach(promocion => {
+            console.log(promocion)
             switch (promocion.promocion.tipo) {
                 case 'percentage':
-                    producto.descuento = (producto.precio * producto.cantidad * promocion.promocion.porcentaje) / 100;
-                    producto.promocionAplicada = promocion.promocion;
+                    // Solo aplicamos el descuento percentage si es general (no por producto)
+                    if (promocion.promocion.es_general) {
+                        // Marcamos la promoción pero el descuento se aplicará a nivel de pedido
+                        producto.descuento = (producto.precio * producto.cantidad * promocion.promocion.porcentaje) / 100;
+                        producto.promocionAplicada = promocion.promocion;
+                    }
                     break;
 
                 case 'bogo':
@@ -38,6 +43,21 @@ export async function aplicarPromociones(productoId, productosSeleccionados) {
                     producto.promocionAplicada = promocion.promocion;
                     break;
 
+                case 'products':
+                    // Descuento específico por producto
+                    producto.descuento = (producto.precio * producto.cantidad * promocion.promocion.porcentaje) / 100;
+                    producto.promocionAplicada = promocion.promocion;
+                    break;
+
+                case 'buy-get':
+                    // Aquí aplicamos la lógica de "Buy X, Get Y Free"
+                    if (producto.cantidad > promocion.promocion.buy_quantity) {
+                        const cantidadGratis = Math.floor(producto.cantidad / promocion.promocion.buy_quantity) * promocion.promocion.get_quantity;
+                        const precioDescuento = (producto.precio * cantidadGratis); // El descuento será igual al valor de los productos gratis
+                        producto.descuento += precioDescuento; // Sumar el descuento al total del producto
+                        producto.promocionAplicada = promocion.promocion;
+                    }
+                    break;
                 default:
                     console.warn(`Tipo de promoción no reconocido: ${promocion.promocion.tipo}`);
             }
@@ -47,39 +67,75 @@ export async function aplicarPromociones(productoId, productosSeleccionados) {
     producto.total = (producto.precio * producto.cantidad) - producto.descuento;
 }
 
-// Función para aplicar descuentos a nivel de pedido (threshold por total)
+
+// Función para aplicar descuentos a nivel de pedido
 export function aplicarDescuentosPedido(productosSeleccionados) {
     // Calcular SUBTOTAL (sin descuentos)
     const subtotal = calcularSubtotalPedido(productosSeleccionados);
     let descuentoThreshold = 0;
+    let descuentoPercentage = 0;
+    let descuentosProductos = 0;
+    let descuentosBogo = 0;
+    let promocionXY = 0;
     let promocionThreshold = null;
+    let promocionPercentage = null;
 
-    // Buscar promociones de threshold en todos los productos
+    // Buscar promociones en todos los productos
     productosSeleccionados.forEach(producto => {
-        if (producto.promocionAplicada && producto.promocionAplicada.tipo === 'threshold') {
-            const promocion = producto.promocionAplicada;
-            console.log(subtotal)
-            if (subtotal >= promocion.threshold) {
-                descuentoThreshold = (subtotal * promocion.porcentaje) / 100;
-                promocionThreshold = promocion;
-                
+        if (producto.promocionAplicada) {
+            switch (producto.promocionAplicada.tipo) {
+                case 'threshold':
+                    if (subtotal >= producto.promocionAplicada.threshold) {
+                        descuentoThreshold = (subtotal * producto.promocionAplicada.porcentaje) / 100;
+                        promocionThreshold = producto.promocionAplicada;
+                    }
+                    break;
+
+                case 'percentage':
+                    if (producto.promocionAplicada.es_general) {
+                        descuentoPercentage = (subtotal * producto.promocionAplicada.porcentaje) / 100;
+                        promocionPercentage = producto.promocionAplicada;
+                    }
+                    break;
+
+                case 'products':
+                    // Descuento específico por producto
+                    descuentosProductos += (producto.precio * producto.cantidad * producto.promocionAplicada.porcentaje) / 100;
+                    break;
+
+                case 'bogo':
+                    // Calcular descuentos por productos 2x1
+                    descuentosBogo += (producto.descuento || 0);
+                    break;
+
+                case 'buy-get':
+                    // Calcular descuentos por "buy-get"
+                    // Aquí calculamos los productos gratis
+                    const cantidadGratis = Math.floor(producto.cantidad / producto.promocionAplicada.buy_quantity) * producto.promocionAplicada.get_quantity;
+                    promocionXY += (producto.precio * cantidadGratis);
+                    break;
             }
         }
     });
 
-    // Calcular descuentos por productos
-    const descuentosProductos = productosSeleccionados.reduce((total, producto) => {
-        return total + (producto.descuento || 0);
-    }, 0);
-
+    // Calcular el total de descuentos por productos
+    /*  const descuentosTotales = productosSeleccionados.reduce((total, producto) => {
+          return total + (producto.descuento || 0);
+      }, 0);
+  */
     return {
         subtotal,
         descuentoThreshold,
+        descuentoPercentage,
         descuentosProductos,
+        descuentosBogo,
         promocionThreshold,
-        totalConDescuento: subtotal - descuentosProductos - descuentoThreshold
+        promocionPercentage,
+        promocionXY,
+        totalConDescuento: subtotal -/* descuentosTotales -*/ descuentoThreshold - descuentoPercentage - descuentosProductos - descuentosBogo - promocionXY
     };
 }
+
 
 // Nueva función para calcular subtotal (sin descuentos)
 export function calcularSubtotalPedido(productosSeleccionados) {
@@ -137,6 +193,12 @@ async function verificarPromocion(productoId, cantidad, subtotal) {
                 return cantidad >= (promocion.buy_quantity || 2);
             case 'threshold':
                 return subtotal >= promocion.threshold;
+            case 'products':
+                // Para promociones de tipo "products", verificamos que el producto sea el correcto                
+                return true//productoId === promocion.producto_id && cantidad >= promocion.min_quantity; // Verificamos si el producto califica para el descuento
+            case 'buy-get':
+                // Para promociones de tipo "buy-get", verificamos si la cantidad cumple con el requisito
+                return cantidad >= promocion.buy_quantity;
             default:
                 return false;
         }

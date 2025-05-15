@@ -374,7 +374,6 @@ async function agregarProducto(id, nombre, precio) {
 }
 
 // Función para actualizar la tabla con los productos seleccionados
-// Función actualizarTabla modificada para mostrar promociones
 function actualizarTabla() {
     const tablaProductos = document.getElementById("product-table").getElementsByTagName('tbody')[0];
     tablaProductos.innerHTML = '';
@@ -385,8 +384,6 @@ function actualizarTabla() {
         return;
     }
 
-    // Calcular totales
-    const totalPedido = calcularTotalPedido(productosSeleccionados);
     let totalGeneral = 0;
     let totalDescuentosProductos = 0;
 
@@ -398,17 +395,20 @@ function actualizarTabla() {
         }
     });
 
-    // Luego aplicamos descuentos por threshold (pedido)
     // Calcular totales usando la nueva función
     const {
         subtotal,
         descuentoThreshold,
+        descuentoPercentage,
         descuentosProductos,
+        descuentosBogo,
         promocionThreshold,
+        promocionPercentage,
+        promocionXY,
         totalConDescuento
     } = aplicarDescuentosPedido(productosSeleccionados);
-  //  const totalFinal = totalGeneral - descuentoTotal;
 
+    let cantidadGratis = 0;
     // Mostrar productos en la tabla
     productosSeleccionados.forEach(producto => {
         const row = tablaProductos.insertRow();
@@ -417,8 +417,7 @@ function actualizarTabla() {
         const cellNombre = row.insertCell(0);
         let nombreHTML = producto.nombre;
         if (producto.promocionAplicada) {
-            const icono = producto.promocionAplicada.tipo === 'threshold' ?
-                'bogo' : 'fa-tag';
+            const icono = producto.promocionAplicada.tipo === 'threshold' ? 'fa-badge-percent' : 'fa-tag';
             nombreHTML += ` <i class="fas ${icono} text-success" title="${producto.promocionAplicada.nombre}"></i>`;
         }
         cellNombre.innerHTML = nombreHTML;
@@ -442,20 +441,27 @@ function actualizarTabla() {
             cellTotal.textContent = `$${producto.total.toFixed(2)}`;
         }
 
+        // Mostrar descuento "buy-get" si aplica
+        if (producto.promocionAplicada?.tipo === 'buy-get') {
+            cantidadGratis = Math.floor(producto.cantidad / producto.promocionAplicada.buy_quantity) * producto.promocionAplicada.get_quantity;
+            const descuentoGratis = producto.precio * cantidadGratis;
+            cellTotal.innerHTML += `
+                <div style="font-size: 14px; color:green;">
+                    <small>Promoción Compra ${producto.cantidad} gratis ${cantidadGratis}: -$${descuentoGratis.toFixed(2)}</small>
+                </div>
+            `;
+        }
+
         row.addEventListener('click', () => seleccionarFila(row, producto));
     });
 
- 
     // Mostrar total con todos los descuentos
-    let htmlTotal = `Total: $${totalConDescuento.toFixed(2)}`;
-    
-    // Mostrar subtotal
-    htmlTotal = `
+    let htmlTotal = `
         <div class="text-muted">
             <small>Subtotal: $${subtotal.toFixed(2)}</small>
         </div>
-    ` + htmlTotal;
-    
+    `;
+
     // Mostrar descuentos por productos si existen
     if (descuentosProductos > 0) {
         htmlTotal += `
@@ -464,7 +470,25 @@ function actualizarTabla() {
             </div>
         `;
     }
-    
+
+    // Mostrar descuento por porcentaje general si aplica
+    if (descuentoPercentage > 0) {
+        htmlTotal += `
+            <div class="text-success">
+                <small>Descuento general (${promocionPercentage?.nombre || 'Promoción'}): -$${descuentoPercentage.toFixed(2)}</small>
+            </div>
+        `;
+    }
+
+    // Mostrar descuento por 2x1 si aplica
+    if (descuentosBogo > 0) {
+        htmlTotal += `
+            <div class="text-success">
+                <small>2x1 Descuentos por productos: -$${descuentosBogo.toFixed(2)}</small>
+            </div>
+        `;
+    }
+
     // Mostrar descuento por threshold si aplica
     if (descuentoThreshold > 0) {
         htmlTotal += `
@@ -474,8 +498,20 @@ function actualizarTabla() {
         `;
     }
 
+    // Mostrar descuento por get-buy si aplica
+    if (promocionXY > 0) {
+        htmlTotal += `
+            <div class="text-success">
+                <small>Descuento de  (${cantidadGratis || 'Promoción'}): -$${promocionXY.toFixed(2)}</small>
+            </div>
+        `;
+    }
+
+    htmlTotal += `Total: $${totalConDescuento.toFixed(2)}`;
+
     document.getElementById("total").innerHTML = htmlTotal;
 }
+
 
 // Función para seleccionar una fila y marcarla para eliminar
 function seleccionarFila(row, producto) {
@@ -606,29 +642,34 @@ document.getElementById("finalize-btn").addEventListener("click", async function
     mostrarTicket(codigoTicket, false, pedidoGuardado.fecha);
 });
 
-// En mostrarTicket()
+// Abre Modal y Diseño a imprimir en ticket
+// Abre Modal y Diseño a imprimir en ticket
 function mostrarTicket(codigoTicket, esReimpresion = false, fechaDelPedido = null) {
     const ticketContent = document.getElementById("ticket-content");
-    
+
     // Calcular todos los totales necesarios
-    const { 
-        subtotal, 
-        descuentoThreshold, 
+    const {
+        subtotal,
+        descuentoThreshold,
+        descuentoPercentage,
         descuentosProductos,
+        descuentosBogo,
         promocionThreshold,
-        totalConDescuento 
+        promocionPercentage,
+        promocionXY,
+        totalConDescuento
     } = aplicarDescuentosPedido(productosSeleccionados);
 
     // Recolectar nombres de promociones aplicadas
     let promocionesAplicadas = [];
-    
+
     // Primero las promociones por producto
     productosSeleccionados.forEach(producto => {
         if (producto.promocionAplicada && !promocionesAplicadas.includes(producto.promocionAplicada.nombre)) {
             promocionesAplicadas.push(producto.promocionAplicada.nombre);
         }
     });
-    
+
     // Luego la promoción por threshold si aplica
     if (descuentoThreshold > 0 && promocionThreshold && !promocionesAplicadas.includes(promocionThreshold.nombre)) {
         promocionesAplicadas.push(promocionThreshold.nombre);
@@ -659,12 +700,11 @@ function mostrarTicket(codigoTicket, esReimpresion = false, fechaDelPedido = nul
     productosSeleccionados.forEach(producto => {
         const precioOriginal = producto.precio * producto.cantidad;
         const totalProducto = producto.total;
-        
+
         // Mostrar icono de promoción si aplica
         let nombreProducto = producto.nombre;
         if (producto.promocionAplicada) {
-            const iconClass = producto.promocionAplicada.tipo === 'bogo' ? 
-                'fa-badge-percent' : 'fa-tag';
+            const iconClass = producto.promocionAplicada.tipo === 'threshold' ? 'fa-badge-percent' : 'fa-tag';
             nombreProducto += ` <i class="fas ${iconClass} text-success"></i>`;
         }
 
@@ -692,6 +732,23 @@ function mostrarTicket(codigoTicket, esReimpresion = false, fechaDelPedido = nul
             </tr>
             `;
         }
+
+        // Mostrar descuento "buy-get" si aplica
+        if (producto.promocionAplicada?.tipo === 'buy-get') {
+            const cantidadGratis = Math.floor(producto.cantidad / producto.promocionAplicada.buy_quantity) * producto.promocionAplicada.get_quantity;
+            const descuentoGratis = producto.precio * cantidadGratis;
+
+            ticketHTML += `
+            <tr>
+                <!--<td colspan="2" style="text-align: right;">
+                    <small class="text-success">Promoción Buy X Get Y Free:</small>
+                </td>-->
+                <td style="text-align: right;">
+                    <small class="text-success">- ${cantidadGratis} producto(s) gratis</small>
+                </td>
+            </tr>
+            `;
+        }
     });
 
     // Línea divisoria antes de los totales
@@ -713,6 +770,34 @@ function mostrarTicket(codigoTicket, esReimpresion = false, fechaDelPedido = nul
         <tr>
             <td colspan="2" style="text-align: right;"><small class="text-success">Descuentos por productos:</small></td>
             <td style="text-align: right;"><small class="text-success">-$${descuentosProductos.toFixed(2)}</small></td>
+        </tr>
+        `;
+    }
+
+    // Mostrar descuento por percentage general si existe
+    if (descuentoPercentage > 0) {
+        ticketHTML += `
+        <tr>
+            <td colspan="2" style="text-align: right;">
+                <small class="text-success">${promocionPercentage?.nombre || 'Descuento general'}:</small>
+            </td>
+            <td style="text-align: right;">
+                <small class="text-success">-$${descuentoPercentage.toFixed(2)}</small>
+            </td>
+        </tr>
+        `;
+    }
+
+    // Mostrar descuento por 2x1 si aplica
+    if (descuentosBogo > 0) {
+        ticketHTML += `
+        <tr>
+            <td colspan="2" style="text-align: right;">
+                <small class="text-success">2x1 Descuentos por productos:</small>
+            </td>
+            <td style="text-align: right;">
+                <small class="text-success">-$${descuentosBogo.toFixed(2)}</small>
+            </td>
         </tr>
         `;
     }
@@ -749,7 +834,7 @@ function mostrarTicket(codigoTicket, esReimpresion = false, fechaDelPedido = nul
                 <small class="text-success"><strong>Promociones aplicadas:</strong><br>${promocionesAplicadas.join(', ')}</small>
             </td>
         </tr>
-        `;
+    `;
     }
 
     // Pie del ticket
