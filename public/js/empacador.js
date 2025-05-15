@@ -404,7 +404,7 @@ function actualizarTabla() {
         descuentosBogo,
         promocionThreshold,
         promocionPercentage,
-        promocionXY,
+        descuentosBuyGet,
         totalConDescuento
     } = aplicarDescuentosPedido(productosSeleccionados);
 
@@ -447,7 +447,7 @@ function actualizarTabla() {
             const descuentoGratis = producto.precio * cantidadGratis;
             cellTotal.innerHTML += `
                 <div style="font-size: 14px; color:green;">
-                    <small>Promoción Compra ${producto.cantidad} gratis ${cantidadGratis}: -$${descuentoGratis.toFixed(2)}</small>
+                    <small>Promoción Compra ${producto.cantidad} gratis ${cantidadGratis}</small>
                 </div>
             `;
         }
@@ -499,10 +499,10 @@ function actualizarTabla() {
     }
 
     // Mostrar descuento por get-buy si aplica
-    if (promocionXY > 0) {
+    if (descuentosBuyGet > 0) {
         htmlTotal += `
             <div class="text-success">
-                <small>Descuento de  (${cantidadGratis || 'Promoción'}): -$${promocionXY.toFixed(2)}</small>
+                Descuento por promoción: -$${descuentosBuyGet.toFixed(2)}
             </div>
         `;
     }
