@@ -39,9 +39,10 @@ export async function guardarPedido(productosSeleccionados, userId, origen = "em
       cantidad: prod.cantidad,
       precio_unitario: prod.precio,
       descuento: prod.descuento || 0, // El descuento que aplica la promoción
-      total: prod.total // Total después de aplicar descuento
+      promocion_id: prod.promocionAplicada ? prod.promocionAplicada.id : null,
+      total: prod.total
     }));
-console.log(productosDB)
+    console.log(productosDB)
     const { error: errorProductos } = await supabase
       .from("pedido_productos")
       .insert(productosDB);

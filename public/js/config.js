@@ -1,6 +1,6 @@
-import { supabase } from './supabase-config.js'; // Importa la configuración de Supabase
-import { getClienteActivo } from './estado.js';
 import { agregarProductoAlCarrito } from './cart.js';
+import { supabase } from './supabase-config.js';
+import { getClienteActivo } from './estado.js';
 
 // 🔹 Variable global para la categoría seleccionada
 let categoriaSeleccionada = null;

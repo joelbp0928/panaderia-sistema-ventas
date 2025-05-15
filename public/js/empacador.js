@@ -1,9 +1,10 @@
-import { cargarProductos, cargarConfiguracion, configuracionGlobal } from "./config.js";
+import { cargarConfiguracion, configuracionGlobal } from "./config.js";
 import { marcarErrorCampo, mostrarToast } from "./manageError.js";
 import { verificarSesion, cerrarSesion } from './auth-check.js'; // Importa la función para verificar la sesión
+import { aplicarPromociones, aplicarDescuentosPedido, calcularTotalPedido } from "./aplicarPromocion.js";
+import { getLocalDateString } from "./dateLocalDate.js";
 import { guardarPedido } from "./guardarPedido.js";
 import { supabase } from "./supabase-config.js";
-import { getLocalDateString } from "./dateLocalDate.js";
 
 const beepError = new Audio("../sounds/error-beep.mp3");
 let productosSeleccionados = []; // Array para almacenar los productos seleccionados
@@ -359,13 +360,14 @@ async function agregarProducto(id, nombre, precio) {
             nombre,
             precio,
             cantidad: 1,
-            descuento: 0, // Nuevo campo para almacenar descuentos
-            promocionAplicada: null // Nuevo campo para referencia de promoción
+            descuento: 0,
+            promocionAplicada: null,
+            total: precio
         });
     }
 
     // Verificar y aplicar promociones
-    await aplicarPromociones(id);
+    await aplicarPromociones(id, productosSeleccionados);
 
     // Actualizar la tabla
     actualizarTabla();
@@ -379,13 +381,35 @@ function actualizarTabla() {
 
     if (productosSeleccionados.length === 0) {
         tablaProductos.innerHTML = `<tr class="empty"><td colspan="4">No hay productos seleccionados</td></tr>`;
-        document.getElementById("total").textContent = "$0.00";
+        document.getElementById("total").textContent = "Total: $0.00";
         return;
     }
 
+    // Calcular totales
+    const totalPedido = calcularTotalPedido(productosSeleccionados);
     let totalGeneral = 0;
-    let totalDescuentos = 0;
+    let totalDescuentosProductos = 0;
 
+    // Primero calculamos descuentos por producto
+    productosSeleccionados.forEach(producto => {
+        totalGeneral += producto.total;
+        if (producto.descuento > 0) {
+            totalDescuentosProductos += producto.descuento;
+        }
+    });
+
+    // Luego aplicamos descuentos por threshold (pedido)
+    // Calcular totales usando la nueva función
+    const {
+        subtotal,
+        descuentoThreshold,
+        descuentosProductos,
+        promocionThreshold,
+        totalConDescuento
+    } = aplicarDescuentosPedido(productosSeleccionados);
+  //  const totalFinal = totalGeneral - descuentoTotal;
+
+    // Mostrar productos en la tabla
     productosSeleccionados.forEach(producto => {
         const row = tablaProductos.insertRow();
 
@@ -393,8 +417,8 @@ function actualizarTabla() {
         const cellNombre = row.insertCell(0);
         let nombreHTML = producto.nombre;
         if (producto.promocionAplicada) {
-            const icono = producto.promocionAplicada.tipo === 'bogo' ?
-                'fa-badge-percent' : 'fa-tag';
+            const icono = producto.promocionAplicada.tipo === 'threshold' ?
+                'bogo' : 'fa-tag';
             nombreHTML += ` <i class="fas ${icono} text-success" title="${producto.promocionAplicada.nombre}"></i>`;
         }
         cellNombre.innerHTML = nombreHTML;
@@ -418,20 +442,39 @@ function actualizarTabla() {
             cellTotal.textContent = `$${producto.total.toFixed(2)}`;
         }
 
-        // Evento para seleccionar fila
         row.addEventListener('click', () => seleccionarFila(row, producto));
-
-        // Sumar a totales
-        totalGeneral += producto.total;
-        totalDescuentos += producto.descuento;
     });
 
-    // Actualizar total general
-    document.getElementById("total").innerHTML = `
-        $${totalGeneral.toFixed(2)}
-        ${totalDescuentos > 0 ?
-            `<small class="text-success">(Ahorro: $${totalDescuentos.toFixed(2)})</small>` : ''}
-    `;
+ 
+    // Mostrar total con todos los descuentos
+    let htmlTotal = `Total: $${totalConDescuento.toFixed(2)}`;
+    
+    // Mostrar subtotal
+    htmlTotal = `
+        <div class="text-muted">
+            <small>Subtotal: $${subtotal.toFixed(2)}</small>
+        </div>
+    ` + htmlTotal;
+    
+    // Mostrar descuentos por productos si existen
+    if (descuentosProductos > 0) {
+        htmlTotal += `
+            <div class="text-success">
+                <small>Descuentos por productos: -$${descuentosProductos.toFixed(2)}</small>
+            </div>
+        `;
+    }
+    
+    // Mostrar descuento por threshold si aplica
+    if (descuentoThreshold > 0) {
+        htmlTotal += `
+            <div class="text-success">
+                <small>Descuento por pedido (${promocionThreshold?.nombre || 'Promoción'}): -$${descuentoThreshold.toFixed(2)}</small>
+            </div>
+        `;
+    }
+
+    document.getElementById("total").innerHTML = htmlTotal;
 }
 
 // Función para seleccionar una fila y marcarla para eliminar
@@ -520,7 +563,7 @@ async function updateProductQuantity(productId, newQuantity) {
     if (producto) {
         producto.cantidad = newQuantity;
         //   producto.total = producto.cantidad * producto.precio; // Actualizar el total del producto
-        await aplicarPromociones(productId); // Re-aplicar promociones
+        await aplicarPromociones(productId, productosSeleccionados); // Re-aplicar promociones
         // Actualizar la tabla de productos seleccionados
         actualizarTabla();
     } else {
@@ -566,11 +609,32 @@ document.getElementById("finalize-btn").addEventListener("click", async function
 // En mostrarTicket()
 function mostrarTicket(codigoTicket, esReimpresion = false, fechaDelPedido = null) {
     const ticketContent = document.getElementById("ticket-content");
-    let totalGeneral = 0;
-    let totalItems = 0;
-    let descuentoTotal = 0;
-    let promocionesAplicadas = [];
+    
+    // Calcular todos los totales necesarios
+    const { 
+        subtotal, 
+        descuentoThreshold, 
+        descuentosProductos,
+        promocionThreshold,
+        totalConDescuento 
+    } = aplicarDescuentosPedido(productosSeleccionados);
 
+    // Recolectar nombres de promociones aplicadas
+    let promocionesAplicadas = [];
+    
+    // Primero las promociones por producto
+    productosSeleccionados.forEach(producto => {
+        if (producto.promocionAplicada && !promocionesAplicadas.includes(producto.promocionAplicada.nombre)) {
+            promocionesAplicadas.push(producto.promocionAplicada.nombre);
+        }
+    });
+    
+    // Luego la promoción por threshold si aplica
+    if (descuentoThreshold > 0 && promocionThreshold && !promocionesAplicadas.includes(promocionThreshold.nombre)) {
+        promocionesAplicadas.push(promocionThreshold.nombre);
+    }
+
+    // Construir el HTML del ticket
     let ticketHTML = `
     <div style="max-width: 300px; font-family: monospace; font-size: 16px; text-align: center; color: #000;">
         <img src="${configuracionGlobal.logo_url || ''}" alt="Logo" style="max-width: 80px; margin-bottom: 5px;" />
@@ -591,71 +655,119 @@ function mostrarTicket(codigoTicket, esReimpresion = false, fechaDelPedido = nul
             <tbody>
     `;
 
-    // Agregar cada producto al ticket
+    // Agregar cada producto al ticket con su información
     productosSeleccionados.forEach(producto => {
-        let precioOriginal = producto.precio * producto.cantidad;
-        let totalProducto = precioOriginal;
+        const precioOriginal = producto.precio * producto.cantidad;
+        const totalProducto = producto.total;
         
-        if (producto.descuento) {
-            totalProducto -= producto.descuento;
-            descuentoTotal += producto.descuento;
-            
-            if (producto.promocionAplicada && !promocionesAplicadas.includes(producto.promocionAplicada.nombre)) {
-                promocionesAplicadas.push(producto.promocionAplicada.nombre);
-            }
+        // Mostrar icono de promoción si aplica
+        let nombreProducto = producto.nombre;
+        if (producto.promocionAplicada) {
+            const iconClass = producto.promocionAplicada.tipo === 'bogo' ? 
+                'fa-badge-percent' : 'fa-tag';
+            nombreProducto += ` <i class="fas ${iconClass} text-success"></i>`;
         }
 
-        totalGeneral += totalProducto;
-        totalItems += producto.cantidad;
-        
         ticketHTML += ` 
             <tr>
-                <td>${producto.nombre}</td>
+                <td>${nombreProducto}</td>
                 <td style="text-align: center;">${producto.cantidad}</td>
                 <td style="text-align: right;">$${totalProducto.toFixed(2)}</td>
             </tr>
         `;
 
-        // Mostrar descuento si aplica
+        // Mostrar descuento por producto si aplica
         if (producto.descuento > 0) {
             ticketHTML += `
             <tr>
-                <td colspan="2" style="text-align: right;"><small class="text-success">${producto.promocionAplicada?.nombre || 'Descuento'}</small></td>
-                <td style="text-align: right;"><small class="text-success">-$${producto.descuento.toFixed(2)}</small></td>
+                <td colspan="2" style="text-align: right;">
+                    <small class="text-success">${producto.promocionAplicada?.nombre || 'Descuento'}</small>
+                </td>
+                <td style="text-align: right;">
+                    <small class="text-success">
+                        <span class="text-muted text-decoration-line-through">$${precioOriginal.toFixed(2)}</span>
+                        -$${producto.descuento.toFixed(2)}
+                    </small>
+                </td>
             </tr>
             `;
         }
     });
 
-    // Mostrar resumen de promociones si hay
-    if (promocionesAplicadas.length > 0) {
+    // Línea divisoria antes de los totales
+    ticketHTML += `
+        <tr><td colspan="3"><hr style="border-top: 1px dashed #aaa; margin: 5px 0;" /></td></tr>
+    `;
+
+    // Mostrar subtotal (sin descuentos)
+    ticketHTML += `
+        <tr>
+            <td colspan="2" style="text-align: right;"><strong>Subtotal:</strong></td>
+            <td style="text-align: right;">$${subtotal.toFixed(2)}</td>
+        </tr>
+    `;
+
+    // Mostrar descuentos por productos si existen
+    if (descuentosProductos > 0) {
         ticketHTML += `
-            <tr><td colspan="3"><hr style="border-top: 1px dashed #aaa; margin: 5px 0;" /></td></tr>
-            <tr>
-                <td colspan="3"><small class="text-success"><strong>Promociones aplicadas:</strong> ${promocionesAplicadas.join(', ')}</small></td>
-            </tr>
+        <tr>
+            <td colspan="2" style="text-align: right;"><small class="text-success">Descuentos por productos:</small></td>
+            <td style="text-align: right;"><small class="text-success">-$${descuentosProductos.toFixed(2)}</small></td>
+        </tr>
         `;
     }
 
+    // Mostrar descuento por threshold si existe
+    if (descuentoThreshold > 0) {
+        ticketHTML += `
+        <tr>
+            <td colspan="2" style="text-align: right;">
+                <small class="text-success">${promocionThreshold?.nombre || 'Descuento por pedido'}:</small>
+            </td>
+            <td style="text-align: right;">
+                <small class="text-success">-$${descuentoThreshold.toFixed(2)}</small>
+            </td>
+        </tr>
+        `;
+    }
+
+    // Línea divisoria antes del total final
+    ticketHTML += `
+        <tr><td colspan="3"><hr style="border-top: 1px dashed #aaa; margin: 5px 0;" /></td></tr>
+        <tr>
+            <td colspan="2" style="text-align: right;"><strong>Total:</strong></td>
+            <td style="text-align: right;"><strong>$${totalConDescuento.toFixed(2)}</strong></td>
+        </tr>
+    `;
+
+    // Mostrar resumen de promociones si hay
+    if (promocionesAplicadas.length > 0) {
+        ticketHTML += `
+        <tr><td colspan="3"><hr style="border-top: 1px dashed #aaa; margin: 5px 0;" /></td></tr>
+        <tr>
+            <td colspan="3" style="text-align: center;">
+                <small class="text-success"><strong>Promociones aplicadas:</strong><br>${promocionesAplicadas.join(', ')}</small>
+            </td>
+        </tr>
+        `;
+    }
+
+    // Pie del ticket
     ticketHTML += `
             </tbody>
         </table>
         <hr style="border-top: 2px dashed #aaa;" />
-        <p style="margin: 4px 0; font-size: 16px;"><strong><i class="fa-solid fa-boxes-stacked"></i> Productos:</strong> ${totalItems}</p>
-    `;
-
-    if (descuentoTotal > 0) {
-        ticketHTML += `
-            <p style="margin: 4px 0; font-size: 16px;"><strong><i class="fa-solid fa-tag"></i> Descuento total:</strong> <span class="text-success">-$${descuentoTotal.toFixed(2)}</span></p>
-        `;
-    }
-
-    ticketHTML += `
-        <p style="margin: 4px 0; font-size: 16px;"><strong><i class="fa-solid fa-cash-register"></i> Total:</strong> $${totalGeneral.toFixed(2)}</p>
+        <p style="margin: 4px 0; font-size: 16px;">
+            <strong><i class="fa-solid fa-boxes-stacked"></i> Productos:</strong> 
+            ${productosSeleccionados.reduce((sum, p) => sum + p.cantidad, 0)}
+        </p>
         <div style="margin-top: 10px;">
             <svg id="barcode"></svg>
         </div>
-        <p style="margin-top: 8px;"><i class="fa-solid fa-circle-info"></i> ${esReimpresion ? 'Pedido reimpreso' : 'Pendiente de pago'}</p>
+        <p style="margin-top: 8px;">
+            <i class="fa-solid fa-circle-info"></i> 
+            ${esReimpresion ? 'Pedido reimpreso' : 'Pendiente de pago'}
+        </p>
         <p style="margin: 6px 0;">Conserva este ticket para cualquier aclaración.</p>
         <hr style="border-top: 1px dashed #aaa;" />
         <p style="font-style: italic;">Gracias por tu compra <i class="fa-solid fa-heart"></i></p>
@@ -677,20 +789,6 @@ function mostrarTicket(codigoTicket, esReimpresion = false, fechaDelPedido = nul
 
     // Mostrar el modal para imprimir el ticket
     new bootstrap.Modal(document.getElementById('ticketModal')).show();
-}
-
-function actualizarEstadoBotonFinalizar() {
-    const botonFinalizar = document.getElementById("finalize-btn");
-
-    if (productosSeleccionados.length === 0) {
-        botonFinalizar.disabled = true;
-        botonFinalizar.classList.add("btn-outline-danger", "shake");
-        botonFinalizar.classList.remove("btn-primary");
-    } else {
-        botonFinalizar.disabled = false;
-        botonFinalizar.classList.remove("btn-outline-danger", "shake");
-        botonFinalizar.classList.add("btn-primary");
-    }
 }
 
 // Función para imprimir el ticket
@@ -755,7 +853,12 @@ document.getElementById("print-ticket-btn").addEventListener("click", function (
     printWindow.document.write(ticketContent);
     printWindow.document.write('</body></html>');
     printWindow.document.close();
-    printWindow.print();
+
+    // Agregar un pequeño retraso antes de imprimir
+    setTimeout(function () {
+        printWindow.print();  // Llamar a la función de impresión después de 500ms (medio segundo)
+        printWindow.close();  // Cerrar la ventana de impresión después de imprimir
+    }, 500);  // 500 milisegundos de retraso, puedes ajustarlo si es necesario
 
     // Resetear todo al terminar
     productosSeleccionados = [];
@@ -764,33 +867,6 @@ document.getElementById("print-ticket-btn").addEventListener("click", function (
     bootstrap.Modal.getInstance(document.getElementById("ticketModal")).hide();
 });
 
-
-/*
-async function actualizarContadorPedidosHoy() {
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !sessionData.session) return;
-
-    const userId = sessionData.session.user.id;
-    const hoy = getLocalDateString(); // → "2025-04-13"
-    const { count, error: countError } = await supabase
-        .from("pedidos")
-        .select("*", { count: "exact", head: true })
-        .eq("empleado_id", userId)
-        .eq("origen", "empacador")
-        .gte("fecha", `${hoy}T00:00:00`)
-        .lte("fecha", `${hoy}T23:59:59`);
-
-    if (countError) {
-        console.warn("❌ No se pudo contar pedidos:", countError.message);
-        return;
-    }
-
-    const badge = document.getElementById("contador-pedidos-hoy");
-    badge.innerHTML = `<i class="fa-solid fa-truck me-1"></i> Hoy: ${count} pedido${count === 1 ? "" : "s"}`;
-
-
-}
-*/
 // Función principal que maneja la apertura del historial
 document.getElementById("open-history-btn").addEventListener("click", async () => {
     new bootstrap.Offcanvas(document.getElementById("history-sidebar")).show();
@@ -966,10 +1042,18 @@ function renderizarPedidos(pedidos, contenedor) {
     });
 }
 
+// Función para ver detalles del pedido (modificada para incluir promociones)
 async function verDetallePedido(pedidoId) {
     const { data, error } = await supabase
         .from("pedido_productos")
-        .select("cantidad, precio_unitario, total, productos(nombre)")
+        .select(`
+            cantidad, 
+            precio_unitario, 
+            total,
+            descuento,
+            productos(nombre),
+            promociones(nombre, tipo, porcentaje)
+        `)
         .eq("pedido_id", pedidoId);
 
     if (error) {
@@ -981,9 +1065,21 @@ async function verDetallePedido(pedidoId) {
             <td><i class="fa-solid fa-cookie-bite"></i> ${item.productos?.nombre || 'N/D'}</td>
             <td>${item.cantidad}</td>
             <td>$${item.precio_unitario.toFixed(2)}</td>
-            <td>$${item.total.toFixed(2)}</td>  <!-- Aquí usamos el total desde la DB -->
+            <td>$${item.precio_unitario * item.cantidad.toFixed(2)}</td>
         </tr>
+        ${item.descuento > 0 ? `
+        <tr>
+            <td  class="text-success">
+                <small>${item.promociones?.nombre || 'Promoción'} 
+                ${item.promociones?.tipo === 'percentage' ? `(${item.promociones.porcentaje}%)` : ''}
+                </small>
+            </td>
+            <td class="text-success">...</td>
+            <td class="text-success">...</td>
+            <td class="text-success text-end"><small>-$${item.descuento.toFixed(2)}</small></td>
+        </tr>` : ''}
     `).join("");
+
 
     // Mostrar los detalles en el modal
     document.getElementById("detalle-pedido-body").innerHTML = detalleHTML;
@@ -1030,9 +1126,9 @@ async function verDetallePedido(pedidoId) {
         nombre: item.productos?.nombre || "N/D",
         cantidad: item.cantidad,
         precio: item.precio_unitario,
-        total: item.total,
         descuento: item.descuento || 0,
-        promocion: item. promociones
+        promocionAplicada: item.promociones,
+        total: item.total
     }));
 
     // Mostrar el modal con los detalles
@@ -1598,96 +1694,3 @@ document.getElementById('print-ticket-btnP').addEventListener('click', function 
     // Cerrar el modal después de imprimir
     bootstrap.Modal.getInstance(document.getElementById('detallePedidoModalPendiente')).hide();
 });
-
-// Función para aplicar promociones
-async function aplicarPromociones(productoId) {
-    const producto = productosSeleccionados.find(p => p.id === productoId);
-    if (!producto) return;
-    // Obtener promociones válidas para este producto
-    const promociones = await verificarPromocion(productoId, producto.cantidad);
-
-    // Resetear descuentos antes de aplicar nuevas promociones
-    producto.descuento = 0;
-    producto.promocionAplicada = null;
-
-    if (promociones && promociones.length > 0) {
-        promociones.forEach(promocion => {
-            if (promocion.promocion.tipo === 'percentage') {
-                // Descuento porcentual
-                producto.descuento = (producto.precio * producto.cantidad * promocion.promocion.porcentaje) / 100;
-                producto.promocionAplicada = promocion.promocion;
-            } else if (promocion.promocion.tipo === 'bogo' && producto.cantidad >= 2) {
-                // Promoción 2x1
-                const pares = Math.floor(producto.cantidad / 2);
-                producto.descuento = pares * producto.precio;
-                producto.promocionAplicada = promocion.promocion;
-            }
-        });
-    }
-
-    // Calcular el total final del producto
-    producto.total = (producto.precio * producto.cantidad) - producto.descuento;
-}
-
-async function verificarPromocion(productoId, cantidad) {
-    // Obtener las promociones activas para el producto
-    const { data: promociones, error } = await supabase
-        .from('productos_promocion')
-        .select('promocion_id')
-        .eq('producto_id', productoId);
-
-    if (error) {
-        console.error("Error al obtener promociones:", error);
-        return null;
-    }
-
-    // Si el producto no tiene promociones, no hacer nada
-    if (!promociones || promociones.length === 0) return null;
-
-    // Verificar si alguna de las promociones está activa y si es 2x1
-    const promocionesActivas = await Promise.all(promociones.map(async (promo) => {
-        const { data: promocion, error } = await supabase
-            .from('promociones')
-            .select('*')
-            .eq('id', promo.promocion_id)
-            .single();
-
-        if (error) {
-            console.error("Error al obtener la promoción:", error);
-            return null;
-        }
-
-        // Comprobar si la promoción está activa y dentro del rango de fechas
-        const fechaActual = new Date();
-        const fechaInicio = new Date(promocion.fecha_inicio);
-        const fechaExpiracion = new Date(promocion.fecha_expiracion);
-
-        if (promocion.activa && fechaActual >= fechaInicio && fechaActual <= fechaExpiracion) {
-            // Verificar si la promoción es un 2x1
-            if (promocion.tipo === 'bogo') {
-                // Solo aplicar 2x1 si la cantidad es 2 o mayor
-                if (cantidad >= 2) {
-                    // Solo aplicar 1 descuento, no más
-                    const cantidadAplicada = Math.floor(cantidad / 2);  // Se aplica 1 descuento por cada par de productos
-                    mostrarNotificacionPromocion(promocion.nombre)
-                    console.log(promocion.nombre)
-                    return { promocion, cantidadAplicada };
-                }
-            }
-            return null; // No aplicar promoción si no es 2x1 o no se cumple la condición de cantidad
-        }
-
-        return null; // Promoción no activa
-    }));
-
-    // Filtrar las promociones válidas que se puedan aplicar
-    return promocionesActivas.filter(promo => promo !== null);
-}
-
-function mostrarNotificacionPromocion(promocion) {
-    const mensaje = promocion.tipo === 'percentage'
-        ? `¡Descuento del ${promocion.porcentaje}% aplicado!`
-        : `¡${promocion.nombre} aplicado!`;
-
-    mostrarToast(mensaje, 'success');
-}
