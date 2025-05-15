@@ -22,30 +22,30 @@ export async function aplicarPromociones(productoId, productosSeleccionados) {
                 switch (promocion.tipo) {
                     case 'percentage':
                         // Solo aplicamos el descuento percentage si es general (no por producto)
-                        if (promocion.promocion.es_general) {
+                        if (promocion.es_general) {
                             // Marcamos la promoción pero el descuento se aplicará a nivel de pedido
-                            producto.descuento = (producto.precio * producto.cantidad * promocion.promocion.porcentaje) / 100;
-                            producto.promocionAplicada = promocion.promocion;
+                            producto.descuento = (producto.precio * producto.cantidad * promocion.porcentaje) / 100;
+                            producto.promocionAplicada = promocion;
                         }
                         break;
 
                     case 'bogo':
-                        if (producto.cantidad >= (promocion.promocion.buy_quantity || 2)) {
-                            const grupos = Math.floor(producto.cantidad / (promocion.promocion.buy_quantity || 2));
-                            producto.descuento = grupos * producto.precio * (promocion.promocion.get_quantity || 1);
-                            producto.promocionAplicada = promocion.promocion;
+                        if (producto.cantidad >= (promocion.buy_quantity || 2)) {
+                            const grupos = Math.floor(producto.cantidad / (promocion.buy_quantity || 2));
+                            producto.descuento = grupos * producto.precio * (promocion.get_quantity || 1);
+                            producto.promocionAplicada = promocion;
                         }
                         break;
 
                     case 'threshold':
                         // Marcamos la promoción pero el descuento se aplicará a nivel de pedido
-                        producto.promocionAplicada = promocion.promocion;
+                        producto.promocionAplicada = promocion;
                         break;
 
                     case 'products':
                         // Descuento específico por producto
-                        producto.descuento = (producto.precio * producto.cantidad * promocion.promocion.porcentaje) / 100;
-                        producto.promocionAplicada = promocion.promocion;
+                        producto.descuento = (producto.precio * producto.cantidad * promocion.porcentaje) / 100;
+                        producto.promocionAplicada = promocion;
                         break;
 
                     // Modificación en la función aplicarPromociones

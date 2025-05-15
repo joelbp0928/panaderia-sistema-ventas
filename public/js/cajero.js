@@ -131,12 +131,18 @@ document.getElementById("codigo-ticket-input").addEventListener("keypress", asyn
 });
 
 window.onload = async function () {
+  // Mostrar el spinner mientras se cargan los datos
+  document.getElementById("loading-spinner").style.display = "flex";
+
   await verificarSesion();
   cargarConfiguracion();
+  configurarBotonesPago();
+  
+  // Ocultar el spinner cuando se haya cargado todo
+  document.getElementById("loading-spinner").style.display = "none";
 
   document.getElementById("logout-btn").addEventListener("click", cerrarSesion);
 
-  configurarBotonesPago();
 };
 
 async function cargarProductosTicket() {
@@ -220,14 +226,14 @@ function actualizarTablaProductos() {
       const precioConDescuento = (producto.precioUnitario * producto.cantidad - producto.descuento).toFixed(2);
 
       contenidoFila += `
-        <td class="text-success">
-          <span class="text-decoration-line-through text-muted">$${precioOriginal}</span>
-          <br>$${precioConDescuento}
-          <div class="badge bg-success mt-1">
-            <i class="fas fa-gift"></i> Promoción aplicada
-          </div>
-        </td>
-      `;
+  <td class="text-success" style="word-wrap: break-word;">
+    <span class="text-decoration-line-through text-muted" style="font-size: 0.9em;">$${precioOriginal}</span>
+    <span style="display: block; font-weight: bold;">$${precioConDescuento}</span>
+    <div class="badge bg-success" style="margin-top: 2px; font-size: 0.7em;">
+      <i class="fas fa-gift"></i> Promo
+    </div>
+  </td>
+`;
     } else if (tienePromocion) {
       contenidoFila += `
         <td>
@@ -505,7 +511,7 @@ async function procesarPago() {
       ventana.print();
       // Cerrar después de imprimir (con retraso para navegadores lentos)
       setTimeout(() => ventana.close(), 1000);
-    }, 500); // 500ms debería ser suficiente para cargar todo
+    }, 800); // 500ms debería ser suficiente para cargar todo
 
 
     // Reset visual
@@ -527,175 +533,261 @@ async function procesarPago() {
   }
 }
 
-
-function calcularTotal() {
-  return productosTicket.reduce((sum, producto) => sum + producto.subtotal, 0);
-}
-
 function generarTicketHTML(ticket, productos, pagado, cambio) {
-  const fecha = new Date(ticket.fecha).toLocaleString('es-MX');
-  let filas = '';
-
-  productos.forEach(p => {
-    filas += `
-        <tr>
-          <td>${p.nombre}</td>
-          <td>${p.cantidad}</td>
-          <td>$${p.precioUnitario.toFixed(2)}</td>
-          <td>$${p.subtotal.toFixed(2)}</td>
-        </tr>`;
+  const fecha = new Date(ticket.fecha).toLocaleString('es-MX', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
   });
 
+  let filas = '';
   let promocionesAplicadas = [];
 
   productos.forEach(p => {
-    // Determinar si tiene promoción
     const tienePromocion = p.promocionAplicada !== null;
     const esProductoGratis = tienePromocion && p.descuento > 0;
 
-    filas += `
-      <tr>
-        <td>${p.nombre}${tienePromocion ? ' *' : ''}</td>
-        <td>${p.cantidad}</td>
-        <td>$${p.precioUnitario.toFixed(2)}</td>
-        <td>${esProductoGratis ?
-        `<span class="text-decoration-line-through">$${(p.precioUnitario * p.cantidad).toFixed(2)}</span><br>
-           $${(p.subtotal).toFixed(2)}` :
-        `$${p.subtotal.toFixed(2)}`}
-        </td>
-      </tr>`;
-
-    // Registrar promociones únicas
     if (tienePromocion && !promocionesAplicadas.includes(p.promocionAplicada.nombre)) {
       promocionesAplicadas.push(p.promocionAplicada.nombre);
     }
+
+    filas += `
+      <tr>
+        <td style="font-size:15px">
+          ${p.nombre}${tienePromocion ? ' <i class="fas fa-tag text-success"></i>' : ''}
+        </td>
+        <td style="font-size:15px" align="center">
+           ${p.cantidad}
+        </td>
+        <td style="font-size:15px" align="right">
+          $ ${p.precioUnitario.toFixed(2)}
+        </td>
+        <td style="font-size:18px" align="right">
+          ${esProductoGratis ?
+        `<span style="font-size:14px" class="old-price">
+              $ ${(p.precioUnitario * p.cantidad).toFixed(2)}
+             </span><br>
+             $ ${p.subtotal.toFixed(2)}` :
+        `$ ${p.subtotal.toFixed(2)}`}
+        </td>
+      </tr>`;
   });
 
-  // Agregar sección de promociones al ticket
-  let promocionesHTML = '';
-  if (promocionesAplicadas.length > 0) {
-    promocionesHTML = `
-      <div class="linea"></div>
-      <p><strong>Promociones aplicadas:</strong></p>
-      <ul>
-        ${promocionesAplicadas.map(p => `<li>${p}</li>`).join('')}
-      </ul>
-    `;
-  }
+  // Sección de promociones
+  let promocionesHTML = promocionesAplicadas.length > 0 ? `
+    <div class="divider"></div>
+    <p style="font-size:18px" class="promo-title">
+      <i class="fas fa-percentage"></i> <b>PROMOCIONES APLICADAS:</b>
+    </p>
+    ${promocionesAplicadas.map(p => `
+      <p style="font-size:18px" class="promo-item">
+        <i class="fas fa-gift text-success"></i> ${p}
+      </p>`).join('')}
+  ` : '';
 
   return `
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>Ticket</title>
-          <style>
-            * {
-              box-sizing: border-box;
-            }
+    <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Ticket</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', monospace;
+            line-height: 1.3;
+          }
+          body {
+            width: 80mm;
+            margin: 0 auto;
+            padding: 2mm;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 3mm;
+          }
+          .logo {
+            max-width: 50mm;
+            max-height: 20mm;
+            margin: 0 auto 2mm;
+            display: block;
+            filter: contrast(1.2) brightness(0.9);
+          }
+          .company-name {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 2mm;
+            letter-spacing: 1px;
+          }
+          .ticket-info {
+            text-align: center;
+            margin-bottom: 3mm;
+          }
+          .ticket-info p {
+            font-size: 18px;
+            margin: 2mm 0;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 3mm 0;
+          }
+          th {
+            font-weight: bold;
+            border-bottom: 2px solid #000;
+            padding: 2mm 0;
+            text-align: left;
+            font-size: 18px;
+          }
+          td {
+            padding: 1.5mm 0;
+            vertical-align: middle;
+          }
+          .divider {
+            border-top: 2px dashed #000;
+            margin: 4mm 0;
+            height: 2px;
+          }
+          .totals {
+            text-align: right;
+            margin: 4mm 0;
+          }
+          .totals p {
+            font-size: 17px;
+            font-weight: bold;
+            margin: 2.5mm 0;
+          }
+          .qrcode-container {
+            text-align: center;
+            margin: 4mm 0;
+          }
+          .qrcode {
+            width: 45mm;
+            height: 45mm;
+            filter: contrast(1.3);
+          }
+          .footer {
+            text-align: center;
+            margin-top: 4mm;
+          }
+          .footer p {
+            font-size: 15px;
+            margin: 2mm 0;
+          }
+          .old-price {
+            text-decoration: line-through;
+            color: #666;
+            font-size: 14px;
+          }
+          .promo-title {
+            margin-bottom: 3mm;
+          }
+          .promo-item {
+            margin-left: 3mm;
+          }
+          .text-success {
+            color: #28a745 !important;
+          }
+          .fa-times {
+            font-size: 14px;
+            opacity: 0.7;
+          }
+          .fa-dollar-sign {
+            font-size: 14px;
+          }
+          @media print {
             body {
-              font-family: 'Courier New', monospace;
-              font-size: 12px;
-              padding: 10px;
-              width: 280px;
-              color: #000;
-              margin: auto;
+              width: 80mm !important;
             }
-            img.logo {
-              display: block;
-              max-width: 80px;
-              width: 100%;
-              height: auto;
-              margin: 0 auto 5px auto;
+            .no-print {
+              display: none !important;
             }
-            h2, p {
-              text-align: center;
-              margin: 2px 0;
+          }
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+      </head>
+      <body>
+        <div class="header">
+          ${configuracionGlobal.logo_url ?
+      `<img src="${configuracionGlobal.logo_url}" class="logo" onerror="this.remove()"/>` :
+      `<p class="company-name">
+              <i class="fas fa-store"></i> ${configuracionGlobal.nombre_empresa}
+            </p>`
+    }
+        </div>
+
+        <div class="ticket-info">
+          <p><i class="fas fa-receipt"></i> <b>Ticket:</b> ${ticket.codigo_ticket}</p>
+          <p><i class="far fa-calendar-alt"></i> <b>Fecha:</b> ${fecha}</p>
+          <p><i class="fas fa-user-tie"></i> <b>Cajero:</b> ${document.getElementById("employee-name").textContent.replace("Sesión: ", "")}</p>
+        </div>
+
+        <div class="divider"></div>
+
+        <table>
+          <thead>
+            <tr>
+              <th> Producto</th>
+              <th align="right"> Cant</th>
+              <th align="right"> P.U.</th>
+              <th align="right"> Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>${filas}</tbody>
+        </table>
+
+        ${promocionesHTML}
+
+        <div class="divider"></div>
+
+        <div class="totals">
+          <p><i class="fas fa-file-invoice-dollar"></i> <b>TOTAL:</b> $${ticket.total.toFixed(2)}</p>
+          <p><i class="fas fa-money-bill-wave"></i> <b>PAGADO:</b> $${pagado.toFixed(2)}</p>
+          <p><i class="fas fa-exchange-alt"></i> <b>CAMBIO:</b> $${cambio.toFixed(2)}</p>
+        </div>
+
+        <div class="qrcode-container">
+          <canvas class="qrcode" id="qrcode"></canvas>
+        </div>
+
+        <div class="footer">
+          <p><i class="fas fa-heart text-success"></i> ¡Gracias por su compra! <i class="fas fa-heart text-success"></i></p>
+          ${configuracionGlobal.direccion ? `<p><i class="fas fa-map-marker-alt"></i> ${configuracionGlobal.direccion}</p>` : ''}
+          ${configuracionGlobal.telefono ? `<p><i class="fas fa-phone"></i> Tel: ${configuracionGlobal.telefono}</p>` : ''}
+        </div>
+
+        <script>
+          (function() {
+            try {
+              // QR solo con el código del ticket
+              const qrContent = '${ticket.codigo_ticket}';
+              
+              new QRious({
+                element: document.getElementById('qrcode'),
+                value: qrContent,
+                size: 300,
+                level: 'H',
+                padding: 15,
+                background: '#fff',
+                foreground: '#000'
+              });
+            
+              // Esperar a que carguen los iconos
+              setTimeout(() => {
+              }, 800);
+            } catch(e) {
+              console.error('Error generando QR:', e);
             }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin: 10px 0;
-            }
-            th, td {
-              padding: 4px;
-              text-align: left;
-              font-size: 12px;
-            }
-            th {
-              border-bottom: 1px dashed #000;
-            }
-            .total {
-              font-weight: bold;
-              text-align: right;
-            }
-            .linea {
-              border-top: 1px dashed #000;
-              margin: 10px 0;
-            }
-            #qrcode {
-              display: block;
-              margin: 10px auto;
-              width: 100px;
-              height: 100px;
-            }
-          </style>
-                    <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
-        </head>
-        <body>
-          <img src="${configuracionGlobal.logo_url}" class="logo" />
-          <h2>${configuracionGlobal.nombre_empresa}</h2>
-          <p>Ticket: ${ticket.codigo_ticket}</p>
-          <p>Fecha de empaque: ${fecha}</p>
-          <p>Cajero: ${document.getElementById("employee-name").textContent.replace("Sesión: ", "")}</p>
-  
-          <div class="linea"></div>
-          <table>
-            <thead>
-              <tr><th>Producto</th><th>Cant</th><th>PU</th><th>Sub</th></tr>
-            </thead>
-            <tbody>${filas}</tbody>
-          </table>
-          ${promocionesHTML}
-          <div class="linea"></div>
-  
-          <p class="total">Total: $${ticket.total.toFixed(2)}</p>
-          <p class="total">Pagado: $${pagado.toFixed(2)}</p>
-          <p class="total">Cambio: $${cambio.toFixed(2)}</p>
-  
-          <canvas id="qrcode"></canvas>
-  
-          <div class="linea"></div>
-          <p style="text-align:center;">¡Gracias por tu compra! <i class="fa-solid fa-heart"></i></p>
-           <script>
-            // Generar el QR inmediatamente después de cargar la página
-            (function() {
-              try {
-                // Contenido del QR (puedes personalizarlo)
-                const qrContent = [
-                  'Ticket: ${ticket.codigo_ticket}',
-                  'Fecha: ${fecha}',
-                  'Total: $${ticket.total.toFixed(2)}',
-                  'Pagado: $${pagado.toFixed(2)}',
-                  'Cambio: $${cambio.toFixed(2)}'
-                ].join('\\n');
-                
-                // Crear el QR
-                new QRious({
-                  element: document.getElementById('qrcode'),
-                  value: qrContent,
-                  size: 100,
-                  level: 'H'
-                });
-                
-                console.log('QR generado correctamente');
-              } catch(e) {
-                console.error('Error generando QR:', e);
-              }
-            })();
-          </script>
-        </body>
-      </html>
-    `;
+          })();
+        </script>
+      </body>
+    </html>
+  `;
 }
 
 // Modifica la consulta inicial para incluir los productos del pedido
@@ -878,6 +970,7 @@ function mostrarCobrosListaSimple(cobros, contenedor) {
     contenedor.appendChild(item);
   });
 }
+
 // Event listeners
 document.getElementById("open-history-btn").addEventListener("click", async () => {
   new bootstrap.Offcanvas(document.getElementById("history-sidebar")).show();
@@ -924,12 +1017,17 @@ async function verDetalleCobro(cobroId) {
           cantidad,
           precio_unitario,
           productos (
-            nombre
-          )
+            nombre,
+            imagen_url
+          ),
+          descuento,
+          total,
+          promocion_id
         )
       )
     `)
     .eq("id", cobroId); // Asegúrate de que 'pedido_id' está bien relacionado.
+
   if (error) {
     console.error("Error al cargar detalles del cobro:", error);
     Swal.fire({
@@ -950,18 +1048,31 @@ async function verDetalleCobro(cobroId) {
     return;
   }
 
-  // Extraemos los detalles del cobro (productos y cantidades)
   const cobro = data[0];  // Asumimos que 'data' contiene solo un cobro
+  const productos = cobro.pedidos.pedido_productos;
 
   // Generar la tabla de productos
-  const detalleHTML = cobro.pedidos.pedido_productos.map(item => `
-    <tr>
-      <td>${item.productos.nombre}</td>
-      <td>${item.cantidad}</td>
-      <td>$${item.precio_unitario.toFixed(2)}</td>
-      <td>$${(item.cantidad * item.precio_unitario).toFixed(2)}</td>
-    </tr>
-  `).join("");
+  let detalleHTML = '';
+  productos.forEach(item => {
+    const precioOriginal = (item.precio_unitario * item.cantidad).toFixed(2);
+    const precioConDescuento = (item.total).toFixed(2);
+
+    // Solo mostrar descuento si el producto tiene uno aplicado
+    const descuentoHTML = item.descuento > 0
+      ? `<small class="text-muted text-decoration-line-through">$${precioOriginal}</small><br><strong class="text-success">-$${(precioOriginal - precioConDescuento).toFixed(2)}</strong>`
+      : "-"; // No mostrar nada si no hay descuento
+
+    // Crear fila para cada producto
+    detalleHTML += `
+      <tr>
+        <td> ${item.productos.nombre}</td>
+        <td> ${item.cantidad}</td>
+        <td><i class="fa-solid fa-tag"></i> ${item.precio_unitario.toFixed(2)}</td>
+        <td><i class="fa-solid fa-dollar-sign"></i> ${precioOriginal}</td>
+        <td>${descuentoHTML}</td>
+      </tr>
+    `;
+  });
 
   // Información adicional del pedido
   const nombreEmpleado = cobro.pedidos.empleado ? cobro.pedidos.empleado.nombre : "Empleado no disponible";
@@ -970,6 +1081,28 @@ async function verDetalleCobro(cobroId) {
   const fechaEmpaque = new Date(cobro.pedidos.fecha).toLocaleString("es-MX");
   const origenPedido = cobro.pedidos.origen.charAt(0).toUpperCase() + cobro.pedidos.origen.slice(1); // Capitalizar la primera letra
   const cantidadProductos = cobro.pedidos.pedido_productos.reduce((total, item) => total + item.cantidad, 0);
+
+  // Obtener los nombres de las promociones aplicadas
+  const promocionesAplicadas = await Promise.all(
+    productos.map(async (item) => {
+      if (item.promocion_id) {
+        const { data, error } = await supabase
+          .from('promociones')
+          .select('nombre')
+          .eq('id', item.promocion_id)
+          .single(); // Obtener una sola promoción
+        if (error) {
+          console.error('Error al obtener promoción:', error);
+          return null;
+        }
+        return data.nombre; // Retornamos el nombre de la promoción
+      }
+      return null;
+    })
+  );
+
+  // Eliminar duplicados en promociones aplicadas
+  const promocionesUnicas = [...new Set(promocionesAplicadas.filter(Boolean))];
 
   // Mostrar los detalles en el modal
   document.getElementById("detalle-pedido-body").innerHTML = detalleHTML;
@@ -980,71 +1113,20 @@ async function verDetalleCobro(cobroId) {
   document.getElementById("origen-pedido").textContent = `${origenPedido}`;
   document.getElementById("cantidad-productos").textContent = `${cantidadProductos}`;
 
+  // Calcular el subtotal, promociones y total con descuentos
+  const subtotal = productos.reduce((acc, item) => acc + (item.precio_unitario * item.cantidad), 0).toFixed(2);
+
+  // Mostrar el desglose de precios, promociones y total
+  document.getElementById("desglose").innerHTML = `
+    <div><strong><i class="fa-solid fa-calculator"></i> Subtotal:</strong> $${subtotal}</div>
+    ${promocionesUnicas.length ? `
+    <div><strong><i class="fa-solid fa-tags"></i> Promociones Aplicadas:</strong> ${promocionesUnicas.join(', ')}</div>
+    ` : ''}
+    <div><strong><i class="fa-solid fa-money-bill-wave"></i> Total con Descuento:</strong> $${totalTicket}</div>
+  `;
+
   // Mostrar modal
   new bootstrap.Modal(document.getElementById("detallePedidoModal")).show();
 }
 
-
 document.getElementById("btn-aplicar-filtros").addEventListener("click", cargarHistorialCobros);
-/*
-async function cargarHistorialPedidos() {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const userId = sessionData.session.user.id;
-
-  const desde = document.getElementById("filtro-fecha-desde").value;
-  const hasta = document.getElementById("filtro-fecha-hasta").value;
-
-  // Crear la consulta con los filtros de fecha
-  let query = supabase
-    .from("historial_cobros")
-    .select("id, fecha_cobro, monto_cobrado, pedidos(codigo_ticket, total)")
-    .eq("empleado_cobro_id", userId)
-    .order("fecha_cobro", { ascending: false });
-
-  if (desde) {
-    query = query.gte("fecha_cobro", `${desde}T00:00:00`);
-  }
-
-  if (hasta) {
-    query = query.lte("fecha_cobro", `${hasta}T23:59:59`);
-  }
-
-  const { data: cobros, error } = await query;
-  const badgeResultados = document.getElementById("badge-resultados");
-  const cantidadPedidos = document.getElementById("cantidad-pedidos");
-
-
-  const lista = document.getElementById("lista-historial");
-  lista.innerHTML = ""; // Limpiar la lista antes de agregar elementos
-
-  if (error) {
-    badgeResultados.style.display = "none";
-    lista.innerHTML = `<li class="list-group-item text-danger">Error al cargar cobros</li>`;
-    return;
-  }
-
-  if (!cobros.length) {
-    badgeResultados.style.display = "none";
-    lista.innerHTML = `<li class="list-group-item text-muted">No se encontraron cobros con los filtros seleccionados.</li>`;
-    return;
-  }
-  // Si hay pedidos, actualiza el badge
-  cantidadPedidos.textContent = cobros.length;
-  badgeResultados.style.display = "block";
-  setTimeout(() => badgeResultados.classList.add("show"), 50);
-
-  cobros.forEach(cobro => {
-    const item = document.createElement("li");
-    item.classList.add("list-group-item", "list-group-item-action", "fade-in");
-    item.innerHTML = `
-      <div>
-        <strong><i class="fa-solid fa-ticket"></i> ${cobro.pedidos.codigo_ticket}</strong><br>
-        <small><i class="fa-solid fa-calendar-day"></i> ${new Date(cobro.fecha_cobro).toLocaleString()}</small><br>
-        <small><i class="fa-solid fa-dollar-sign"></i>${cobro.pedidos.total}</small> · 
-        <span class="badge bg-success">Cobrado</span>
-      </div>
-    `;
-    item.onclick = () => verDetalleCobro(cobro.id);
-    lista.appendChild(item);
-  });
-}*/
