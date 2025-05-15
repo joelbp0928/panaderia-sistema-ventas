@@ -146,11 +146,14 @@ async function cargarProductosTicket() {
     const { data, error } = await supabase
       .from('pedido_productos')
       .select(`
-                cantidad,
-                precio_unitario,
-                total,
-                productos:producto_id (id, nombre, imagen_url)
-            `)
+        cantidad,
+        precio_unitario,
+        descuento,
+        total,
+        promocion_id,
+        promociones:promocion_id (id, nombre, tipo),
+        productos:producto_id (id, nombre, imagen_url)
+      `)
       .eq('pedido_id', ticketActual.id);
 
     if (error) throw error;
@@ -161,7 +164,9 @@ async function cargarProductosTicket() {
       imagen: item.productos.imagen_url,
       cantidad: item.cantidad,
       precioUnitario: item.precio_unitario,
-      subtotal: item.total
+      descuento: item.descuento || 0,
+      subtotal: item.total,
+      promocionAplicada: item.promociones || null
     }));
 
     // Aquí obtenemos el total directamente desde la tabla 'pedidos'
@@ -196,18 +201,71 @@ function actualizarTablaProductos() {
     const fila = document.createElement('tr');
     fila.classList.add('producto-row');
 
-    fila.innerHTML = `
-            <td>${producto.nombre}</td>
-            <td>${producto.cantidad}</td>
-            <td>$${producto.precioUnitario.toFixed(2)}</td>
-            <td>$${producto.subtotal.toFixed(2)}</td>
-        `;
+    // Determinar si tiene promoción aplicada
+    const tienePromocion = producto.promocionAplicada !== null;
+    const esProductoGratis = tienePromocion &&
+      producto.promocionAplicada.tipo === 'buy-get' &&
+      producto.descuento > 0;
+
+    // Construir el contenido de la fila
+    let contenidoFila = `
+      <td>${producto.nombre}</td>
+      <td>${producto.cantidad}</td>
+      <td>$${producto.precioUnitario.toFixed(2)}</td>
+    `;
+
+    // Mostrar diferente si tiene descuento o es gratis
+    if (esProductoGratis) {
+      const precioOriginal = (producto.precioUnitario * producto.cantidad).toFixed(2);
+      const precioConDescuento = (producto.precioUnitario * producto.cantidad - producto.descuento).toFixed(2);
+
+      contenidoFila += `
+        <td class="text-success">
+          <span class="text-decoration-line-through text-muted">$${precioOriginal}</span>
+          <br>$${precioConDescuento}
+          <div class="badge bg-success mt-1">
+            <i class="fas fa-gift"></i> Promoción aplicada
+          </div>
+        </td>
+      `;
+    } else if (tienePromocion) {
+      contenidoFila += `
+        <td>
+          $${producto.subtotal.toFixed(2)}
+          <div class="badge bg-info mt-1">
+            <i class="fas fa-tag"></i> ${producto.promocionAplicada.nombre}
+          </div>
+        </td>
+      `;
+    } else {
+      contenidoFila += `<td>$${producto.subtotal.toFixed(2)}</td>`;
+    }
+
+    fila.innerHTML = contenidoFila;
     tablaBody.appendChild(fila);
     total += producto.subtotal;
   });
 
+  // Mostrar resumen de promociones
+  const promocionesAplicadas = productosTicket
+    .filter(p => p.promocionAplicada)
+    .map(p => p.promocionAplicada.nombre)
+    .filter((v, i, a) => a.indexOf(v) === i); // Eliminar duplicados
+
+  if (promocionesAplicadas.length > 0) {
+    const filaPromociones = document.createElement('tr');
+    filaPromociones.classList.add('promocion-row');
+    filaPromociones.innerHTML = `
+      <td colspan="3" class="text-end"><strong>Promociones aplicadas:</strong></td>
+      <td class="text-success">
+        ${promocionesAplicadas.join(', ')}
+      </td>
+    `;
+    tablaBody.appendChild(filaPromociones);
+  }
+
   // Actualizar total
-  // document.getElementById('total-amount').textContent = `$${total.toFixed(2)}`;
+  document.getElementById('total-amount').textContent = `$${total.toFixed(2)}`;
 }
 
 
@@ -455,7 +513,7 @@ async function procesarPago() {
     ticketActual = null;
     actualizarTablaProductos();
     document.getElementById('amount-input').value = '';
-     document.getElementById('total-amount').textContent = '00.00';
+    document.getElementById('total-amount').textContent = '00.00';
     document.getElementById('change').textContent = '0.00';
     document.getElementById('codigo-ticket-input').value = '';
 
@@ -487,6 +545,43 @@ function generarTicketHTML(ticket, productos, pagado, cambio) {
           <td>$${p.subtotal.toFixed(2)}</td>
         </tr>`;
   });
+
+  let promocionesAplicadas = [];
+
+  productos.forEach(p => {
+    // Determinar si tiene promoción
+    const tienePromocion = p.promocionAplicada !== null;
+    const esProductoGratis = tienePromocion && p.descuento > 0;
+
+    filas += `
+      <tr>
+        <td>${p.nombre}${tienePromocion ? ' *' : ''}</td>
+        <td>${p.cantidad}</td>
+        <td>$${p.precioUnitario.toFixed(2)}</td>
+        <td>${esProductoGratis ?
+        `<span class="text-decoration-line-through">$${(p.precioUnitario * p.cantidad).toFixed(2)}</span><br>
+           $${(p.subtotal).toFixed(2)}` :
+        `$${p.subtotal.toFixed(2)}`}
+        </td>
+      </tr>`;
+
+    // Registrar promociones únicas
+    if (tienePromocion && !promocionesAplicadas.includes(p.promocionAplicada.nombre)) {
+      promocionesAplicadas.push(p.promocionAplicada.nombre);
+    }
+  });
+
+  // Agregar sección de promociones al ticket
+  let promocionesHTML = '';
+  if (promocionesAplicadas.length > 0) {
+    promocionesHTML = `
+      <div class="linea"></div>
+      <p><strong>Promociones aplicadas:</strong></p>
+      <ul>
+        ${promocionesAplicadas.map(p => `<li>${p}</li>`).join('')}
+      </ul>
+    `;
+  }
 
   return `
       <html>
@@ -560,6 +655,7 @@ function generarTicketHTML(ticket, productos, pagado, cambio) {
             </thead>
             <tbody>${filas}</tbody>
           </table>
+          ${promocionesHTML}
           <div class="linea"></div>
   
           <p class="total">Total: $${ticket.total.toFixed(2)}</p>

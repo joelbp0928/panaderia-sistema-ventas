@@ -876,3 +876,26 @@ button:disabled {
   color: #007bff;
   transform: scale(1.1);
 }
+
+/* Estilos para la tabla de productos */
+
+
+/* Estilos para badges de promoción */
+.badge {
+  font-size: 0.75rem;
+  padding: 0.25em 0.4em;
+}
+
+.bg-success {
+  background-color: #28a745 !important;
+}
+
+.bg-info {
+  background-color: #17a2b8 !important;
+}
+
+/* Efecto para productos con descuento */
+.text-decoration-line-through {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
