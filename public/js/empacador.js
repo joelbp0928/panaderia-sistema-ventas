@@ -643,7 +643,6 @@ document.getElementById("finalize-btn").addEventListener("click", async function
 });
 
 // Abre Modal y Diseño a imprimir en ticket
-// Abre Modal y Diseño a imprimir en ticket
 function mostrarTicket(codigoTicket, esReimpresion = false, fechaDelPedido = null) {
     const ticketContent = document.getElementById("ticket-content");
 
@@ -846,9 +845,10 @@ function mostrarTicket(codigoTicket, esReimpresion = false, fechaDelPedido = nul
             <strong><i class="fa-solid fa-boxes-stacked"></i> Productos:</strong> 
             ${productosSeleccionados.reduce((sum, p) => sum + p.cantidad, 0)}
         </p>
-        <div style="margin-top: 10px;">
-            <svg id="barcode"></svg>
-        </div>
+<div style="margin-top: 10px;">
+  <img id="qr-ticket-img" style="margin: auto;" />
+</div>
+
         <p style="margin-top: 8px;">
             <i class="fa-solid fa-circle-info"></i> 
             ${esReimpresion ? 'Pedido reimpreso' : 'Pendiente de pago'}
@@ -857,20 +857,36 @@ function mostrarTicket(codigoTicket, esReimpresion = false, fechaDelPedido = nul
         <hr style="border-top: 1px dashed #aaa;" />
         <p style="font-style: italic;">Gracias por tu compra <i class="fa-solid fa-heart"></i></p>
     </div>
+    
     `;
 
     // Insertar el HTML del ticket en el contenedor
     ticketContent.innerHTML = ticketHTML;
 
-    // Renderizar el código de barras
+    // Generar el QR con el código del ticket
     setTimeout(() => {
-        JsBarcode("#barcode", `T-${Date.now()}`, {
-            format: "CODE128",
-            width: 2,
-            height: 60,
-            displayValue: false,
-        });
-    }, 100);
+        QRCode.toDataURL(
+            codigoTicket,
+            {
+                width: 120,
+                margin: 1,
+                color: {
+                    dark: "#000000",
+                    light: "#ffffff"
+                }
+            },
+            function (err, url) {
+                if (err) {
+                    console.error("Error al generar QR:", err);
+                    return;
+                }
+                const img = document.getElementById("qr-ticket-img");
+                if (img) img.src = url;
+            }
+        );
+
+    }, 400);
+
 
     // Mostrar el modal para imprimir el ticket
     new bootstrap.Modal(document.getElementById('ticketModal')).show();
@@ -933,6 +949,7 @@ document.getElementById("print-ticket-btn").addEventListener("click", function (
     }
                 </style>
             </head>
+            <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
             <body>
             `);
     printWindow.document.write(ticketContent);
