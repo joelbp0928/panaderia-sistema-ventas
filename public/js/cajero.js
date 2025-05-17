@@ -199,53 +199,73 @@ window.onload = async function () {
 };
 
 let scannerQR = null;
+const lectorModal = new bootstrap.Modal(document.getElementById('modal-lector-qr'));
 
-document.getElementById("btn-escanear-qr").addEventListener("click", () => {
-  const contenedorCamara = document.getElementById("lector-camara");
-  const contenedorInput = document.getElementById("scan-input-wrapper");
+document.getElementById("btn-escanear-qr").addEventListener("click", async () => {
+  lectorModal.show();
+
+  // Asegúrate de que el contenedor tenga tamaño visible
   const videoDiv = document.getElementById("lector-video");
+  videoDiv.style.height = "250px";
+  videoDiv.style.background = "#000";
 
-  contenedorInput.style.display = "none";
-  contenedorCamara.style.display = "block";
+  // Esperar 300ms para que el modal se muestre correctamente antes de iniciar cámara
+  setTimeout(async () => {
+    scannerQR = new Html5Qrcode("lector-video");
 
-  scannerQR = new Html5Qrcode("lector-video");
+    try {
+      await scannerQR.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+        },
+        async (codigoQR) => {
+          // Detener escáner
+          await scannerQR.stop();
+          document.getElementById("qr-check").style.display = "block";
 
-  // Todo esto debe correr *inmediatamente* tras el click
-  scannerQR.start(
-    { facingMode: "environment" },
-    {
-      fps: 10,
-      qrbox: { width: 250, height: 250 },
-    },
-    async (codigoQR) => {
-      await scannerQR.stop();
-      document.getElementById("qr-check").style.display = "block";
+          // Insertar valor en input
+          const input = document.getElementById("codigo-ticket-input");
+          input.value = codigoQR;
 
-      const input = document.getElementById("codigo-ticket-input");
-      input.value = codigoQR;
+          // Cerrar modal tras escaneo
+          setTimeout(() => {
+            lectorModal.hide();
+            document.getElementById("qr-check").style.display = "none";
 
-      input.dispatchEvent(new KeyboardEvent("keypress", { key: "Enter" }));
-
-      setTimeout(() => {
-        contenedorCamara.style.display = "none";
-        document.getElementById("qr-check").style.display = "none";
-        document.getElementById("amount-input").focus();
-      }, 1000);
-    },
-    (error) => {
-      console.warn("QR no detectado:", error);
+            // Simular enter
+            input.dispatchEvent(new KeyboardEvent("keypress", { key: "Enter" }));
+            document.getElementById("amount-input").focus();
+          }, 1000);
+        },
+        (error) => {
+          // Silenciar escaneo fallido
+        }
+      );
+    } catch (error) {
+      console.error("No se pudo iniciar el escáner:", error);
+      lectorModal.hide();
+      Swal.fire({
+        icon: "error",
+        title: "Permiso denegado o cámara no disponible",
+        text: "Activa la cámara del dispositivo para escanear.",
+      });
     }
-  ).catch((error) => {
-    console.error("Error iniciando cámara:", error);
-    Swal.fire({
-      icon: "error",
-      title: "Permiso denegado o error",
-      text: "Por favor, concede acceso a la cámara para poder escanear.",
-    });
-    contenedorCamara.style.display = "none";
-    contenedorInput.style.display = "block";
-  });
+  }, 300);
 });
+
+// Detener escáner al cerrar manualmente el modal
+document.getElementById("modal-lector-qr").addEventListener("hidden.bs.modal", async () => {
+  if (scannerQR) {
+    await scannerQR.stop().catch(() => {});
+    scannerQR.clear().catch(() => {});
+    document.getElementById("lector-video").innerHTML = "";
+    document.getElementById("qr-check").style.display = "none";
+  }
+});
+
+
 
 
 
