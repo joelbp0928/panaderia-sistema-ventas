@@ -238,7 +238,8 @@ export async function gestionarPromocion() {
             get_quantity: parseInt(document.getElementById("get-quantity").value) || 0, // ✅ Asegurarse que sea un número entero válido
             fecha_inicio: document.getElementById("promotion-inicio").value,
             fecha_expiracion: document.getElementById("promotion-fin").value,
-            activa: true
+            activa: true,
+            es_general: (tipo === "percentage" || tipo === "threshold") // 👈 NUEVA LÍNEA
         };
         if (imagenUrl) dataPromo.imagen_url = imagenUrl;
 
@@ -779,7 +780,7 @@ function prepararEdicionPromocion(promocion) {
         document.getElementById("buy-quantity").value = promocion.buy_quantity;
         document.getElementById("get-quantity").value = promocion.get_quantity;
         // Productos asociados
-      /*  cargarProductos().then(() => {
+        cargarProductos().then(() => {
             const select = document.getElementById("promotion-products-buy");
             Array.from(select.options).forEach(opt => {
                 opt.selected = false;
@@ -793,29 +794,29 @@ function prepararEdicionPromocion(promocion) {
                         if (option) option.selected = true;
                     });
                 });
-        });*/
+        });
         // Productos asociados
-    /*    cargarProductos().then(() => {
+        cargarProductos().then(() => {
             const select = document.getElementById("promotion-products-free");
             Array.from(select.options).forEach(opt => {
                 opt.selected = false;
             });
             supabase.from("productos_promocion")
-                .select("producto_id")
+                .select("producto_gratis_id")
                 .eq("promocion_id", promocion.id)
                 .then(({ data }) => {
                     data?.forEach(p => {
-                        const option = select.querySelector(`option[value='${p.producto_id}']`);
+                        const option = select.querySelector(`option[value='${p.producto_gratis_id}']`);
                         if (option) option.selected = true;
                     });
                 });
-        });*/
+        });
     } else if (promocion.tipo === "threshold") {
         document.getElementById("threshold-value").value = promocion.threshold;
         document.getElementById("threshold-percentage").value = promocion.porcentaje;
     } else if (promocion.tipo === "products") {
         document.getElementById("products-value").value = promocion.porcentaje;
-   /*     // Productos asociados
+        // Productos asociados
         cargarProductos().then(() => {
             const select = document.getElementById("promotion-percentage-products");
             Array.from(select.options).forEach(opt => {
@@ -830,10 +831,10 @@ function prepararEdicionPromocion(promocion) {
                         if (option) option.selected = true;
                     });
                 });
-        });*/
+        });
     } else if (promocion.tipo === "bogo") {
         // Productos asociados
-    /*    cargarProductos().then(() => {
+        cargarProductos().then(() => {
             const select = document.getElementById("promotion-products");
             Array.from(select.options).forEach(opt => {
                 opt.selected = false;
@@ -847,7 +848,7 @@ function prepararEdicionPromocion(promocion) {
                         if (option) option.selected = true;
                     });
                 });
-        });*/
+        });
     }
 
     // Cambiar texto del botón
@@ -952,10 +953,10 @@ export async function cargarProductosPromocion() {
         const selectFree = document.getElementById("promotion-products-free");
 
         // Mostrar estado de carga
-        select.innerHTML = '<option disabled selected>🔄 Cargando productos...</option>';
-        selectProducts.innerHTML = '<option disabled selected>🔄 Cargando productos...</option>';
-        selectBuy.innerHTML = '<option disabled selected>🔄 Cargando productos...</option>';
-        selectFree.innerHTML = '<option disabled selected>🔄 Cargando productos...</option>';
+        select.innerHTML = '<option disabled selected><i class="fa-solid fa-spinner fa-spin-pulse"></i> Cargando productos...</option>';
+        selectProducts.innerHTML = '<option disabled selected><i class="fa-solid fa-spinner fa-spin-pulse"></i> Cargando productos...</option>';
+        selectBuy.innerHTML = '<option disabled selected><i class="fa-solid fa-spinner fa-spin-pulse"></i> Cargando productos...</option>';
+        selectFree.innerHTML = '<option disabled selected><i class="fa-solid fa-spinner fa-spin-pulse"></i> Cargando productos...</option>';
 
         // Obtener productos de Supabase
         const { data, error } = await supabase

@@ -3,7 +3,7 @@ import { verificarSesion, cerrarSesion } from './auth-check.js';
 import { getCDMXISOString } from './dateLocalDate.js'; // Asegúrate de que la ruta sea correcta
 import { supabase } from './supabase-config.js';
 import { getLocalDateString } from "./dateLocalDate.js";
-import { registrarCorteCaja, cargarHistorialCortes, verDetalleCorte } from './corteCaja.js';
+import { registrarCorteCaja, cargarHistorialCortes, abrirCajaConFondo, verificarEstadoCaja, bloquearOperacionesSiCajaCerrada } from './corteCaja.js';
 
 // Variable para almacenar los productos del ticket
 let productosTicket = [];
@@ -15,6 +15,27 @@ sonidoTeclado.volume = 1.0; // Volumen suave
 const input = document.getElementById("amount-input");
 const totalSpan = document.getElementById("total-amount");
 const changeSpan = document.getElementById("change");
+
+// Verificación automática al cargar la página
+/*(async function () {
+  const today = getLocalDateString();
+  const { data: corteHoy } = await supabase
+    .from('cortes_caja')
+    .select('id')
+    .gte('fecha', `${today}T00:00:00`)
+    .lte('fecha', `${today}T23:59:59`)
+    .eq('cerrado', false) // 🔥 SOLO si no está cerrado
+    .limit(1);
+
+  if (!corteHoy || corteHoy.length === 0) {
+    const abrioCaja = await abrirCajaConFondo(true);
+    if (!abrioCaja) {
+      // Si no se abrió caja, bloquear operaciones
+      bloquearOperacionesSiCajaCerrada();
+    }
+  }
+
+})();*/
 
 function actualizarCambio() {
   const total = parseFloat(document.getElementById('total-amount').textContent.replace("$", "")) || 0;
@@ -138,11 +159,23 @@ window.onload = async function () {
   cargarConfiguracion();
   configurarBotonesPago();
   
+  // Verificar estado de caja al cargar
+  const cajaAbierta = await verificarEstadoCaja();
+  console.log(cajaAbierta)
+  if (!cajaAbierta) {
+    // Mostrar modal para abrir caja inmediatamente
+    const abrioCaja = await abrirCajaConFondo(true);
+    console.log(abrioCaja)
+    if (!abrioCaja) {
+      // Si no abrió caja, bloquear operaciones
+      await bloquearOperacionesSiCajaCerrada();
+    }
+  }
+
   // Ocultar el spinner cuando se haya cargado todo
   document.getElementById("loading-spinner").style.display = "none";
 
   document.getElementById("logout-btn").addEventListener("click", cerrarSesion);
-
 };
 
 async function cargarProductosTicket() {
@@ -556,7 +589,7 @@ function generarTicketHTML(ticket, productos, pagado, cambio) {
     filas += `
       <tr>
         <td style="font-size:15px">
-          ${p.nombre}${tienePromocion ? ' <i class="fas fa-tag text-success"></i>' : ''}
+          ${p.nombre}${tienePromocion ? ' <i class="fas fa-tag"></i>' : ''}
         </td>
         <td style="font-size:15px" align="center">
            ${p.cantidad}
@@ -583,7 +616,7 @@ function generarTicketHTML(ticket, productos, pagado, cambio) {
     </p>
     ${promocionesAplicadas.map(p => `
       <p style="font-size:18px" class="promo-item">
-        <i class="fas fa-gift text-success"></i> ${p}
+        <i class="fas fa-gift"></i> ${p}
       </p>`).join('')}
   ` : '';
 
@@ -690,9 +723,6 @@ function generarTicketHTML(ticket, productos, pagado, cambio) {
           .promo-item {
             margin-left: 3mm;
           }
-          .text-success {
-            color: #28a745 !important;
-          }
           .fa-times {
             font-size: 14px;
             opacity: 0.7;
@@ -756,7 +786,7 @@ function generarTicketHTML(ticket, productos, pagado, cambio) {
         </div>
 
         <div class="footer">
-          <p><i class="fas fa-heart text-success"></i> ¡Gracias por su compra! <i class="fas fa-heart text-success"></i></p>
+          <p><i class="fas fa-heart"></i> ¡Gracias por su compra! <i class="fas fa-heart"></i></p>
           ${configuracionGlobal.direccion ? `<p><i class="fas fa-map-marker-alt"></i> ${configuracionGlobal.direccion}</p>` : ''}
           ${configuracionGlobal.telefono ? `<p><i class="fas fa-phone"></i> Tel: ${configuracionGlobal.telefono}</p>` : ''}
         </div>

@@ -1,25 +1,389 @@
 import { supabase } from './supabase-config.js';
-import { getLocalDateString } from './dateLocalDate.js';
+import { getLocalDateString, getCDMXISOString } from './dateLocalDate.js';
+import { configuracionGlobal } from './config.js';
+// Al cargar la aplicación
+// Al inicio de la aplicación
+document.addEventListener('DOMContentLoaded', async () => {
+  // Mostrar spinner
+  //document.getElementById("loading-spinner").style.display = "flex";
+  sincronizarLocalStorageConBase();
+  // Verificar caja
+  const today = getLocalDateString();
+  const { data: ultimoCorte } = await supabase
+    .from('cortes_caja')
+    .select('id, cerrado')
+    .gte('fecha', `${today}T00:00:00`)
+    .lte('fecha', `${today}T23:59:59`)
+    .order('fecha', { ascending: false })
+    .limit(1);
 
-// Evento para activar el corte de caja
-document.getElementById("corte-caja-btn").addEventListener("click", async function () {
-  // Cerrar el sidebar primero
-  const sidebar = bootstrap.Offcanvas.getInstance(document.getElementById("menuLateral"));
-  if (sidebar) {
-    sidebar.hide();
+  if (!ultimoCorte || ultimoCorte.length === 0 || ultimoCorte[0].cerrado) {
+    // No hay caja abierta → mostrar modal de apertura
+    console.log("No hay caja abierta → mostrar modal de apertura")
+    // Habilitar operaciones
+    document.querySelectorAll('.btn-cobro').forEach(btn => {
+      btn.disabled = true;
+    });
+    //  await bloquearOperacionesSiCajaCerrada();
+    await abrirCajaConFondo();
   }
 
-  // Esperar un breve momento para que se cierre el sidebar
-  await new Promise(resolve => setTimeout(resolve, 100));
+  /*
+    if (!corteHoy || corteHoy.length === 0 || corteHoy[0].cerrado) {
+      const abrioCaja = await abrirCajaConFondo();
+      if (!abrioCaja) {
+       // await bloquearOperacionesSiCajaCerrada();
+      }
+    }*/
 
-  // Llamar a la función de corte de caja
-  await registrarCorteCaja();
+  // Actualizar botón
+  await actualizarBotonCorteCaja();
+
+  // Configurar evento del botón
+  document.getElementById("corte-caja-btn").addEventListener("click", async function () {
+    const today = getLocalDateString();
+    const sidebar = bootstrap.Offcanvas.getInstance(document.getElementById("menuLateral"));
+    const { data: corteActual } = await supabase
+      .from('cortes_caja')
+      .select('id, cerrado')
+      .gte('fecha', `${today}T00:00:00`)
+      .lte('fecha', `${today}T23:59:59`)
+      .order('fecha', { ascending: false })
+      .limit(1);
+
+    if (!corteActual || corteActual.length === 0 || corteActual[0].cerrado) {
+      sidebar.hide();
+      await abrirCajaConFondo(true);
+    } else {
+      const sidebar = bootstrap.Offcanvas.getInstance(document.getElementById("menuLateral"));
+      if (sidebar) sidebar.hide();
+      await new Promise(resolve => setTimeout(resolve, 100));
+      await registrarCorteCaja();
+
+      // Después de cerrar, forzar apertura de nueva caja
+      /* const abrioNuevaCaja = await abrirCajaConFondo(true);
+       if (!abrioNuevaCaja) {
+        // await bloquearOperacionesSiCajaCerrada();
+       }*/
+    }
+
+    await actualizarBotonCorteCaja();
+  });
+
+  // Ocultar spinner
+  document.getElementById("loading-spinner").style.display = "none";
 });
+
+// Nueva función para actualizar el texto del botón
+async function actualizarBotonCorteCaja() {
+  const today = getLocalDateString();
+  const btn = document.getElementById("corte-caja-btn");
+
+  const { data: corteHoy, error } = await supabase
+    .from('cortes_caja')
+    .select('cerrado')
+    .gte('fecha', `${today}T00:00:00`)
+    .lte('fecha', `${today}T23:59:59`)
+    .order('fecha', { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error("Error al verificar corte:", error);
+    return;
+  }
+
+  if (!corteHoy || corteHoy.length === 0 || corteHoy[0].cerrado) {
+    btn.innerHTML = '<i class="fas fa-cash-register"></i> Abrir Caja';
+    btn.classList.remove('btn-outline-danger');
+    btn.classList.add('btn-outline-success');
+  } else {
+    btn.innerHTML = '<i class="fas fa-money-bill-wave"></i> Cerrar Caja';
+    btn.classList.remove('btn-outline-success');
+    btn.classList.add('btn-outline-danger');
+  }
+}
+
+// Función para verificar estado de la caja
+export async function verificarEstadoCaja() {
+  // Verificar en localStorage primero para rapidez
+  const cajaAbierta = localStorage.getItem('cajaAbierta') === 'true';
+  console.log(cajaAbierta)
+  if (!cajaAbierta) {
+    // Verificar en la base de datos por si acaso
+    const today = getLocalDateString();
+    const { data, error } = await supabase
+      .from('cortes_caja')
+      .select('id')
+      .gte('fecha', `${today}T00:00:00`)
+      .lte('fecha', `${today}T23:59:59`)
+      .order('fecha', { ascending: false }) // 👈 importante
+      .limit(1); // si solo quieres el más reciente
+
+    if (error) {
+      console.error("Error al verificar cortes:", error);
+      return false;
+    }
+    if (data && data.length > 0) {
+      localStorage.setItem('cajaAbierta', 'true');
+      localStorage.setItem('fechaCorte', today);
+      localStorage.setItem('ultimoCorteId', data[0].id); // ✅ CORRECTO
+      return true;
+    }
+
+    return false;
+  }
+  return true;
+}
+
+// Función para bloquear operaciones si la caja está cerrada
+export async function bloquearOperacionesSiCajaCerrada() {
+  // Obtener fecha y hora exactas de CDMX como string
+  const formatter = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+
+  const parts = formatter.formatToParts(new Date());
+  const fechaCDMX = `${parts.find(p => p.type === 'year').value}-${parts.find(p => p.type === 'month').value}-${parts.find(p => p.type === 'day').value} ${parts.find(p => p.type === 'hour').value}:${parts.find(p => p.type === 'minute').value}:${parts.find(p => p.type === 'second').value}`;
+
+  // Convertir ese string a objeto Date (hora local de CDMX)
+  const fechaExactaCDMX = new Date(`${fechaCDMX} GMT-0600`);
+  const fechaCorte = localStorage.getItem('fechaCorte');
+
+  // Verificar si la fecha guardada es diferente a hoy
+  if (fechaCorte && fechaCorte !== fechaExactaCDMX) {
+    localStorage.removeItem('cajaAbierta');
+    localStorage.removeItem('ultimoCorteId');
+    localStorage.removeItem('fondoInicial');
+  }
+  const cajaAbierta = await verificarEstadoCaja();
+
+  console.log(verificarEstadoCaja())
+  console.log(!verificarEstadoCaja())
+  if (cajaAbierta) {
+    // Modal mejorado con más opciones
+    Swal.fire({
+      icon: 'error',
+      title: 'Caja cerrada',
+      html: `
+        <p>No puedes realizar operaciones sin abrir caja primero.</p>
+        <div class="d-grid gap-2 mt-3">
+          <button id="btn-forzar-apertura" class="btn btn-primary">
+            <i class="fas fa-cash-register"></i> Abrir Caja Ahora
+          </button>
+          <button id="btn-recargar" class="btn btn-secondary">
+            <i class="fas fa-sync-alt"></i> Recargar Página
+          </button>
+        </div>
+      `,
+      showConfirmButton: false,
+      showCancelButton: true,
+      didOpen: () => {
+        document.getElementById('btn-forzar-apertura').addEventListener('click', async () => {
+          const abrioCaja = await abrirCajaConFondo(true);
+          if (abrioCaja) {
+            Swal.close();
+            document.querySelectorAll('.btn-cobro').forEach(btn => {
+              btn.disabled = false;
+            });
+          }
+        });
+
+        document.getElementById('btn-recargar').addEventListener('click', () => {
+          location.reload();
+        });
+      }
+    });
+
+    // Deshabilitar operaciones
+    document.querySelectorAll('.btn-cobro').forEach(btn => {
+      btn.disabled = true;
+    });
+
+    return true;
+  }
+  return false;
+}
+
+// Función para abrir caja con fondo inicial
+export async function abrirCajaConFondo(force = false) {
+  const today = getLocalDateString();
+
+  // Verificar si ya hay caja abierta hoy
+  const { data: corteExistente } = await supabase
+    .from('cortes_caja')
+    .select('id, cerrado')
+    .gte('fecha', `${today}T00:00:00`)
+    .lte('fecha', `${today}T23:59:59`)
+    .order('fecha', { ascending: false })
+    .limit(1);
+
+  if (corteExistente && corteExistente.length > 0 && !corteExistente[0].cerrado && !force) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Caja ya abierta',
+      text: 'Ya hay una caja abierta para hoy.',
+    });
+    return true; // Consideramos que la caja está abierta
+  }
+
+  // Resto de la función de apertura...
+  const { value: formValues } = await Swal.fire({
+    title: 'Apertura de Caja',
+    html: `
+      <div>
+        <label for="fondo-inicial"><i class="fa-solid fa-wallet"></i> Fondo Inicial (Efectivo):</label>
+        <input id="fondo-inicial" type="number" class="swal2-input" placeholder="$0.00" step="0.01" min="0" required>
+      </div>
+      <div>
+        <label for="observaciones-apertura"><i class="fa-solid fa-comment"></i> Observaciones:</label>
+        <textarea id="observaciones-apertura" class="swal2-textarea" placeholder="Notas sobre el fondo inicial..."></textarea>
+      </div>
+    `,
+    focusConfirm: true,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    showCancelButton: true,
+    preConfirm: () => {
+      const fondo = parseFloat(document.getElementById('fondo-inicial').value);
+      if (isNaN(fondo)) {
+        Swal.showValidationMessage("Debes ingresar un monto válido");
+        return false;
+      }
+      return {
+        fondoInicial: fondo,
+        observaciones: document.getElementById('observaciones-apertura').value
+      };
+    }
+  });
+
+  if (!formValues) {
+    // Mostrar aviso de cancelación
+    await Swal.fire({
+      icon: "info",
+      title: "Corte de caja cancelado",
+      text: "El corte de caja no se ha registrado.",
+    });
+
+    // Llamar al modal que bloquea operaciones si no hay caja abierta
+    await new Promise(r => setTimeout(r, 300));
+    await bloquearOperacionesSiCajaCerrada();
+
+    return;
+  }
+
+  // Obtener el ID del empleado actual desde la sesión
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  const usuarioId = sessionData?.session?.user?.id;
+  // Obtener fecha y hora exactas de CDMX como string
+  const formatter = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+
+  const parts = formatter.formatToParts(new Date());
+  const fechaCDMX = `${parts.find(p => p.type === 'year').value}-${parts.find(p => p.type === 'month').value}-${parts.find(p => p.type === 'day').value} ${parts.find(p => p.type === 'hour').value}:${parts.find(p => p.type === 'minute').value}:${parts.find(p => p.type === 'second').value}`;
+
+  // Convertir ese string a objeto Date (hora local de CDMX)
+  const fechaExactaCDMX = new Date(`${fechaCDMX} GMT-0600`);
+  // Resto del código de inserción...
+  const { data, error } = await supabase
+    .from('cortes_caja')
+    .insert([{
+      fecha: fechaExactaCDMX,
+      fondo_inicial: formValues.fondoInicial,
+      monto_ventas: 0,
+      monto_efectivo: formValues.fondoInicial,
+      ingresos_adicionales: 0,
+      salidas_caja: 0,
+      saldo_final: formValues.fondoInicial,
+      empleado_id: usuarioId,
+      observaciones: `${formValues.observaciones || 'Sin observaciones'}`,
+      cerrado: false
+    }])
+    .select();
+
+  if (error) {
+    console.error("Error al abrir caja:", error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'No se pudo registrar la apertura de caja.'
+    });
+    return false;
+  }
+
+  if (data && data.length > 0) {
+    // 1. Obtener el nombre del empleado
+    const { data: empleado, error: errorEmpleado } = await supabase
+      .from('empleados')
+      .select('usuario_id')
+      .eq('id', usuarioId)
+      .single();
+
+    const { data: usuario, error: errorUsuario } = await supabase
+      .from('usuarios')
+      .select('nombre')
+      .eq('id', usuarioId)
+      .single();
+
+    const nombreEmpleado = usuario?.nombre || 'Empleado Desconocido';
+
+    await actualizarBotonCorteCaja();
+    // 2. Imprimir el ticket
+    imprimirCorteDeCaja(data[0], nombreEmpleado);
+  }
+
+
+  // Actualizar estado en localStorage
+  localStorage.setItem('cajaAbierta', 'true');
+  localStorage.setItem('ultimoCorteId', data[0].id);
+  localStorage.setItem('fondoInicial', formValues.fondoInicial);
+  localStorage.setItem('fechaCorte', today);
+
+  // Habilitar operaciones
+  document.querySelectorAll('.btn-cobro').forEach(btn => {
+    btn.disabled = false;
+  });
+
+  return true;
+}
 
 // Función para registrar un nuevo corte de caja
 export async function registrarCorteCaja() {
-  // Obtener la fecha de hoy
-  const today = getLocalDateString(); // Formato YYYY-MM-DD
+  // Verificar si hay caja abierta
+  const today = getLocalDateString();
+
+  const { data: cortesAbiertos, error: errorCortes } = await supabase
+    .from('cortes_caja')
+    .select('id, fondo_inicial')
+    .gte('fecha', `${today}T00:00:00`)
+    .lte('fecha', `${today}T23:59:59`)
+    .is('cerrado', false)
+    .order('fecha', { ascending: false })
+    .limit(1);
+
+
+  const corteAbierto = cortesAbiertos?.[0];
+
+  if (!corteAbierto) {
+    Swal.fire({
+      icon: 'error',
+      title: 'No hay caja abierta',
+      text: 'Debes abrir caja con un fondo inicial antes de poder cerrarla.',
+    });
+    return;
+  }
 
   // 1. Obtener los 'pedido_id' de los cobros realizados hoy
   const { data: cobros, error: errorCobros } = await supabase
@@ -60,9 +424,9 @@ export async function registrarCorteCaja() {
 
   // Obtener el ID del empleado actual desde la sesión
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  const empleadoId = sessionData.session.user.id; // El empleado es el usuario logueado
-console.log(empleadoId)
-  if (sessionError || !empleadoId) {
+  const usuarioId = sessionData?.session?.user?.id;
+  console.log(usuarioId)
+  if (sessionError || !usuarioId) {
     Swal.fire({
       icon: 'error',
       title: 'Error al obtener el empleado',
@@ -105,7 +469,7 @@ console.log(empleadoId)
         ingresosAdicionales: document.getElementById('ingresos-adicionales').value,
         salidasCaja: document.getElementById('salidas-caja').value,
         observaciones: document.getElementById('observaciones').value,
-        empleadoId: empleadoId // Pasamos el empleado_id
+        empleadoId: usuarioId // Pasamos el empleado_id
       }
     }
   });
@@ -125,28 +489,32 @@ console.log(empleadoId)
   const ingresosAdicionales = parseFloat(formValues.ingresosAdicionales) || 0;
   const salidasCaja = parseFloat(formValues.salidasCaja) || 0;
   const observaciones = formValues.observaciones;
-  
+
 
   // Calculamos el saldo final
   const saldoFinal = montoVentas - salidasCaja;
+  const cajaEsperada = corteAbierto.fondo_inicial + montoVentas + ingresosAdicionales - salidasCaja;
+  const diferencia = montoEfectivo - cajaEsperada;
 
   // Mostrar la confirmación de corte de caja con los detalles
   const confirmacion = await Swal.fire({
     title: "Confirmar Corte de Caja",
     html: `
-       <p><strong>Total Ventas:</strong> $${montoVentas.toFixed(2)}</p>
-       <p><strong>Caja Final (Efectivo):</strong> $${montoEfectivo.toFixed(2)}</p>
-       <p><strong>Ingresos Adicionales:</strong> $${ingresosAdicionales.toFixed(2)}</p>
-       <p><strong>Salidas de Caja:</strong> $${salidasCaja.toFixed(2)}</p>
-       <p><strong>Saldo Final:</strong> $${saldoFinal.toFixed(2)}</p>
-       <p><strong>Observaciones:</strong> ${observaciones}</p>
-     `,
+      <p><strong>Total Ventas:</strong> $${montoVentas.toFixed(2)}</p>
+      <p><strong>Ingresos Adicionales:</strong> $${ingresosAdicionales.toFixed(2)}</p>
+      <p><strong>Salidas de Caja:</strong> $${salidasCaja.toFixed(2)}</p>
+      <p><strong>Saldo Final (calculado):</strong> $${saldoFinal.toFixed(2)}</p>
+      <p><strong>Caja Esperada:</strong> $${cajaEsperada.toFixed(2)}</p>
+      <p><strong>Caja Reportada:</strong> $${montoEfectivo.toFixed(2)}</p>
+      <p><strong>Verificación:</strong> ${diferencia === 0 ? '✅ Coincide' : `❌ Diferencia de $${diferencia.toFixed(2)}`}</p>
+      <p><strong>Observaciones:</strong> ${observaciones || 'Sin observaciones'}</p>
+    `,
     icon: "question",
     showCancelButton: true,
     confirmButtonText: "Confirmar Corte",
     cancelButtonText: "Cancelar",
-    confirmButtonColor: "#28a745", // Verde para confirmar
-    cancelButtonColor: "#dc3545",  // Rojo para cancelar
+    confirmButtonColor: "#28a745",
+    cancelButtonColor: "#dc3545"
   });
 
   if (!confirmacion.isConfirmed) {
@@ -158,24 +526,41 @@ console.log(empleadoId)
     });
     return;
   }
+  // Obtener fecha y hora exactas de CDMX como string
+  const formatter = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
 
+  const parts = formatter.formatToParts(new Date());
+  const fechaCDMX = `${parts.find(p => p.type === 'year').value}-${parts.find(p => p.type === 'month').value}-${parts.find(p => p.type === 'day').value} ${parts.find(p => p.type === 'hour').value}:${parts.find(p => p.type === 'minute').value}:${parts.find(p => p.type === 'second').value}`;
+
+  // Convertir ese string a objeto Date (hora local de CDMX)
+  const fechaExactaCDMX = new Date(`${fechaCDMX} GMT-0600`);
   // Insertamos el corte de caja en la base de datos
   try {
     const { data, error } = await supabase
       .from("cortes_caja")
-      .insert([
-        {
-          fecha: new Date(),
-          monto_ventas: montoVentas,
-          monto_efectivo: montoEfectivo,
-          ingresos_adicionales: ingresosAdicionales,
-          salidas_caja: salidasCaja,
-          saldo_final: saldoFinal,
-          empleado_id: empleadoId, // ID del empleado actual (esto se debe obtener dinámicamente)
-          observaciones: observaciones,
-        },
-      ]);
+      .insert([{
+        fecha: fechaExactaCDMX,
+        fondo_inicial: corteAbierto.fondo_inicial, // conservar el mismo fondo de apertura
+        monto_ventas: montoVentas,
+        monto_efectivo: montoEfectivo,
+        ingresos_adicionales: ingresosAdicionales,
+        salidas_caja: salidasCaja,
+        saldo_final: saldoFinal,
+        empleado_id: usuarioId,
+        observaciones: `${observaciones || 'Sin observaciones'}`,
+        cerrado: true
+      }])
+      .select();
 
+    // Verificamos si hay un error al insertar
     if (error) {
       console.error("Error al registrar el corte de caja:", error);
       Swal.fire({
@@ -186,12 +571,53 @@ console.log(empleadoId)
       return;
     }
 
+    // Mostrar los datos para depurar
+    console.log("Corte de caja registrado:", data);
+
     // Si todo está bien, mostrar un mensaje de éxito
     Swal.fire({
       icon: "success",
       title: "Corte de Caja Registrado",
       text: "El corte de caja se ha registrado exitosamente.",
     });
+
+    // Llamar a la función de impresión
+    if (data && data.length > 0) {
+      // 1. Obtener el nombre del empleado
+      const { data: empleado, error: errorEmpleado } = await supabase
+        .from('empleados')
+        .select('usuario_id')
+        .eq('id', usuarioId)
+        .limit(1);;
+
+      const { data: usuario, error: errorUsuario } = await supabase
+        .from('usuarios')
+        .select('nombre')
+        .eq('id', usuarioId)
+        .limit(1);;
+
+      const nombreEmpleado = usuario?.nombre || 'Empleado Desconocido';
+
+      // 2. Imprimir el ticket
+      imprimirCorteDeCaja(data[0], nombreEmpleado);
+
+    } else {
+      console.error("No se recibieron datos del corte insertado");
+    }
+
+    // Limpiar localStorage al cerrar caja
+    localStorage.removeItem('cajaAbierta');
+    localStorage.removeItem('ultimoCorteId');
+    localStorage.removeItem('fondoInicial');
+
+    // await bloquearOperacionesSiCajaCerrada();
+    // Mostrar modal para abrir nueva caja inmediatamente
+    setTimeout(async () => {
+      const abrioCaja = await abrirCajaConFondo(true);
+      if (!abrioCaja) {
+        await bloquearOperacionesSiCajaCerrada();
+      }
+    }, 1500); // Pequeño retraso para mejor UX
 
   } catch (error) {
     console.error("Error al registrar el corte:", error);
@@ -203,42 +629,195 @@ console.log(empleadoId)
   }
 }
 
+function imprimirCorteDeCaja(corte, nombreEmpleado) {
+  const htmlCorte = generarHTMLCorteDeCaja(corte, nombreEmpleado);
+
+  // Crear una ventana nueva para imprimir
+  const ventanaImpresion = window.open('', '', 'width=600,height=400');
+  ventanaImpresion.document.open();
+  ventanaImpresion.document.write(htmlCorte);
+  ventanaImpresion.document.close();
+
+  // Esperar un poco para que el contenido cargue completamente
+  setTimeout(() => {
+    ventanaImpresion.focus();  // Asegurarse de que la ventana esté activa
+    ventanaImpresion.print();  // Iniciar la impresión
+    ventanaImpresion.close();  // Cerrar la ventana después de la impresión
+  }, 1000); // Espera 1 segundo para que el contenido se cargue
+}
+
+
+function generarHTMLCorteDeCaja(corte, nombreEmpleado) {
+  const fecha = getCDMXISOString();
+
+  const tipoCorte = corte.cerrado ? 'CIERRE DE CAJA' : 'APERTURA DE CAJA';
+  const cajaEsperada = corte.fondo_inicial + corte.monto_ventas + corte.ingresos_adicionales - corte.salidas_caja;
+  const diferencia = corte.monto_efectivo - cajaEsperada;
+
+  return `
+    <html>
+      <head>
+        <style>
+          body { font-family: 'Courier New', monospace; width: 80mm; margin: 0; padding: 3mm; }
+          .header { text-align: center; margin-bottom: 5mm; }
+          .title { font-weight: bold; font-size: 1.2em; }
+          .tipo-corte { 
+            font-weight: bold; 
+            font-size: 1.1em;
+            text-align: center;
+            margin: 3mm 0;
+            padding: 2mm;
+            background: ${corte.cerrado ? '#f8d7da' : '#d4edda'};
+            border-radius: 5px;
+          }
+          .detail { display: flex; justify-content: space-between; margin: 2mm 0; }
+          .divider { border-top: 1px dashed #000; margin: 3mm 0; }
+          .footer { font-size: 0.8em; text-align: center; margin-top: 5mm; }
+          .text-right { text-align: right; }
+          .text-bold { font-weight: bold; }
+          .total-box { 
+            border: 2px solid #000;
+            padding: 3mm;
+            margin-top: 4mm;
+            border-radius: 5px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="title">${configuracionGlobal.nombre_empresa || 'Mi Negocio'}</div>
+          <div>Corte #${corte.id}</div>
+          <div>${fecha}</div>
+        </div>
+
+        <div class="tipo-corte">
+          ${tipoCorte}
+        </div>
+
+        <div class="detail">
+          <span>Fondo Inicial:</span>
+          <span>$${corte.fondo_inicial?.toFixed(2) || '0.00'}</span>
+        </div>
+
+        ${corte.cerrado ? `
+          <div class="detail">
+            <span>Ventas Totales:</span>
+            <span>$${corte.monto_ventas.toFixed(2)}</span>
+          </div>
+          <div class="detail">
+            <span>Ingresos Adicionales:</span>
+            <span>+ $${corte.ingresos_adicionales.toFixed(2)}</span>
+          </div>
+          <div class="detail">
+            <span>Salidas de Caja:</span>
+            <span>- $${corte.salidas_caja.toFixed(2)}</span>
+          </div>
+          <div class="divider"></div>
+                  <div class="detail text-bold">
+          <span>Efectivo Reportado:</span>
+          <span>$${corte.monto_efectivo.toFixed(2)}</span>
+        </div>
+        <div class="detail">
+          <span>Caja Esperada:</span>
+          <span>$${cajaEsperada.toFixed(2)}</span>
+        </div>
+        <div class="detail">
+          <span>Verificación:</span>
+          <span>${diferencia === 0 ? '<i class="fa-solid fa-check fa-lg"></i> Coincide' : `<i class="fa-solid fa-xmark fa-lg"></i> Diferencia de $${diferencia.toFixed(2)}`}</span>
+        </div>
+
+          <div class="total-box">
+            <div class="detail text-bold">
+              <span>SALDO FINAL:</span>
+              <span>$${corte.saldo_final.toFixed(2)}</span>
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="footer">
+          <div>Responsable: ${nombreEmpleado}</div>
+          <div>${corte.observaciones || 'Sin observaciones'}</div>
+          <div>--------------------------------</div>
+          <div>Este ticket es un comprobante digital</div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+export async function sincronizarLocalStorageConBase() {
+  const today = getLocalDateString();
+  const { data, error } = await supabase
+    .from('cortes_caja')
+    .select('id, cerrado')
+    .gte('fecha', `${today}T00:00:00`)
+    .lte('fecha', `${today}T23:59:59`)
+    .order('fecha', { ascending: false })
+    .limit(1);
+
+  if (data && data.length > 0 && !data[0].cerrado) {
+    localStorage.setItem('cajaAbierta', 'true');
+    localStorage.setItem('fechaCorte', today);
+    localStorage.setItem('ultimoCorteId', data[0].id);
+  } else {
+    limpiarEstadoCajaLocal(); // Si no hay caja abierta, limpia
+  }
+}
+export function limpiarEstadoCajaLocal() {
+  localStorage.removeItem('cajaAbierta');
+  localStorage.removeItem('ultimoCorteId');
+  localStorage.removeItem('fondoInicial');
+  localStorage.removeItem('fechaCorte');
+}
+
+document.getElementById("open-history-cortes-btn").addEventListener("click", async () => {
+  await cargarHistorialCortes();
+  const historial = new bootstrap.Offcanvas(document.getElementById("historialCortesOffcanvas"));
+  historial.show();
+});
+
 
 // Función para cargar los cortes de caja del historial
 export async function cargarHistorialCortes() {
-  const desde = document.getElementById("filtro-fecha-desde").value;
-  const hasta = document.getElementById("filtro-fecha-hasta").value;
-
   const { data, error } = await supabase
     .from("cortes_caja")
     .select("*")
-    .gte("fecha", desde)
-    .lte("fecha", hasta)
-    .order("fecha", { ascending: false });
+    .order("fecha", { ascending: false })
+    .limit(30); // 🔢 limitar resultados
+
+
 
   if (error) {
-    console.error("Error al cargar cortes de caja:", error);
+    console.error("Error al cargar cortes:", error);
     return;
   }
 
-  const tablaCortes = document.getElementById("tabla-cortes");
-  tablaCortes.innerHTML = ""; // Limpiar tabla antes de agregar datos
-
-  data.forEach((corte) => {
-    const fila = document.createElement("tr");
-    fila.innerHTML = `
-        <td>${new Date(corte.fecha).toLocaleString()}</td>
-        <td>$${corte.monto_ventas.toFixed(2)}</td>
-        <td>$${corte.saldo_final.toFixed(2)}</td>
-        <td>${corte.observaciones}</td>
-        <td><button class="btn btn-info" onclick="verDetalleCorte(${corte.id})">Ver Detalle</button></td>
-      `;
-    tablaCortes.appendChild(fila);
+  data.forEach(corte => {
+    const card = document.createElement('div');
+    card.className = 'col-12';
+    card.innerHTML = `
+    <div class="card shadow-sm rounded-4 p-3 bg-light historal-corte-card" style="cursor:pointer" data-id="${corte.id}">
+      <div class="d-flex justify-content-between">
+        <div>
+          <div class="fw-bold">${new Date(corte.fecha).toLocaleString()}</div>
+          <div class="text-muted">${corte.cerrado ? '🟥 Cierre de Caja' : '🟩 Apertura de Caja'}</div>
+        </div>
+        <div class="text-end">
+          <div><i class="fa-solid fa-coins"></i> $${corte.saldo_final.toFixed(2)}</div>
+          <div><i class="fa-solid fa-sack-dollar"></i> $${corte.monto_ventas.toFixed(2)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+    card.querySelector('.historal-corte-card').addEventListener('click', () => verDetalleCorte(corte.id));
+    contenedorHistorialCortes.appendChild(card);
   });
+
 }
 
+
 // Cargar detalles del corte de caja
-export async function verDetalleCorte(corteId) {
+window.verDetalleCorte = async function (corteId) {
   const { data, error } = await supabase
     .from("cortes_caja")
     .select("*")
@@ -250,20 +829,12 @@ export async function verDetalleCorte(corteId) {
     return;
   }
 
-  // Mostrar el detalle del corte en el modal
   document.getElementById("detalle-fecha").textContent = new Date(data.fecha).toLocaleString();
   document.getElementById("detalle-ventas").textContent = `$${data.monto_ventas.toFixed(2)}`;
   document.getElementById("detalle-efectivo").textContent = `$${data.monto_efectivo.toFixed(2)}`;
   document.getElementById("detalle-saldo").textContent = `$${data.saldo_final.toFixed(2)}`;
   document.getElementById("detalle-observaciones").textContent = data.observaciones;
 
-  // Mostrar modal con los detalles
-  $('#detalleCorteModal').modal('show');
+  const modal = new bootstrap.Modal(document.getElementById("detalleCorteModal"));
+  modal.show();
 }
-/*
-// Añadir evento para registrar corte de caja
-document.getElementById("registrar-corte-btn").addEventListener("click", registrarCorteCaja);
-
-// Añadir evento para cargar historial de cortes
-document.getElementById("ver-historial-btn").addEventListener("click", cargarHistorialCortes);
-*/

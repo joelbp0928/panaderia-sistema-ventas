@@ -80,6 +80,16 @@
           >
             <i class="fa-solid fa-cash-register"></i> Realizar Corte de Caja
           </button>
+          <button
+            class="btn btn-outline-info w-100 mb-2"
+            id="open-history-cortes-btn"
+          >
+            <span
+              ><i class="fa-solid fa-clock-rotate-left"></i> Historial de
+              Cortes</span
+            >
+            <!--  <i class="fa-solid fa-chevron-right"></i>-->
+          </button>
           <button class="btn btn-outline-danger w-100" id="logout-btn">
             <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
           </button>
@@ -142,7 +152,6 @@
           </ul>
         </div>
       </div>
-      <!-- Modal detalles del pedido -->
       <!-- Modal detalles del pedido -->
       <div class="modal fade" id="detallePedidoModal">
         <div class="modal-dialog modal-lg">
@@ -227,6 +236,80 @@
           </div>
         </div>
       </div>
+      <!-- Panel lateral Cortes -->
+      <div
+        class="offcanvas offcanvas-end"
+        tabindex="-1"
+        id="historialCortesOffcanvas"
+      >
+        <div class="offcanvas-header header-tittle">
+          <h5 class="offcanvas-title">
+            <i class="fa-solid fa-clock-rotate-left"></i> Historial de Cortes
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="offcanvas"
+          ></button>
+        </div>
+        <div class="offcanvas-body">
+          <div id="contenedorHistorialCortes" class="row g-3 px-2">
+            <!-- Aquí se insertarán dinámicamente las tarjetas -->
+          </div>
+        </div>
+      </div>
+      <!-- Modal detalles del los cortes -->
+      <div
+        class="modal fade"
+        id="detalleCorteModal"
+        tabindex="-1"
+        aria-labelledby="detalleCorteModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-dialog-scrollable">
+          <div class="modal-content">
+            <div class="modal-header ">
+              <h5 class="modal-title" id="detalleCorteModalLabel">
+                <i class="fa-solid fa-receipt"></i> Detalle del Corte
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <p><strong>Fecha:</strong> <span id="detalle-fecha"></span></p>
+              <p>
+                <strong>Ventas Totales:</strong>
+                <span id="detalle-ventas"></span>
+              </p>
+              <p>
+                <strong>Efectivo Reportado:</strong>
+                <span id="detalle-efectivo"></span>
+              </p>
+              <p>
+                <strong>Saldo Final:</strong> <span id="detalle-saldo"></span>
+              </p>
+              <p><strong>Observaciones:</strong></p>
+              <div
+                class="alert alert-light"
+                id="detalle-observaciones"
+                style="white-space: pre-wrap"
+              ></div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                <i class="fa-solid fa-xmark"></i> Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- NUEVA ESTRUCTURA INTERFAZ FACHERITA -->
       <div id="main-content">
@@ -242,7 +325,7 @@
             <table id="ticket-details">
               <thead>
                 <tr>
-                  <th><i class="fa-solid fa-cake-candles"></i> Producto</th>
+                  <th><i class="fa-solid fa-cookie-bite"></i> Producto</th>
                   <th><i class="fa-solid fa-hashtag"></i> Cantidad</th>
                   <th>
                     <i class="fa-solid fa-dollar-sign"></i> Precio Unitario
@@ -271,7 +354,7 @@
               <span id="change">$0.00</span>
             </div>
           </div>
-          <button id="submit-payment">Confirmar Pago</button>
+          <button class="btn-cobro" id="submit-payment">Confirmar Pago</button>
         </div>
 
         <!-- Teclado Numérico en la esquina inferior derecha -->
