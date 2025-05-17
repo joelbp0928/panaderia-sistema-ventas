@@ -5,6 +5,18 @@ import { configuracionGlobal } from './config.js';
 // Al inicio de la aplicación
 document.addEventListener('DOMContentLoaded', async () => {
   // Mostrar spinner
+  // Simplemente usa new Date() para obtener la hora local del cliente
+  const fechaLocal = new Date();
+  const fechaCDMX = fechaLocal.toLocaleString('es-MX', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+  console.log(fechaCDMX)
   //document.getElementById("loading-spinner").style.display = "flex";
   sincronizarLocalStorageConBase();
   // Verificar caja
@@ -280,27 +292,27 @@ export async function abrirCajaConFondo(force = false) {
   // Obtener el ID del empleado actual desde la sesión
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
   const usuarioId = sessionData?.session?.user?.id;
-  // Obtener fecha y hora exactas de CDMX como string
-  const formatter = new Intl.DateTimeFormat('sv-SE', {
-    timeZone: 'America/Mexico_City',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  });
+  // Obtener fecha actual en zona horaria de CDMX
+const fechaCDMX = new Date().toLocaleString('es-MX', {
+  timeZone: 'America/Mexico_City',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false // Para formato 24 horas
+});
 
-  const parts = formatter.formatToParts(new Date());
-  const fechaCDMX = `${parts.find(p => p.type === 'year').value}-${parts.find(p => p.type === 'month').value}-${parts.find(p => p.type === 'day').value} ${parts.find(p => p.type === 'hour').value}:${parts.find(p => p.type === 'minute').value}:${parts.find(p => p.type === 'second').value}`;
+// Convertir a formato ISO 8601 para PostgreSQL
+const partes = fechaCDMX.match(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}):(\d{2}):(\d{2})/);
+const fechaISO = `${partes[3]}-${partes[2]}-${partes[1]}T${partes[4]}:${partes[5]}:${partes[6]}`;
 
-  // Convertir ese string a objeto Date (hora local de CDMX)
-  const fechaExactaCDMX = new Date(`${fechaCDMX} GMT-0600`);
   // Resto del código de inserción...
   const { data, error } = await supabase
     .from('cortes_caja')
     .insert([{
-      fecha: fechaExactaCDMX,
+      fecha: fechaISO,
       fondo_inicial: formValues.fondoInicial,
       monto_ventas: 0,
       monto_efectivo: formValues.fondoInicial,
@@ -526,28 +538,27 @@ export async function registrarCorteCaja() {
     });
     return;
   }
-  // Obtener fecha y hora exactas de CDMX como string
-  const formatter = new Intl.DateTimeFormat('sv-SE', {
-    timeZone: 'America/Mexico_City',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  });
+// Obtener fecha actual en zona horaria de CDMX
+const fechaCDMX = new Date().toLocaleString('es-MX', {
+  timeZone: 'America/Mexico_City',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false // Para formato 24 horas
+});
 
-  const parts = formatter.formatToParts(new Date());
-  const fechaCDMX = `${parts.find(p => p.type === 'year').value}-${parts.find(p => p.type === 'month').value}-${parts.find(p => p.type === 'day').value} ${parts.find(p => p.type === 'hour').value}:${parts.find(p => p.type === 'minute').value}:${parts.find(p => p.type === 'second').value}`;
-
-  // Convertir ese string a objeto Date (hora local de CDMX)
-  const fechaExactaCDMX = new Date(`${fechaCDMX} GMT-0600`);
+// Convertir a formato ISO 8601 para PostgreSQL
+const partes = fechaCDMX.match(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}):(\d{2}):(\d{2})/);
+const fechaISO = `${partes[3]}-${partes[2]}-${partes[1]}T${partes[4]}:${partes[5]}:${partes[6]}`;
   // Insertamos el corte de caja en la base de datos
   try {
     const { data, error } = await supabase
       .from("cortes_caja")
       .insert([{
-        fecha: fechaExactaCDMX,
+        fecha: fechaISO,
         fondo_inicial: corteAbierto.fondo_inicial, // conservar el mismo fondo de apertura
         monto_ventas: montoVentas,
         monto_efectivo: montoEfectivo,

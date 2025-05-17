@@ -75,14 +75,15 @@ function actualizarCambio() {
 
 input.addEventListener("input", actualizarCambio);
 input.addEventListener("change", actualizarCambio);
-document.addEventListener("click", () => {
+
+/*document.addEventListener("click", () => {
   if (!esDispositivoMovil()) {
     const scanInput = document.getElementById("codigo-ticket-input");
     if (document.activeElement !== scanInput) {
       scanInput.focus();
     }
   }
-});
+});*/
 
 document.getElementById("codigo-ticket-input").addEventListener("keypress", async (e) => {
   if (e.key === "Enter") {
