@@ -16,6 +16,11 @@ const input = document.getElementById("amount-input");
 const totalSpan = document.getElementById("total-amount");
 const changeSpan = document.getElementById("change");
 
+function esDispositivoMovil() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+
 // Verificación automática al cargar la página
 /*(async function () {
   const today = getLocalDateString();
@@ -70,6 +75,14 @@ function actualizarCambio() {
 
 input.addEventListener("input", actualizarCambio);
 input.addEventListener("change", actualizarCambio);
+document.addEventListener("click", () => {
+  if (!esDispositivoMovil()) {
+    const scanInput = document.getElementById("codigo-ticket-input");
+    if (document.activeElement !== scanInput) {
+      scanInput.focus();
+    }
+  }
+});
 
 document.getElementById("codigo-ticket-input").addEventListener("keypress", async (e) => {
   if (e.key === "Enter") {
@@ -140,7 +153,9 @@ document.getElementById("codigo-ticket-input").addEventListener("keypress", asyn
     actualizarTablaProductos();
     document.getElementById("amount-input").value = "";
     document.getElementById("change").textContent = "$0.00";
-
+    const scanInput = document.getElementById("codigo-ticket-input");
+    scanInput.value = "";
+    setTimeout(() => scanInput.focus(), 100); // Pequeña pausa para asegurar foco
     Swal.fire({
       icon: "success",
       title: "Ticket cargado",
@@ -155,10 +170,14 @@ window.onload = async function () {
   // Mostrar el spinner mientras se cargan los datos
   document.getElementById("loading-spinner").style.display = "flex";
 
+  if (!esDispositivoMovil()) {
+    console.log("aqui que hago con foco")
+    document.getElementById("codigo-ticket-input").focus();
+  }
   await verificarSesion();
   cargarConfiguracion();
   configurarBotonesPago();
-  
+
   // Verificar estado de caja al cargar
   const cajaAbierta = await verificarEstadoCaja();
   console.log(cajaAbierta)
@@ -176,7 +195,72 @@ window.onload = async function () {
   document.getElementById("loading-spinner").style.display = "none";
 
   document.getElementById("logout-btn").addEventListener("click", cerrarSesion);
+
 };
+
+let scannerQR = null;
+
+document.getElementById("btn-escanear-qr").addEventListener("click", () => {
+  const contenedorCamara = document.getElementById("lector-camara");
+  const contenedorInput = document.getElementById("scan-input-wrapper");
+  const videoDiv = document.getElementById("lector-video");
+
+  contenedorInput.style.display = "none";
+  contenedorCamara.style.display = "block";
+
+  scannerQR = new Html5Qrcode("lector-video");
+
+  // Todo esto debe correr *inmediatamente* tras el click
+  scannerQR.start(
+    { facingMode: "environment" },
+    {
+      fps: 10,
+      qrbox: { width: 250, height: 250 },
+    },
+    async (codigoQR) => {
+      await scannerQR.stop();
+      document.getElementById("qr-check").style.display = "block";
+
+      const input = document.getElementById("codigo-ticket-input");
+      input.value = codigoQR;
+
+      input.dispatchEvent(new KeyboardEvent("keypress", { key: "Enter" }));
+
+      setTimeout(() => {
+        contenedorCamara.style.display = "none";
+        document.getElementById("qr-check").style.display = "none";
+        document.getElementById("amount-input").focus();
+      }, 1000);
+    },
+    (error) => {
+      console.warn("QR no detectado:", error);
+    }
+  ).catch((error) => {
+    console.error("Error iniciando cámara:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Permiso denegado o error",
+      text: "Por favor, concede acceso a la cámara para poder escanear.",
+    });
+    contenedorCamara.style.display = "none";
+    contenedorInput.style.display = "block";
+  });
+});
+
+
+
+document.getElementById("btn-cancelar-escaneo").addEventListener("click", async () => {
+  const contenedorCamara = document.getElementById("lector-camara");
+  const contenedorInput = document.getElementById("scan-input-wrapper");
+
+  if (scannerQR) {
+    await scannerQR.stop().catch(() => { });
+    scannerQR.clear().catch(() => { });
+  }
+
+  contenedorCamara.style.display = "none";
+  contenedorInput.style.display = "block";
+});
 
 async function cargarProductosTicket() {
   if (!ticketActual) return;
