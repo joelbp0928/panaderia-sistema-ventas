@@ -227,19 +227,18 @@ document.getElementById("btn-escanear-qr").addEventListener("click", async () =>
           // Insertar valor en input
           const input = document.getElementById("codigo-ticket-input");
           input.value = codigoQR;
-
+          navigator.vibrate?.(100); // en móvil
+          const beep = new Audio("../sounds/beep.mp3");
+          beep.play().catch(() => { });
           // Cerrar modal tras escaneo
           setTimeout(() => {
+
             lectorModal.hide();
             document.getElementById("qr-check").style.display = "none";
 
             // Simular enter
             input.dispatchEvent(new KeyboardEvent("keypress", { key: "Enter" }));
             document.getElementById("amount-input").focus();
-            navigator.vibrate?.(100); // en móvil
-            const beep = new Audio("../sounds/beep.mp3");
-            beep.play().catch(() => { });
-
           }, 1000);
         },
         (error) => {
