@@ -171,7 +171,6 @@ window.onload = async function () {
   document.getElementById("loading-spinner").style.display = "flex";
 
   if (!esDispositivoMovil()) {
-    console.log("aqui que hago con foco")
     document.getElementById("codigo-ticket-input").focus();
   }
   await verificarSesion();
@@ -237,6 +236,10 @@ document.getElementById("btn-escanear-qr").addEventListener("click", async () =>
             // Simular enter
             input.dispatchEvent(new KeyboardEvent("keypress", { key: "Enter" }));
             document.getElementById("amount-input").focus();
+            navigator.vibrate?.(100); // en móvil
+            const beep = new Audio("../sounds/beep.mp3");
+            beep.play().catch(() => { });
+
           }, 1000);
         },
         (error) => {
@@ -258,8 +261,8 @@ document.getElementById("btn-escanear-qr").addEventListener("click", async () =>
 // Detener escáner al cerrar manualmente el modal
 document.getElementById("modal-lector-qr").addEventListener("hidden.bs.modal", async () => {
   if (scannerQR) {
-    await scannerQR.stop().catch(() => {});
-    scannerQR.clear().catch(() => {});
+    await scannerQR.stop().catch(() => { });
+    scannerQR.clear().catch(() => { });
     document.getElementById("lector-video").innerHTML = "";
     document.getElementById("qr-check").style.display = "none";
   }

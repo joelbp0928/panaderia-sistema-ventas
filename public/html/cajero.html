@@ -67,61 +67,31 @@
         </div>
       </header>
       <!-- Contenedor de lector con botón cancelar y check animado -->
-      <div
-        class="modal fade"
-        id="modal-lector-qr"
-        tabindex="-1"
-        aria-labelledby="modalQRLabel"
-        aria-hidden="true"
-      >
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-          <div class="modal-content bg-dark text-white">
-            <div class="modal-header">
-              <h5 class="modal-title" id="modalQRLabel">
-                <i class="fas fa-qrcode"></i> Escanear Ticket
-              </h5>
-              <button
-                type="button"
-                class="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-                aria-label="Cerrar"
-              ></button>
-            </div>
-            <div class="modal-body text-center">
-              <div
-                id="lector-video"
-                style="
-                  width: 100%;
-                  height: 250px;
-                  background: #000;
-                  border-radius: 8px;
-                "
-              ></div>
-              <div
-                id="qr-check"
-                style="
-                  display: none;
-                  font-size: 3rem;
-                  color: lime;
-                  margin-top: 1rem;
-                "
-              >
-                <i class="fas fa-check-circle fa-bounce"></i>
-              </div>
-            </div>
-            <div class="modal-footer p-2">
-              <button
-                type="button"
-                class="btn btn-danger w-100"
-                data-bs-dismiss="modal"
-                id="btn-cancelar-escaneo"
-              >
-                <i class="fas fa-times"></i> Cancelar
-              </button>
-            </div>
-          </div>
+<div class="modal fade" id="modal-lector-qr" tabindex="-1" aria-labelledby="modalQRLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content bg-dark text-white position-relative">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-qrcode"></i> Escanear Ticket</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body text-center p-0 position-relative" style="overflow:hidden">
+        <div class="qr-marco">
+          <div id="lector-video" style="width: 100%; height: 250px; object-fit: cover;"></div>
+          <div class="linea-laser"></div>
+        </div>
+        <div id="qr-check" style="display: none; font-size: 3rem; color: lime; margin-top: 1rem;">
+          <i class="fas fa-check-circle fa-bounce"></i>
         </div>
       </div>
+      <div class="modal-footer p-2">
+        <button type="button" class="btn btn-danger w-100" data-bs-dismiss="modal" id="btn-cancelar-escaneo">
+          <i class="fas fa-times"></i> Cancelar escaneo
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
       <div class="offcanvas offcanvas-end" tabindex="-1" id="menuLateral">
         <div class="offcanvas-header header-tittle">
