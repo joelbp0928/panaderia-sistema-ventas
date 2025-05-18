@@ -95,85 +95,17 @@ export async function mostrarCarrito() {
   }
 
   try {
-    // Obtener productos del carrito
-    const { data: carritoData, error: carritoError } = await supabase
-      .from("carrito")
-      .select(`
-        id,
-        cantidad,
-        productos:producto_id (
-          id,
-          nombre,
-          precio,
-          imagen_url
-        )
-      `)
-      .eq("usuario_id", usuario_id);
+    // Calcular todos los descuentos y totales
+    const { productos, resumen } = await calcularDescuentosCarrito(usuario_id);
 
-    if (carritoError) throw carritoError;
-
-    if (!carritoData || carritoData.length === 0) {
+    if (!productos || productos.length === 0) {
       carritoBody.innerHTML = "<p class='text-muted'><i class='fa-solid fa-ban'></i> Tu carrito está vacío</p>";
       badgeCount.textContent = "0";
       return;
     }
 
-    // Obtener promociones activas
-    const { data: promocionesData, error: promocionesError } = await supabase
-      .from("promociones")
-      .select(`
-        id,
-        nombre,
-        tipo,
-        porcentaje,
-        threshold,
-        buy_quantity,
-        get_quantity,
-        productos_promocion:productos_promocion(producto_id, producto_gratis_id)
-      `)
-      .gte("fecha_expiracion", new Date().toISOString())
-      .eq("activa", true);
-
-    if (promocionesError) throw promocionesError;
-
-    // Calcular descuentos para cada producto
-    const productosConDescuento = carritoData.map(item => {
-      const producto = { ...item, descuento: 0, descuentoTexto: "" };
-
-      // Buscar promociones aplicables a este producto
-      promocionesData.forEach(promo => {
-        const resultado = evaluarDescuento(promo, item);
-        if (resultado.aplica) {
-          producto.descuento += resultado.descuento;
-          producto.descuentoTexto = resultado.texto;
-        }
-      });
-
-
-      return producto;
-    });
-
-    // Calcular totales
-    const subtotal = productosConDescuento.reduce((sum, item) =>
-      sum + (item.productos.precio * item.cantidad), 0);
-
-    const descuentoTotal = productosConDescuento.reduce((sum, item) => sum + item.descuento, 0);
-
-    // Aplicar descuentos por threshold (monto mínimo)
-    const thresholdPromos = promocionesData.filter(p => p.tipo === "threshold");
-    let thresholdDescuento = 0;
-    let thresholdTexto = "";
-
-    if (thresholdPromos.length > 0 && subtotal >= thresholdPromos[0].threshold) {
-      thresholdDescuento = subtotal * (thresholdPromos[0].porcentaje / 100);
-      thresholdTexto = `${thresholdPromos[0].porcentaje}% descuento por compra mayor a $${thresholdPromos[0].threshold}`;
-    }
-
-    const total = subtotal - descuentoTotal - thresholdDescuento;
-    const cantidadTotal = productosConDescuento.reduce((sum, item) => sum + item.cantidad, 0);
-
     // Renderizar carrito
-    badgeCount.textContent = productosConDescuento.length;
+    badgeCount.textContent = productos.length;
     badgeCount.classList.remove("animate__bounceIn");
     void badgeCount.offsetWidth;
     badgeCount.classList.add("animate__animated", "animate__bounceIn");
@@ -184,12 +116,12 @@ export async function mostrarCarrito() {
         <button id="hacer-pedido" class="btn btn-success animate__animated animate__pulse animate__infinite"><i class="fas fa-check-circle me-2"></i>Hacer Pedido</button>
       </div>
       <div class="animate__animated animate__fadeInRight">
-        ${productosConDescuento.map(item => `
+        ${productos.map(item => `
           <div class="mb-3 d-flex align-items-center border-bottom pb-2 justify-content-between">
             <img src="${item.productos.imagen_url}" class="img-thumbnail me-2" style="width: 60px; height: 60px; object-fit: cover;">
             <div class="flex-grow-1 me-2">
               <h6 class="mb-1">${item.productos.nombre}</h6>
-              ${item.descuentoTexto ? `<small class="text-success animate__animated animate__fadeIn"><i class="fas fa-tag me-1"></i>${item.descuentoTexto}</small>` : ''}
+              ${item.descuentoTexto ? `<small class="text-success animate__animated animate__fadeIn" data-promo-texto="true"><i class="fas fa-tag me-1"></i>${item.descuentoTexto}</small>` : ''}
               <div class="input-group input-group-sm w-75">
                 <button class="btn btn-outline-secondary actualizar-cantidad" data-id="${item.id}" data-action="restar"><i class="fas fa-minus"></i></button>
                 <input type="text" class="form-control text-center cantidad-input" data-id="${item.id}" id="cantidad-${item.id}" value="${item.cantidad}" readonly>
@@ -206,20 +138,20 @@ export async function mostrarCarrito() {
           </div>
         `).join("")}
       </div>
-       <div class="mt-3 border-top pt-3 text-end">
-    <p class="mb-1"><i class="fas fa-shopping-cart me-1"></i> Productos: <strong class="carrito-total-productos">${cantidadTotal}</strong></p>
-    <div class="carrito-descuentos">
-      ${descuentoTotal > 0 ? `<p class="mb-1"><i class="fas fa-tag me-1 text-success"></i> Descuentos: <strong class="text-success">-$${descuentoTotal.toFixed(2)}</strong></p>` : ''}
-    </div>
-    <div class="carrito-threshold">
-      ${thresholdDescuento > 0 ? `<p class="mb-1"><i class="fas fa-percentage me-1 text-success"></i> ${thresholdTexto}: <strong class="text-success">-$${thresholdDescuento.toFixed(2)}</strong></p>` : ''}
-    </div>
-    <p class="mb-0"><i class="fas fa-dollar-sign me-1"></i> Total: <strong class="carrito-total-precio">$${total.toFixed(2)}</strong></p>
-    <div class="carrito-ahorro">
-      ${subtotal > total ? `<small class="text-muted">Ahorras: $${(subtotal - total).toFixed(2)}</small>` : ''}
-    </div>
-  </div>
-`;
+      <div class="mt-3 border-top pt-3 text-end">
+        <p class="mb-1"><i class="fas fa-shopping-cart me-1"></i> Productos: <strong class="carrito-total-productos">${resumen.cantidadTotal}</strong></p>
+        <div class="carrito-descuentos">
+          ${resumen.descuentoTotal > 0 ? `<p class="mb-1"><i class="fas fa-tag me-1 text-success"></i> Descuentos: <strong class="text-success">-$${resumen.descuentoTotal.toFixed(2)}</strong></p>` : ''}
+        </div>
+        <div class="carrito-threshold">
+          ${resumen.thresholdDescuento > 0 ? `<p class="mb-1"><i class="fas fa-percentage me-1 text-success"></i> ${resumen.thresholdTexto}: <strong class="text-success">-$${resumen.thresholdDescuento.toFixed(2)}</strong></p>` : ''}
+        </div>
+        <p class="mb-0"><i class="fas fa-dollar-sign me-1"></i> Total: <strong class="carrito-total-precio">$${resumen.total.toFixed(2)}</strong></p>
+        <div class="carrito-ahorro">
+          ${resumen.subtotal > resumen.total ? `<small class="text-muted">Ahorras: $${(resumen.subtotal - resumen.total).toFixed(2)}</small>` : ''}
+        </div>
+      </div>
+    `;
 
     // Resto del código para manejar eventos (igual que antes)...
     document.querySelectorAll(".actualizar-cantidad").forEach(btn => {
@@ -339,232 +271,56 @@ export async function generarResumenPopover() {
   `;
 }
 
-async function actualizarTotalesCarrito() {
-  try {
-    const { data: user } = await supabase.auth.getUser();
-    const usuario_id = user?.user?.id;
-    if (!usuario_id) return;
-
-    // Obtener productos actualizados del carrito
-    const { data: carritoData, error: carritoError } = await supabase
-      .from("carrito")
-      .select(`
-        id,
-        cantidad,
-        productos:producto_id (
-          id,
-          nombre,
-          precio,
-          imagen_url
-        )
-      `)
-      .eq("usuario_id", usuario_id);
-
-    if (carritoError) throw carritoError;
-
-    // Obtener promociones activas
-    const { data: promocionesData, error: promocionesError } = await supabase
-      .from("promociones")
-      .select(`
-        id,
-        nombre,
-        tipo,
-        porcentaje,
-        threshold,
-        buy_quantity,
-        get_quantity,
-        productos_promocion:productos_promocion(producto_id, producto_gratis_id)
-      `)
-      .gte("fecha_expiracion", new Date().toISOString())
-      .eq("activa", true);
-
-    if (promocionesError) throw promocionesError;
-
-    // Calcular descuentos para cada producto
-    const productosConDescuento = carritoData.map(item => {
-      const producto = { ...item, descuento: 0, descuentoTexto: "" };
-
-      // Buscar promociones aplicables a este producto
-      promocionesData.forEach(promo => {
-        const productosPromo = promo.productos_promocion || [];
-
-        switch (promo.tipo) {
-          case "percentage":
-            producto.descuento += (item.productos.precio * item.cantidad) * (promo.porcentaje / 100);
-            producto.descuentoTexto = `${promo.porcentaje}% descuento`;
-            break;
-
-          case "products":
-            if (productosPromo.some(pp => pp.producto_id === item.productos.id)) {
-              producto.descuento += (item.productos.precio * item.cantidad) * (promo.porcentaje / 100);
-              producto.descuentoTexto = `${promo.porcentaje}% descuento`;
-            }
-            break;
-
-          case "bogo":
-            if (productosPromo.some(pp => pp.producto_id === item.productos.id)) {
-              const pares = Math.floor(item.cantidad / 2);
-              producto.descuento += pares * item.productos.precio;
-              producto.descuentoTexto = "2x1 aplicado";
-            }
-            break;
-
-          case "buy-get":
-            if (productosPromo.some(pp => pp.producto_id === item.productos.id)) {
-              const setsCompletos = Math.floor(item.cantidad / promo.buy_quantity);
-              const productosGratis = setsCompletos * promo.get_quantity;
-              producto.descuento += productosGratis * item.productos.precio;
-              producto.descuentoTexto = `Compra ${promo.buy_quantity} lleva ${promo.get_quantity} gratis`;
-            }
-            break;
-        }
-      });
-
-      return producto;
-    });
-
-    // Calcular totales
-    const subtotal = productosConDescuento.reduce((sum, item) =>
-      sum + (item.productos.precio * item.cantidad), 0);
-
-    const descuentoTotal = productosConDescuento.reduce((sum, item) => sum + item.descuento, 0);
-
-    // Aplicar descuentos por threshold (monto mínimo)
-    const thresholdPromos = promocionesData.filter(p => p.tipo === "threshold");
-    let thresholdDescuento = 0;
-    let thresholdTexto = "";
-
-    if (thresholdPromos.length > 0 && subtotal >= thresholdPromos[0].threshold) {
-      thresholdDescuento = subtotal * (thresholdPromos[0].porcentaje / 100);
-      thresholdTexto = `${thresholdPromos[0].porcentaje}% descuento por compra mayor a $${thresholdPromos[0].threshold}`;
-    }
-
-    const total = subtotal - descuentoTotal - thresholdDescuento;
-    const cantidadTotal = productosConDescuento.reduce((sum, item) => sum + item.cantidad, 0);
-
-    // Actualizar los elementos del DOM
-    document.querySelector(".carrito-total-productos").textContent = cantidadTotal;
-
-    // Actualizar elementos de descuento
-    const descuentoElement = document.querySelector(".carrito-descuentos");
-    if (descuentoElement) {
-      descuentoElement.innerHTML = descuentoTotal > 0 ?
-        `<i class="fas fa-tag me-1 text-success"></i> Descuentos: <strong class="text-success">-$${descuentoTotal.toFixed(2)}</strong>` :
-        '';
-    }
-
-    const thresholdElement = document.querySelector(".carrito-threshold");
-    if (thresholdElement) {
-      thresholdElement.innerHTML = thresholdDescuento > 0 ?
-        `<i class="fas fa-percentage me-1 text-success"></i> ${thresholdTexto}: <strong class="text-success">-$${thresholdDescuento.toFixed(2)}</strong>` :
-        '';
-    }
-
-    document.querySelector(".carrito-total-precio").textContent = `$${total.toFixed(2)}`;
-
-    const ahorroElement = document.querySelector(".carrito-ahorro");
-    if (ahorroElement) {
-      ahorroElement.innerHTML = subtotal > total ?
-        `<small class="text-muted">Ahorras: $${(subtotal - total).toFixed(2)}</small>` :
-        '';
-    }
-
-    // Actualizar subtotales individuales
-    productosConDescuento.forEach(item => {
-      const subtotalElement = document.getElementById(`subtotal-${item.id}`);
-      if (subtotalElement) {
-        subtotalElement.textContent = `$${((item.productos.precio * item.cantidad) - item.descuento).toFixed(2)}`;
-
-        // Actualizar precio tachado
-        const precioOriginalElement = subtotalElement.nextElementSibling;
-        if (precioOriginalElement && precioOriginalElement.classList.contains('text-danger')) {
-          precioOriginalElement.textContent = `$${(item.productos.precio * item.cantidad).toFixed(2)}`;
-          precioOriginalElement.style.display = item.descuento > 0 ? 'block' : 'none';
-        }
-
-        // ✅ Actualizar texto de descuento (esto es lo nuevo)
-        const contenedorItem = subtotalElement.closest('.mb-3');
-        const descuentoTextoContainer = contenedorItem.querySelector("h6 + small.text-success");
-
-        if (item.descuentoTexto) {
-          if (descuentoTextoContainer) {
-            // Ya existe → solo actualiza el texto
-            descuentoTextoContainer.innerHTML = `<i class="fas fa-tag me-1"></i>${item.descuentoTexto}`;
-            descuentoTextoContainer.classList.remove("d-none");
-          } else {
-            // No existe → lo agregas dinámicamente
-            const nuevoTexto = document.createElement("small");
-            nuevoTexto.className = "text-success animate__animated animate__fadeIn";
-            nuevoTexto.innerHTML = `<i class="fas fa-tag me-1"></i>${item.descuentoTexto}`;
-            contenedorItem.querySelector("h6").after(nuevoTexto);
-          }
-        } else {
-          console.log("ya quitame")
-          // Si ya no aplica promoción, ocultar o quitar
-          if (descuentoTextoContainer) {
-            console.log("ya quitame")
-            descuentoTextoContainer.remove();
-          }
-        }
-      }
-    });
-
-
-  } catch (error) {
-    console.error("Error al actualizar totales del carrito:", error);
-  }
-}
-
+// Función centralizada para evaluar descuentos
 function evaluarDescuento(promo, item) {
   const cantidad = item.cantidad;
   const precio = item.productos.precio;
   const productoId = item.productos.id;
   const productosPromo = promo.productos_promocion || [];
 
+  // Verificar si el producto aplica para la promoción
+  const productoEnPromo = productosPromo.some(pp => pp.producto_id === productoId);
+  const esPromoGeneral = ['percentage', 'threshold'].includes(promo.tipo);
+
+  if (!productoEnPromo && !esPromoGeneral) {
+    return { aplica: false, descuento: 0, texto: "" };
+  }
+
   switch (promo.tipo) {
     case "percentage":
-      const descuentoGeneral = precio * cantidad * (promo.porcentaje / 100);
       return {
         aplica: true,
-        descuento: descuentoGeneral,
+        descuento: precio * cantidad * (promo.porcentaje / 100),
         texto: `${promo.porcentaje}% descuento`
       };
 
     case "products":
-      if (productosPromo.some(pp => pp.producto_id === productoId)) {
-        const descuento = precio * cantidad * (promo.porcentaje / 100);
+      return {
+        aplica: true,
+        descuento: precio * cantidad * (promo.porcentaje / 100),
+        texto: `${promo.porcentaje}% descuento`
+      };
+
+    case "bogo":
+      const pares = Math.floor(cantidad / 2);
+      if (pares > 0) {
         return {
           aplica: true,
-          descuento,
-          texto: `${promo.porcentaje}% descuento`
+          descuento: pares * precio,
+          texto: "2x1 aplicado"
         };
       }
       break;
 
-    case "bogo":
-      if (productosPromo.some(pp => pp.producto_id === productoId)) {
-        const pares = Math.floor(cantidad / 2);
-        if (pares > 0) {
-          return {
-            aplica: true,
-            descuento: pares * precio,
-            texto: "2x1 aplicado"
-          };
-        }
-      }
-      break;
-
     case "buy-get":
-      if (productosPromo.some(pp => pp.producto_id === productoId)) {
-        const sets = Math.floor(cantidad / promo.buy_quantity);
-        if (sets > 0) {
-          const gratis = sets * promo.get_quantity;
-          return {
-            aplica: true,
-            descuento: gratis * precio,
-            texto: `Compra ${promo.buy_quantity} lleva ${promo.get_quantity} gratis`
-          };
-        }
+      const sets = Math.floor(cantidad / promo.buy_quantity);
+      if (sets > 0) {
+        const gratis = sets * promo.get_quantity;
+        return {
+          aplica: true,
+          descuento: gratis * precio,
+          texto: `Compra ${promo.buy_quantity} lleva ${promo.get_quantity} gratis`
+        };
       }
       break;
 
@@ -575,6 +331,188 @@ function evaluarDescuento(promo, item) {
   return { aplica: false, descuento: 0, texto: "" };
 }
 
+// Función optimizada para calcular todos los descuentos
+async function calcularDescuentosCarrito(usuario_id) {
+  // Obtener productos del carrito
+  const { data: carritoData, error: carritoError } = await supabase
+    .from("carrito")
+    .select(`
+      id,
+      cantidad,
+      productos:producto_id (
+        id,
+        nombre,
+        precio,
+        imagen_url
+      )
+    `)
+    .eq("usuario_id", usuario_id);
+
+  if (carritoError) throw carritoError;
+
+  // Obtener promociones activas
+  const { data: promocionesData, error: promocionesError } = await supabase
+    .from("promociones")
+    .select(`
+      id,
+      nombre,
+      tipo,
+      porcentaje,
+      threshold,
+      buy_quantity,
+      get_quantity,
+      productos_promocion:productos_promocion(producto_id, producto_gratis_id)
+    `)
+    .gte("fecha_expiracion", new Date().toISOString())
+    .eq("activa", true);
+
+  if (promocionesError) throw promocionesError;
+
+  // Calcular descuentos para cada producto
+  const productosConDescuento = carritoData.map(item => {
+    const producto = { ...item, descuento: 0, descuentoTexto: "" };
+
+    promocionesData.forEach(promo => {
+      const resultado = evaluarDescuento(promo, item);
+      if (resultado.aplica) {
+        producto.descuento += resultado.descuento;
+        // Solo actualizar el texto si no tiene uno o si es un descuento mayor
+        if (!producto.descuentoTexto || resultado.descuento > 0) {
+          producto.descuentoTexto = resultado.texto;
+        }
+      }
+    });
+
+    return producto;
+  });
+
+  // Calcular totales
+  const subtotal = productosConDescuento.reduce((sum, item) =>
+    sum + (item.productos.precio * item.cantidad), 0);
+
+  const descuentoTotal = productosConDescuento.reduce((sum, item) => sum + item.descuento, 0);
+
+  // Aplicar descuentos por threshold (monto mínimo)
+  const thresholdPromos = promocionesData.filter(p => p.tipo === "threshold");
+  let thresholdDescuento = 0;
+  let thresholdTexto = "";
+
+  if (thresholdPromos.length > 0 && subtotal >= thresholdPromos[0].threshold) {
+    thresholdDescuento = subtotal * (thresholdPromos[0].porcentaje / 100);
+    thresholdTexto = `${thresholdPromos[0].porcentaje}% descuento por compra mayor a $${thresholdPromos[0].threshold}`;
+  }
+
+  const total = subtotal - descuentoTotal - thresholdDescuento;
+  const cantidadTotal = productosConDescuento.reduce((sum, item) => sum + item.cantidad, 0);
+
+  return {
+    productos: productosConDescuento,
+    resumen: {
+      subtotal,
+      descuentoTotal,
+      thresholdDescuento,
+      thresholdTexto,
+      total,
+      cantidadTotal
+    }
+  };
+}
+
+// Función optimizada para actualizar los totales
+async function actualizarTotalesCarrito() {
+  try {
+    const { data: user } = await supabase.auth.getUser();
+    const usuario_id = user?.user?.id;
+    if (!usuario_id) return;
+
+    // Calcular todos los descuentos y totales
+    const { productos, resumen } = await calcularDescuentosCarrito(usuario_id);
+
+    // Actualizar los elementos del DOM
+    document.querySelector(".carrito-total-productos").textContent = resumen.cantidadTotal;
+
+    // Actualizar elementos de descuento
+    const descuentoElement = document.querySelector(".carrito-descuentos");
+    if (descuentoElement) {
+      descuentoElement.innerHTML = resumen.descuentoTotal > 0 ?
+        `<i class="fas fa-tag me-1 text-success"></i> Descuentos: <strong class="text-success">-$${resumen.descuentoTotal.toFixed(2)}</strong>` :
+        '';
+    }
+
+    const thresholdElement = document.querySelector(".carrito-threshold");
+    if (thresholdElement) {
+      thresholdElement.innerHTML = resumen.thresholdDescuento > 0 ?
+        `<i class="fas fa-percentage me-1 text-success"></i> ${resumen.thresholdTexto}: <strong class="text-success">-$${resumen.thresholdDescuento.toFixed(2)}</strong>` :
+        '';
+    }
+
+    document.querySelector(".carrito-total-precio").textContent = `$${resumen.total.toFixed(2)}`;
+
+    const ahorroElement = document.querySelector(".carrito-ahorro");
+    if (ahorroElement) {
+      ahorroElement.innerHTML = resumen.subtotal > resumen.total ?
+        `<small class="text-muted">Ahorras: $${(resumen.subtotal - resumen.total).toFixed(2)}</small>` :
+        '';
+    }
+
+    // Actualizar subtotales individuales
+    productos.forEach(item => {
+      const subtotalElement = document.getElementById(`subtotal-${item.id}`);
+      if (subtotalElement) {
+        subtotalElement.textContent = `$${((item.productos.precio * item.cantidad) - item.descuento).toFixed(2)}`;
+
+        // Actualizar precio tachado
+        const precioOriginal = (item.productos.precio * item.cantidad).toFixed(2);
+        let precioOriginalElement = subtotalElement.nextElementSibling;
+
+        if (precioOriginalElement && precioOriginalElement.classList.contains('text-danger')) {
+          if (item.descuento > 0) {
+            precioOriginalElement.textContent = `$${precioOriginal}`;
+            precioOriginalElement.style.display = 'block';
+            precioOriginalElement.classList.remove("d-none");
+            // Reiniciar animación
+            precioOriginalElement.classList.remove("animate__animated", "animate__fadeInDown");
+            void precioOriginalElement.offsetWidth;
+            precioOriginalElement.classList.add("animate__animated", "animate__fadeInDown");
+          } else {
+            precioOriginalElement.remove();
+          }
+        } else if (item.descuento > 0) {
+          const nuevoSmall = document.createElement("small");
+          nuevoSmall.className = "text-danger text-decoration-line-through animate__animated animate__fadeInDown";
+          nuevoSmall.textContent = `$${precioOriginal}`;
+          subtotalElement.after(nuevoSmall);
+        }
+
+
+        // Actualizar texto de descuento
+        const contenedorItem = subtotalElement.closest('.mb-3');
+        const descuentoTextoContainer = contenedorItem.querySelector("small.text-success[data-promo-texto='true']");
+
+        if (item.descuentoTexto) {
+          if (descuentoTextoContainer) {
+            // Actualizar texto existente
+            descuentoTextoContainer.innerHTML = `<i class="fas fa-tag me-1"></i>${item.descuentoTexto}`;
+            descuentoTextoContainer.classList.remove("d-none");
+          } else {
+            // Crear nuevo elemento
+            const nuevoTexto = document.createElement("small");
+            nuevoTexto.className = "text-success animate__animated animate__fadeIn";
+            nuevoTexto.dataset.promoTexto = "true";
+            nuevoTexto.innerHTML = `<i class="fas fa-tag me-1"></i>${item.descuentoTexto}`;
+            contenedorItem.querySelector("h6").after(nuevoTexto);
+          }
+        } else if (descuentoTextoContainer) {
+          // Eliminar si no hay descuento
+          descuentoTextoContainer.remove();
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error("Error al actualizar totales del carrito:", error);
+  }
+}
 
 function reproducirSonido(nombre) {
   const audio = new Audio(`./sounds/${nombre}.mp3`);
