@@ -1,5 +1,3 @@
-// ✅ Versión FINAL lista para descarga en teléfono como imagen o captura
-
 import { guardarPedido } from "./guardarPedido.js";
 import { supabase } from "./supabase-config.js";
 import { mostrarToast } from "./manageError.js";
