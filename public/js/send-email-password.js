@@ -1,50 +1,34 @@
-import { supabase } from "./supabase-config.js";
-// Obtener el correo del parámetro en la URL
-const urlParams = new URLSearchParams(window.location.search);
-const token = urlParams.get("token");
-//     console.log("Email:", email);
+      import { supabase } from "../js/supabase-config.js";
 
-// Manejar el formulario de restablecimiento de contraseña
-document.getElementById("forgot-password-form")
-  .addEventListener("submit", async (event) => {
-    event.preventDefault();
+      document.getElementById("forgot-password-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
 
-    // Obtener el correo electrónico ingresado
-    const emailInput = document.getElementById("recovery-email").value;
+        const emailInput = document.getElementById("recovery-email").value;
 
-    // Verificar si el correo electrónico ingresado coincide con el que recibimos
-/*       if (emailInput !== email) {
-      alert(
-        "El correo ingresado no coincide con el correo de la invitación."
-      );
-      return;
-    }*/
+        try {
+          const { data, error } = await supabase.auth.resetPasswordForEmail(emailInput);
 
-    try {
-      // Enviar el enlace de restablecimiento de contraseña
-      const { data, error } =
-        await supabase.auth.resetPasswordForEmail(emailInput);
-      
-      if (error) {
-        console.error(
-          "Error al enviar el enlace de restablecimiento:",
-          error.message
-        );
-        alert(
-          "Error al enviar el enlace de restablecimiento: " +
-            error.message
-        );
-      } else {
-        console.log("Enlace de restablecimiento enviado con éxito.");
-        alert(
-          "Te hemos enviado un enlace para restablecer tu contraseña."
-        );
-        window.location.href = "../index.html"; // Redirigir al login después de enviar el correo
-      }
-    } catch (error) {
-      console.error("Error al procesar la solicitud:", error.message);
-      alert("Error al procesar la solicitud: " + error.message);
-    }
-  });
-
-  
+          if (error) {
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: "No se pudo enviar el enlace: " + error.message,
+            });
+          } else {
+            Swal.fire({
+              icon: "success",
+              title: "¡Enlace enviado!",
+              text: "Revisa tu correo para continuar con el restablecimiento.",
+              confirmButtonText: "Aceptar",
+            }).then(() => {
+              window.location.href = "../index.html";
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: "Error inesperado",
+            text: error.message,
+          });
+        }
+      });
