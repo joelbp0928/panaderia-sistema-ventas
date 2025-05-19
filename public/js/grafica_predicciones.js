@@ -1,6 +1,8 @@
 let predChart = null;
 
 document.getElementById("mostrarPrediccionesBtn").addEventListener("click", async () => {
+  document.getElementById("contenedorPredicciones").style.display = "block"; // 👈 esto es esencial
+
   const periodo = document.getElementById("stats-period").value;
   
   // Determinar el endpoint según el periodo
@@ -11,7 +13,8 @@ document.getElementById("mostrarPrediccionesBtn").addEventListener("click", asyn
   else return; // Salir si no hay opción válida
 
   try {
-    const res = await fetch(`http://localhost:5050${endpoint}`);
+    const res = await fetch(`https://sarimax-panaderia-v2-dyfwgmb5ecb5gnb4.eastus-01.azurewebsites.net${endpoint}`);
+    //const res = await fetch(`http://localhost:5000${endpoint}`);
     const predData = await res.json();
 
     if (!Array.isArray(predData)) {
@@ -67,7 +70,7 @@ document.getElementById("mostrarPrediccionesBtn").addEventListener("click", asyn
       },
       title: {
         display: true,
-        text: "Predicción de Ventas (SARIMAX)",
+        text: "Predicción de Ventas",
         font: {
           size: 18
         },
