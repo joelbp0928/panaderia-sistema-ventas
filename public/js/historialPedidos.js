@@ -214,132 +214,151 @@ async function obtenerTotalesProductosPorPedido(idsPedidos) {
 }
 
 
-async function descargarTicketDesdeHistorial(pedidoId) {
-    // Mostrar spinner al inicio
-    const swalInstance = Swal.fire({
-        title: 'Generando ticket...',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-    });
-    try {
-        // Obtener información del pedido
-        const { data: pedido, error: errorPedido } = await supabase
-            .from("pedidos")
-            .select("*")
-            .eq("id", pedidoId)
-            .maybeSingle();
+export async function descargarTicketDesdeHistorial(pedidoId) {
+  const swalInstance = Swal.fire({
+    title: 'Generando ticket...',
+    allowOutsideClick: false,
+    didOpen: () => Swal.showLoading()
+  });
 
-        if (errorPedido || !pedido) {
-            mostrarToast("No se pudo obtener la información del pedido", "error");
-            return;
-        }
+  try {
+    const { data: pedido } = await supabase
+      .from("pedidos")
+      .select("*")
+      .eq("id", pedidoId)
+      .maybeSingle();
 
-        // Obtener información del cliente
-        const { data: clienteData } = await supabase
-            .from("usuarios")
-            .select("nombre")
-            .eq("id", pedido.cliente_id)
-            .maybeSingle();
+    const { data: clienteData } = await supabase
+      .from("usuarios")
+      .select("nombre")
+      .eq("id", pedido.cliente_id)
+      .maybeSingle();
 
-        const nombreCliente = clienteData?.nombre || "Cliente";
+    const { data: productos, error: errorProductos } = await supabase
+      .from("pedido_productos")
+      .select("cantidad, precio_unitario, descuento, promocion_id, productos:producto_id (nombre)")
+      .eq("pedido_id", pedidoId);
 
-        // Obtener productos del pedido
-        const { data: productos } = await supabase
-            .from("pedido_productos")
-            .select("cantidad, precio_unitario, productos:producto_id (nombre)")
-            .eq("pedido_id", pedidoId);
-
-        // Obtener configuración global (color primario)
-        const color = configuracionGlobal.color_primario || "#6c1b2d";
-
-        // Crear el ticket con el mismo diseño que en procesar-pedido.js
-        const ticketHTML = `
-        <div id="ticket-imagen" class="ticket-impresion" style="max-width: 320px; background: white; font-family: 'Courier New', monospace; border: 2px dashed ${color}; padding: 16px; border-radius: 12px;">
-            <div class="text-center mb-2">
-            <h5 style="margin: 4px 0; color: ${color};">${configuracionGlobal.nombre_empresa}</h5>
-                <hr />
-                <small><i class="fas fa-user me-1 text-primary"></i><strong>Cliente:</strong> ${nombreCliente}</small><br/>
-                <small><i class="fas fa-receipt me-1 text-secondary"></i><strong>Ticket:</strong> ${pedido.codigo_ticket}</small><br/>
-                <small><i class="fas fa-calendar-day me-1 text-muted"></i>${new Date(pedido.fecha).toLocaleString()}</small>
-            </div>
-            <hr />
-            ${productos.map(p => `
-                <div class="d-flex justify-content-between border-bottom py-1">
-                    <span><i class="fas fa-cookie-bite me-1 text-success"></i>${p.productos?.nombre || "Producto"} x${p.cantidad}</span>
-                    <span>$${(p.precio_unitario * p.cantidad).toFixed(2)}</span>
-                </div>`
-        ).join('')}
-            <hr />
-            <div class="d-flex justify-content-between mb-2">
-                <strong><i class="fas fa-coins me-1"></i>Total</strong>
-                <strong>$${pedido.total.toFixed(2)}</strong>
-            </div>
-            <div class="text-center mt-3" id="qr-pedido"></div>
-            
-            <div class="alert alert-warning mt-3 p-2 text-start" style="font-size: 0.68rem;">
-                <i class="fas fa-info-circle me-1 text-warning"></i>
-                <strong>Importante:</strong><br>
-                <ul class="ps-3 mb-0">
-                    <li>Este <strong>no es un comprobante de pago</strong>.</li>
-                    <li><i class="fas fa-save me-1"></i>Guarda este ticket para referencia.</li>
-                    <li><i class="fas fa-clock me-1"></i>Estado actual: ${pedido.estado}.</li>
-                    <li><i class="fa-solid fa-exclamation"></i> Espera confirmación de tienda antes de pagar.</li>
-                </ul>
-            </div>
-            
-            <p class="text-center mb-0 mt-2" style="font-size: 0.65rem; color: #999;">
-                <i class="fas fa-star text-warning me-1"></i>Gracias por tu preferencia
-            </p>
-        </div>`;
-
-        // Crear elemento temporal para renderizar el ticket
-        const temp = document.createElement("div");
-        temp.innerHTML = ticketHTML;
-        document.body.appendChild(temp);
-
-        // Generar QR (opcional)
-        const qrElement = temp.querySelector("#qr-pedido");
-        if (qrElement) {
-            new QRCode(qrElement, {
-                text: pedido.codigo_ticket,
-                width: 100,
-                height: 100
-            });
-        }
-
-        // Convertir a imagen y descargar
-        const element = temp.querySelector("#ticket-imagen");
-        const canvas = await html2canvas(element, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: false,
-            logging: false
-        });
-
-        const link = document.createElement("a");
-        link.href = canvas.toDataURL("image/png", 1.0);
-        link.download = `ticket-${pedido.codigo_ticket}.png`;
-        link.click();
-        // Dentro del try, después de link.click():
-        await swalInstance.close();
-        Swal.fire({
-            icon: 'success',
-            title: 'Ticket descargado',
-            text: `El ticket ${pedido.codigo_ticket} se ha descargado correctamente`,
-            timer: 2000,
-            showConfirmButton: false
-        });
-        // Cerrar spinner después de descargar
-        await swalInstance.close();
-
-        // Limpiar
-        document.body.removeChild(temp);
-    } catch (err) {
-        await swalInstance.close();
-        mostrarToast("❌ No se pudo descargar el ticket", "error");
-        console.error(err);
+    if (errorProductos || !productos || productos.length === 0) {
+      await swalInstance.close();
+      mostrarToast("❌ No se pudieron cargar los productos del ticket", "error");
+      return;
     }
+
+    const promocionesAplicadas = [];
+    for (const p of productos) {
+      if (p.promocion_id) {
+        const { data: promo } = await supabase
+          .from("promociones")
+          .select("nombre")
+          .eq("id", p.promocion_id)
+          .maybeSingle();
+        if (promo?.nombre && !promocionesAplicadas.includes(promo.nombre)) {
+          promocionesAplicadas.push(promo.nombre);
+        }
+      }
+    }
+
+    const nombreCliente = clienteData?.nombre || "Cliente";
+    const color = configuracionGlobal.color_primario || "#6c1b2d";
+
+    const totalPiezas = productos.reduce((sum, p) => sum + p.cantidad, 0);
+    const subtotal = productos.reduce((sum, p) => sum + (p.precio_unitario * p.cantidad), 0);
+    const totalDescuentos = productos.reduce((sum, p) => sum + (p.descuento || 0), 0);
+    const totalFinal = subtotal - totalDescuentos;
+
+    const ticketHTML = `
+    <div id="ticket-imagen" class="ticket-impresion" style="max-width: 320px; background: white; font-family: 'Courier New', monospace; border: 2px dashed ${color}; padding: 16px; border-radius: 12px;">
+      <div class="text-center mb-2">
+        <h5 style="margin: 4px 0; color: ${color};">${configuracionGlobal.nombre_empresa}</h5>
+        <hr />
+        <small><i class="fas fa-user me-1 text-primary"></i><strong>Cliente:</strong> ${nombreCliente}</small><br/>
+        <small><i class="fas fa-receipt me-1 text-secondary"></i><strong>Ticket:</strong> ${pedido.codigo_ticket}</small><br/>
+        <small><i class="fas fa-calendar-day me-1 text-muted"></i>${new Date(pedido.fecha).toLocaleString()}</small>
+      </div>
+      <hr />
+      ${productos.map(p => `
+        <div class="d-flex justify-content-between border-bottom py-1">
+          <div>
+            <span><i class="fas fa-cookie-bite me-1 text-success"></i>${p.productos?.nombre || "Producto"} x${p.cantidad}</span>
+          </div>
+          <div class="text-end">
+            ${p.descuento > 0
+              ? `<span class="text-danger text-decoration-line-through d-block">$${(p.precio_unitario * p.cantidad).toFixed(2)}</span>
+                 <strong>$${((p.precio_unitario * p.cantidad) - p.descuento).toFixed(2)}</strong>`
+              : `<strong>$${(p.precio_unitario * p.cantidad).toFixed(2)}</strong>`}
+          </div>
+        </div>`).join('')}
+      <hr />
+      <div class="mb-2">
+        <strong><i class="fas fa-cubes me-1"></i> Total de piezas:</strong> ${totalPiezas}<br>
+        <strong><i class="fas fa-coins me-1"></i> Subtotal:</strong> $${subtotal.toFixed(2)}<br>
+        ${totalDescuentos > 0 ? `<strong class="text-success"><i class="fas fa-piggy-bank me-1"></i> Ahorraste:</strong> -$${totalDescuentos.toFixed(2)}<br>` : ''}
+        <strong><i class="fas fa-coins me-1"></i> Total:</strong> $${totalFinal.toFixed(2)}
+      </div>
+      ${promocionesAplicadas.length > 0 ? `
+      <div class="text-start mt-2">
+        <i class="fas fa-tags text-info me-1"></i><strong>Promociones aplicadas:</strong>
+        <ul class="ps-3 mb-0">
+          ${promocionesAplicadas.map(p => `<li><i class="fas fa-check-circle text-success me-1"></i>${p}</li>`).join('')}
+        </ul>
+      </div>` : ''}
+      <div class="text-center mt-3" id="qr-pedido" style="display: flex; justify-content: center;"></div>
+      <div class="alert alert-warning mt-3 p-2 text-start" style="font-size: 0.68rem;">
+        <i class="fas fa-info-circle me-1 text-warning"></i>
+        <strong>Importante:</strong><br>
+        <ul class="ps-3 mb-0">
+          <li>Este <strong>no es un comprobante de pago</strong>.</li>
+          <li><i class="fas fa-save me-1"></i>Guarda este ticket para poder pagar.</li>
+          <li><i class="fas fa-clock me-1"></i>Estado actual: ${pedido.estado}.</li>
+          <li><i class="fa-solid fa-exclamation"></i> Espera confirmación de tienda antes de pagar.</li>
+        </ul>
+      </div>
+      <p class="text-center mb-0 mt-2" style="font-size: 0.65rem; color: #999;">
+        <i class="fas fa-star text-warning me-1"></i>Gracias por tu preferencia
+      </p>
+    </div>`;
+
+    const temp = document.createElement("div");
+    temp.innerHTML = ticketHTML;
+    document.body.appendChild(temp);
+
+    const qrElement = temp.querySelector("#qr-pedido");
+    new QRCode(qrElement, {
+      text: pedido.codigo_ticket,
+      width: 100,
+      height: 100
+    });
+
+    const element = temp.querySelector("#ticket-imagen");
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true
+    });
+
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png", 1.0);
+    link.download = `ticket-${pedido.codigo_ticket}.png`;
+    link.click();
+
+    await swalInstance.close();
+    Swal.fire({
+      icon: 'success',
+      title: 'Ticket descargado',
+      text: `El ticket ${pedido.codigo_ticket} se ha descargado correctamente`,
+      timer: 2000,
+      showConfirmButton: false
+    });
+
+    document.body.removeChild(temp);
+  } catch (err) {
+    await swalInstance.close();
+    mostrarToast("❌ No se pudo descargar el ticket", "error");
+    console.error(err);
+  }
 }
+
+
 
 function obtenerColorEstado(estado) {
     switch (estado.toLowerCase()) {
