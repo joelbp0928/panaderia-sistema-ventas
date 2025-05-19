@@ -319,7 +319,8 @@ function evaluarDescuento(promo, item) {
         return {
           aplica: true,
           descuento: gratis * precio,
-          texto: `Compra ${promo.buy_quantity} lleva ${promo.get_quantity} gratis`
+          texto: `Compra ${promo.buy_quantity} lleva ${promo.get_quantity} gratis`,
+          promocion_id: promo.id // 💥
         };
       }
       break;
@@ -332,7 +333,8 @@ function evaluarDescuento(promo, item) {
 }
 
 // Función optimizada para calcular todos los descuentos
-async function calcularDescuentosCarrito(usuario_id) {
+export async function calcularDescuentosCarrito(usuario_id) {
+  const promocionesAplicadas = new Set();
   // Obtener productos del carrito
   const { data: carritoData, error: carritoError } = await supabase
     .from("carrito")
@@ -376,10 +378,12 @@ async function calcularDescuentosCarrito(usuario_id) {
       const resultado = evaluarDescuento(promo, item);
       if (resultado.aplica) {
         producto.descuento += resultado.descuento;
+        producto.promocion_id = resultado.promocion_id || null;
         // Solo actualizar el texto si no tiene uno o si es un descuento mayor
         if (!producto.descuentoTexto || resultado.descuento > 0) {
           producto.descuentoTexto = resultado.texto;
         }
+        promocionesAplicadas.add(promo.nombre); // <<-- Aquí guardas la promo aplicada
       }
     });
 
@@ -413,7 +417,8 @@ async function calcularDescuentosCarrito(usuario_id) {
       thresholdDescuento,
       thresholdTexto,
       total,
-      cantidadTotal
+      cantidadTotal,
+      promocionesAplicadas: Array.from(promocionesAplicadas) // <<-- lo devuelves como array
     }
   };
 }
