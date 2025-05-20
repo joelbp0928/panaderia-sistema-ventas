@@ -69,7 +69,8 @@ function validarFormularioEmpleado() {
     let isValid = true;
     const campos = [
         "empleado-nombre", "empleado-email",
-        "empleado-telefono", "empleado-fecha"
+        "empleado-telefono", "empleado-fecha",
+        "empleado-sueldo"
     ];
 
     limpiarErrorCampo(campos);
@@ -96,6 +97,12 @@ function validarFormularioEmpleado() {
         marcarErrorCampo("empleado-fecha", "Debe tener al menos 16 años");
         isValid = false;
     }
+    // Validar sueldo
+    const sueldo = document.getElementById("empleado-sueldo").value;
+    if (!sueldo || parseFloat(sueldo) <= 0) {
+        marcarErrorCampo("empleado-sueldo", "El sueldo debe ser mayor a 0");
+        isValid = false;
+    }
 
     return isValid;
 }
@@ -116,6 +123,7 @@ export async function gestionarEmpleado(event) {
     const idEmpleado = document.getElementById("form-empleado").dataset.empleadoId || null;
 
     try {
+        const sueldo = parseFloat(document.getElementById("empleado-sueldo").value);
         const email = document.getElementById("empleado-email").value.trim();
         // 🔹 Verificar si el email ya existe en otro usuario
         const { data: usuarioConEmail } = await supabase
@@ -153,10 +161,10 @@ export async function gestionarEmpleado(event) {
 
         if (idEmpleado) {
             // ✏️ **Editar empleado existente**
-            await actualizarEmpleado(idEmpleado, { nombre, email, telefono, fechaNacimiento, puesto, genero });
+            await actualizarEmpleado(idEmpleado, { nombre, email, telefono, fechaNacimiento, puesto, genero, sueldo });
         } else {
             // ➕ **Registrar nuevo empleado**
-            await registrarNuevoEmpleado({ nombre, email, telefono, fechaNacimiento, puesto, genero });
+            await registrarNuevoEmpleado({ nombre, email, telefono, fechaNacimiento, puesto, genero, sueldo });
         }
         // Cerrar el modal después de guardar
         empleadoModal.hide(); // ✅ Usa la instancia global
@@ -182,7 +190,7 @@ export async function editarEmpleado(idEmpleado) {
         const { data: empleadoData, error: empleadoError } = await supabase
             .from("empleados")
             .select(`
-                id, puesto, genero, usuario_id,
+                id, puesto, genero, usuario_id, sueldo,
                 usuario:usuario_id (nombre, email, telefono, fechaNacimiento)
             `)
             .eq("id", idEmpleado)
@@ -199,6 +207,7 @@ export async function editarEmpleado(idEmpleado) {
         document.getElementById("empleado-genero").value = empleadoData.genero;
         document.getElementById("empleado-fecha").value = empleadoData.usuario.fechaNacimiento;
         document.getElementById("empleado-puesto").value = empleadoData.puesto;
+        document.getElementById("empleado-sueldo").value = empleadoData.sueldo;
 
         // 🔹 Guardar el ID del empleado en un atributo del formulario para saber qué usuario se edita
         const formulario = document.getElementById("form-empleado");
@@ -267,7 +276,7 @@ export async function cargarEmpleados() {
         const { data, error } = await supabase
             .from("empleados")
             .select(`
-                id, puesto, genero, creado_por,
+                id, puesto, genero, sueldo, creado_por,
                 usuario:usuario_id (nombre, email, telefono, fechaNacimiento, fechaRegistro),
                 admin:creado_por (nombre)
             `);
@@ -281,6 +290,7 @@ export async function cargarEmpleados() {
                 <td>${empleado.usuario.nombre}</td>
                 <td>${formatearFecha(empleado.usuario.fechaNacimiento)}</td>
                 <td>${empleado.puesto}</td>
+                <td>${empleado.sueldo}</td>
                 <td>${empleado.usuario.email}</td>
                 <td>${empleado.usuario.telefono}</td>
                 <td>${empleado.admin?.nombre || "Desconocido"}</td>
@@ -382,7 +392,8 @@ async function actualizarEmpleado(idEmpleado, datos) {
     // 🔹 Actualizar en la tabla `empleados`
     await supabase.from("empleados").update({
         puesto: datos.puesto,
-        genero: datos.genero
+        genero: datos.genero,
+        sueldo: datos.sueldo
     }).eq("id", idEmpleado);
     mostrarToast("✅ Empleado actualizado correctamente.", "success");
 }
@@ -413,6 +424,7 @@ export async function registrarNuevoEmpleado(datos) {
                 telefono: datos.telefono,
                 fechaNacimiento: datos.fechaNacimiento,
                 rol: "empleado",
+                sueldo: datos.sueldo,
                 fechaRegistro: new Date().toISOString()
             }
         ]);

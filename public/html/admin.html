@@ -165,6 +165,22 @@
             Estadísticas
           </button>
         </li>
+        <!-- Botón de Reportes -->
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            id="reportes-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#reportes"
+            type="button"
+            role="tab"
+            aria-controls="reportes"
+            aria-selected="false"
+          >
+            Reportes
+          </button>
+        </li>
+        <!--Configuraciones Admin-->
         <li class="nav-item">
           <button
             class="nav-link"
@@ -301,10 +317,7 @@
             </span>
           </div>
           <!-- Contenedor para los botones de eliminar y editar -->
-          <div
-            id="acciones-clientes"
-            class="button-container"
-          >
+          <div id="acciones-clientes" class="button-container">
             <!-- Botón de eliminar (bote de basura) -->
             <div id="delete-client-btn" class="button-delete">
               <i class="fa-solid fa-trash"></i>
@@ -584,6 +597,23 @@
                         <option value="admin">Administrador</option>
                       </select>
                     </div>
+                    <div class="mb-3">
+                      <label for="empleado-sueldo" class="form-label">
+                        <i class="fas fa-money-bill-wave me-1"></i>Sueldo
+                        Mensual
+                      </label>
+                      <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input
+                          type="number"
+                          class="form-control"
+                          id="empleado-sueldo"
+                          min="0"
+                          step="0.01"
+                          placeholder="Ej. 5000.00"
+                        />
+                      </div>
+                    </div>
                     <button type="submit" class="btn btn-success">
                       Guardar colaborador
                     </button>
@@ -726,13 +756,18 @@
             >
               <thead class="table-card-title">
                 <tr>
-                  <th>Nombre</th>
-                  <th>Fecha nacimiento</th>
-                  <th>Puesto</th>
-                  <th>Email</th>
-                  <th>Teléfono</th>
-                  <th>Registrado por</th>
-                  <th>Fecha registro</th>
+                  <th><i class="fas fa-user me-2"></i>Nombre</th>
+                  <th>
+                    <i class="fas fa-birthday-cake me-2"></i>Fecha nacimiento
+                  </th>
+                  <th><i class="fas fa-briefcase me-2"></i>Puesto</th>
+                  <th><i class="fas fa-money-bill-wave me-1"></i>Sueldo</th>
+                  <th><i class="fas fa-envelope me-2"></i>Email</th>
+                  <th><i class="fas fa-phone-alt me-2"></i>Teléfono</th>
+                  <th><i class="fas fa-user-plus me-2"></i>Registrado por</th>
+                  <th>
+                    <i class="far fa-calendar-alt me-2"></i>Fecha registro
+                  </th>
                 </tr>
               </thead>
               <tbody id="tabla-empleados-content">
@@ -1017,26 +1052,32 @@
               <i class="fa-regular fa-pen-to-square"></i>
             </div>
           </div>
-          <span class="text-muted small text-center"
-            >Selecciona un ingrediente para ver acciones</span
-          >
-<div class="table-responsive small-table mx-auto">
-  <table
-    id="ingredient-table"
-    class="table table-hover table-borderless align-middle text-center table-sm mb-0 shadow-sm rounded"
-  >
-    <thead class="table-card-title">
-      <tr>
-        <th>Ingrediente</th>
-        <th>Costo total por medida</th>
-        <th>Fecha registro</th>
-      </tr>
-    </thead>
-    <tbody id="ingredients-list">
-      <!-- Lista dinámica de ingredientes -->
-    </tbody>
-  </table>
-</div>
+
+          <div class="table-responsive small-table mx-auto">
+            <span class="text-muted small text-center"
+              >Selecciona un ingrediente para ver acciones</span
+            >
+            <table
+              id="ingredient-table"
+              class="table table-hover table-borderless align-middle text-center table-sm mb-0 shadow-sm rounded"
+            >
+              <thead class="table-card-title">
+                <tr>
+                  <th><i class="fas fa-box-open me-2"></i>Ingrediente</th>
+                  <th>
+                    <i class="fas fa-dollar-sign me-2"></i>Costo total por
+                    medida
+                  </th>
+                  <th>
+                    <i class="far fa-calendar-alt me-2"></i>Fecha registro
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="ingredients-list">
+                <!-- Lista dinámica de ingredientes -->
+              </tbody>
+            </table>
+          </div>
 
           <!-- Modal de Confirmación de Eliminación de ingrediente-->
           <div
@@ -1262,7 +1303,7 @@
                         <span id="detalle-producto-costo-unitario"></span>
                       </p>
                       <p class="mb-0">
-                      <!--  <i class="fas fa-boxes me-2 text-muted"></i>
+                        <!--  <i class="fas fa-boxes me-2 text-muted"></i>
                         <strong>Ingredientes:</strong>-->
                         <span id="detalle-producto-ingredientes"></span>
                       </p>
@@ -2010,7 +2051,7 @@
                             class="form-select"
                             id="promotion-products"
                           >
-                       <!--     <option value="1">Dona de Chocolate</option>
+                            <!--     <option value="1">Dona de Chocolate</option>
                             <option value="2">Concha de Vainilla</option>
                             <option value="3">Bolillo</option>
                             <option value="4">Pastel de Tres Leches</option>-->
@@ -2177,7 +2218,7 @@
                         class="form-select"
                         id="sugerencia-productos"
                       >
-                      <!--  <option value="1">Dona de Chocolate</option>
+                        <!--  <option value="1">Dona de Chocolate</option>
                         <option value="2">Concha de Vainilla</option>
                         <option value="3">Bolillo</option>
                         <option value="4">Pastel de Tres Leches</option>-->
@@ -3165,21 +3206,25 @@
               </div>
             </div>
           </div>
-          
+
           <div class="text-center mb-3">
             <button id="mostrarPrediccionesBtn">Mostrar predicción</button>
           </div>
-            
+
           <div id="contenedorVentas" class="contenedor-grafica-individual">
             <canvas id="sales-chart"></canvas>
           </div>
 
-          <div id="contenedorPredicciones" class="contenedor-graficas" style="display: none;">
+          <div
+            id="contenedorPredicciones"
+            class="contenedor-graficas"
+            style="display: none"
+          >
             <div class="card">
               <canvas id="graficaPrediccion"></canvas>
             </div>
           </div>
-          
+
           <!-- 🔁 Fila de resúmenes adicionales -->
           <!-- Grid para Total Pedidos y Top Producto -->
           <div class="row row-cols-1 row-cols-md-2 g-4 mt-3">
@@ -3210,7 +3255,6 @@
             </div>
           </div>
 
-          <!-- 📊 Gráficas secundarias -->
           <!-- 📊 Gráficas secundarias -->
           <div class="row row-cols-1 row-cols-md-2 g-4 mt-4">
             <!-- Top Productos Vendidos -->
@@ -3301,6 +3345,141 @@
           </div>
         </div>
 
+        <!-- Reportes -->
+        <div
+          class="tab-pane fade"
+          id="reportes"
+          role="tabpanel"
+          aria-labelledby="reportes-tab"
+        >
+          <div class="container py-4 animate__animated animate__fadeIn">
+            <h3 class="mb-4 text-primary">
+              <i class="fas fa-chart-line me-2"></i> Reporte de Punto de
+              Equilibrio
+            </h3>
+
+            <!-- Tarjeta de resumen de costos fijos -->
+            <div class="card shadow-sm mb-4">
+              <div
+                class="card-body d-flex justify-content-between align-items-center"
+              >
+                <div>
+                  <h5 class="card-title">
+                    <i class="fas fa-coins text-warning me-1"></i> Costos Fijos
+                    Totales
+                  </h5>
+                  <p class="card-text text-muted mb-1">
+                    Incluye sueldos, renta, servicios y otros gastos mensuales.
+                  </p>
+                  <h4 id="costosFijosTotal" class="text-success fw-bold">
+                    $0.00
+                  </h4>
+                </div>
+                <button
+                  class="btn btn-primary btn-sm"
+                  id="btn-agregar-costo-fijo"
+                >
+                  <i class="fas fa-edit me-1"></i> Agregar costo fijo
+                </button>
+                <button
+                  class="btn btn-outline-secondary btn-sm"
+                  id="editarCostosFijos"
+                >
+                  <i class="fas fa-edit me-1"></i> Editar costo fijo
+                </button>
+              </div>
+            </div>
+
+            <!-- Tabla de productos y datos para mezcla -->
+            <div class="card shadow-sm mb-4">
+              <div
+                class="card-header bg-light d-flex justify-content-between align-items-center"
+              >
+                <h5 class="mb-0">
+                  <i class="fas fa-box-open me-2"></i> Productos en la Mezcla
+                </h5>
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  id="btn-actualizar-mezcla"
+                >
+                  <i class="fas fa-sync-alt"></i> Actualizar
+                </button>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table
+                    class="table table-sm table-hover align-middle text-center mb-0"
+                  >
+                    <thead class="table-primary">
+                      <tr>
+                        <th>Producto</th>
+                        <th>Precio Venta</th>
+                        <th>Costo Variable</th>
+                        <th>Margen Contrib.</th>
+                        <th>% Mezcla</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tabla-mezcla-productos">
+                      <!-- Filas dinámicas -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Resultado del Punto de Equilibrio -->
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">
+                  <i class="fas fa-balance-scale me-2"></i> Punto de Equilibrio
+                </h5>
+                <p class="mb-2 text-muted">
+                  Cálculo basado en:
+                  <strong class="text-primary">PE = CF / MCP</strong> (Margen
+                  Contrib. Promedio)
+                </p>
+                <div
+                  class="alert alert-info d-flex align-items-center"
+                  role="alert"
+                >
+                  <i class="fas fa-info-circle me-2"></i>
+                  <div>
+                    Debes vender <strong id="resultado-pe">0</strong> unidades
+                    (equivalentes) para cubrir tus costos fijos.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gráfica de pastel -->
+            <div class="card mt-4 shadow-sm">
+              <div class="card-body text-center">
+                <h5 class="card-title mb-3">
+                  <i class="fas fa-chart-pie me-2"></i> Distribución de la
+                  Mezcla de Ventas
+                </h5>
+
+                <!-- Animación de carga -->
+                <div id="loadingChart" class="my-3">
+                  <div class="spinner-border text-primary" role="status"></div>
+                  <p class="text-muted mt-2">Generando gráfica...</p>
+                </div>
+
+                <!-- Contenedor con altura flexible y gráfico -->
+                <div
+                  class="position-relative mx-auto"
+                  style="max-width: 100%; height: 400px"
+                >
+                  <canvas
+                    id="graficaMezcla"
+                    class="d-none w-100 h-100"
+                  ></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Configuraciones -->
         <div
           class="tab-pane fade"
@@ -3339,7 +3518,6 @@
       <p id="footer-company-name"></p>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Toastify JS -->
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
@@ -3347,7 +3525,8 @@
     <!-- Importa tinycolor2 desde un CDN -->
     <script src="https://cdn.jsdelivr.net/npm/tinycolor2@1.4.2/dist/tinycolor-min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="../js/grafica_predicciones.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="../js/grafica_predicciones.js"></script>
     <script type="module" src="../js/admin.js"></script>
   </body>
 </html>
