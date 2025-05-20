@@ -688,6 +688,31 @@ table {
 table th, table td {
   padding: 0.5rem;
 }
+/* Opcional: reduce paddings y márgenes generales */
+.small-table table {
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+/* Alinea más el contenido y limita el ancho */
+.small-table {
+  max-width: 700px;
+  margin: auto;
+}
+
+
+#ingredient-table th,
+#ingredient-table td {
+  padding: 0.4rem 0.6rem;
+  vertical-align: middle;
+}
+
+/* Opcional: efecto hover sutil */
+#ingredient-table tbody tr:hover {
+  background-color: #f0f0f0;
+  transition: background-color 0.2s ease-in-out;
+}
+
 
 /*   EStadisticas */
 /* Reducir el tamaño de la gráfica principal */

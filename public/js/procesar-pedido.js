@@ -68,7 +68,7 @@ export async function confirmarPedido() {
 
 
     const { isConfirmed } = await Swal.fire({
-      title: '🧾 Confirmar Pedido',
+      title: '🧾 Confirmar pedido',
       html: `
     <div class="table-responsive">
       <table class="table table-bordered">
@@ -98,7 +98,7 @@ export async function confirmarPedido() {
   ` : ''}
   `,
       icon: 'info',
-      confirmButtonText: 'Confirmar Pedido',
+      confirmButtonText: 'Confirmar pedido',
       cancelButtonText: 'Cancelar',
       showCancelButton: true,
       customClass: {

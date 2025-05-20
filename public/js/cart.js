@@ -112,8 +112,8 @@ export async function mostrarCarrito() {
 
     carritoBody.innerHTML = `
       <div class="d-grid gap-2 mb-3">
-        <button id="limpiar-carrito" class="btn btn-outline-danger animate__animated"><i class="fas fa-trash me-2"></i>Vaciar Carrito</button>
-        <button id="hacer-pedido" class="btn btn-success animate__animated animate__pulse animate__infinite"><i class="fas fa-check-circle me-2"></i>Hacer Pedido</button>
+        <button id="limpiar-carrito" class="btn btn-outline-danger animate__animated"><i class="fas fa-trash me-2"></i>Vaciar carrito</button>
+        <button id="hacer-pedido" class="btn btn-success animate__animated animate__pulse animate__infinite"><i class="fas fa-check-circle me-2"></i>Hacer pedido</button>
       </div>
       <div class="animate__animated animate__fadeInRight">
         ${productos.map(item => `
