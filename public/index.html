@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vista Cliente</title>
+    <title>Vista cliente</title>
     <link rel="stylesheet" href="./css/styles-usuario.css" />
     <link rel="stylesheet" href="./css/alergias-modal-style.css" />
     <link
@@ -57,7 +57,7 @@
             data-bs-toggle="modal"
             data-bs-target="#loginModal"
           >
-            <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+            <i class="fas fa-sign-in-alt"></i> Iniciar sesión
           </button>
           <button
             class="btn btn-light"
@@ -92,7 +92,7 @@
             <i class="fas fa-clock-rotate-left me-2"></i>Historial
           </button>
           <button id="logout-cliente-btn" class="btn btn-outline-light">
-            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
           </button>
         </div>
       </div>
@@ -209,7 +209,7 @@
       >
         <div class="sidebar-header">
           <h5 class="text-white m-0">
-            <i class="fas fa-list me-2"></i>Historial de Pedidos
+            <i class="fas fa-list me-2"></i>Historial de pedidos
           </h5>
           <button
             class="btn-close"
@@ -254,14 +254,14 @@
       </div>
     </section>
 
-   <!--Sugerencias-->
+    <!--Sugerencias-->
     <!-- 🔸 SUGERENCIAS - SOLO SI EL CLIENTE ESTÁ ACTIVO -->
     <div id="seccion-sugerencias" class="d-none">
-      <br>
+      <br />
       <div id="titulo-recomendacion">
         <h4>Nuestra recomendación del día para ti</h4>
       </div>
-      <br>
+      <br />
       <div id="tarjeta-sugerencia" class="tarjeta-horizontal">
         <img id="imagen-pan" src="" alt="Pan recomendado" />
         <div class="contenido-pan">
@@ -270,13 +270,16 @@
             <i class="fas fa-cart-plus"></i> Agregar
           </button>
         </div>
-        
       </div>
-      <br>
+      <br />
       <div class="acciones-sugerencia">
-          <button id="btn-otra-sugerencia"><i class="fa-solid fa-code-compare"></i>Ver otra</button>
-          <button id="btn-filtro-alergenos"><i class="fa-solid fa-gears"></i>Preferencias</button>
-        </div>
+        <button id="btn-otra-sugerencia">
+          <i class="fa-solid fa-code-compare"></i>Ver otra
+        </button>
+        <button id="btn-filtro-alergenos">
+          <i class="fa-solid fa-gears"></i>Preferencias
+        </button>
+      </div>
     </div>
 
     <!-- Categorías -->
@@ -327,12 +330,12 @@
       </div>
     </section>
 
-    <!-- 🔹 Modal de Iniciar Sesión -->
+    <!-- 🔹 Modal de Iniciar sesión -->
     <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header bg-vino text-white">
-            <h3 class="modal-title">Iniciar Sesión</h3>
+            <h3 class="modal-title">Iniciar sesión</h3>
             <button
               type="button"
               class="btn-close"
@@ -342,7 +345,7 @@
           </div>
           <div class="modal-body">
             <form id="login-form">
-              <label for="login-email">Correo Electrónico</label>
+              <label for="login-email">Correo electrónico</label>
               <input
                 type="email"
                 id="login-email"
@@ -380,7 +383,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header bg-vino text-white">
-            <h3 class="modal-title">Registro de Cliente</h3>
+            <h3 class="modal-title">Registro de cliente</h3>
             <button
               type="button"
               class="btn-close"
@@ -391,7 +394,7 @@
           <div class="modal-body">
             <form id="signup-form">
               <!-- Sección 1: Datos Personales -->
-              <h5 class="mb-3">Datos Personales</h5>
+              <h5 class="mb-3">Datos personales</h5>
               <div class="mb-3">
                 <label for="signup-name" class="form-label"
                   >Nombre Completo</label
@@ -417,7 +420,7 @@
               </div>
               <div class="mb-3">
                 <label for="signup-birthdate" class="form-label"
-                  >Fecha de Nacimiento</label
+                  >Fecha de nacimiento</label
                 >
                 <input
                   type="date"
@@ -455,7 +458,7 @@
               </div>
               <div class="mb-3">
                 <label for="signup-codigo-postal" class="form-label"
-                  >Código Postal</label
+                  >Código postal</label
                 >
                 <input
                   type="number"
@@ -467,7 +470,7 @@
               </div>
               <div class="mb-3">
                 <label for="signup-address" class="form-label"
-                  >Dirección Completa</label
+                  >Dirección completa</label
                 >
                 <input
                   type="text"
@@ -477,14 +480,13 @@
                   required
                 />
               </div>
-
               <hr />
 
               <!-- Sección 3: Datos de Cuenta -->
-              <h5 class="mb-3">Datos de Cuenta</h5>
+              <h5 class="mb-3">Datos de cuenta</h5>
               <div class="mb-3">
                 <label for="signup-email" class="form-label"
-                  >Correo Electrónico</label
+                  >Correo electrónico</label
                 >
                 <input
                   type="email"
@@ -518,7 +520,7 @@
               </div>
               <div class="mb-3">
                 <label for="signup-password-confirm" class="form-label"
-                  >Confirmar Contraseña</label
+                  >Confirmar contraseña</label
                 >
                 <input
                   type="password"
@@ -550,7 +552,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header bg-vino text-white">
-            <h5 class="modal-title">Recuperar Contraseña</h5>
+            <h5 class="modal-title">Recuperar contraseña</h5>
             <button
               type="button"
               class="btn-close"
@@ -560,7 +562,7 @@
           </div>
           <div class="modal-body">
             <form id="forgot-password-form">
-              <label for="recovery-email">Correo Electrónico</label>
+              <label for="recovery-email">Correo electrónico</label>
               <input
                 type="email"
                 id="recovery-email"
@@ -579,20 +581,23 @@
     </div>
 
     <!-- Modal para seleccionar alergias -->
-<div id="modal-alergias" class="modal">
-  <div class="modal-contenido">
-    <span class="cerrar-modal" id="cerrar-modal">&times;</span>
-    <h2>Selecciona los ingredientes a los que eres alérgico o no te gusten</h2>
-    <form id="form-alergias">
-      <div id="contenedor-ingredientes">
-        <!-- Aquí se cargarán los checkboxes desde JS -->
-      </div>
-      
-      <button type="submit" class="btn-guardar">Guardar preferencias</button>
-    </form>
-  </div>
-</div>
+    <div id="modal-alergias" class="modal">
+      <div class="modal-contenido">
+        <span class="cerrar-modal" id="cerrar-modal">&times;</span>
+        <h2>
+          Selecciona los ingredientes a los que eres alérgico o no te gusten
+        </h2>
+        <form id="form-alergias">
+          <div id="contenedor-ingredientes">
+            <!-- Aquí se cargarán los checkboxes desde JS -->
+          </div>
 
+          <button type="submit" class="btn-guardar">
+            Guardar preferencias
+          </button>
+        </form>
+      </div>
+    </div>
 
     <!-- Footer -->
     <footer>
@@ -602,8 +607,8 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
     />
-   <!-- <script src="js/config.js"></script>-->
-   <!-- <script src="js/sugerencias.js"></script>-->
+    <!-- <script src="js/config.js"></script>-->
+    <!-- <script src="js/sugerencias.js"></script>-->
     <script src="js/alergias.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script type="module" src="./js/main.js"></script>

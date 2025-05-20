@@ -3,12 +3,12 @@ import { supabase } from "./supabase-config.js";
 import { mostrarToast } from "./manageError.js";
 import { getCDMXISOString, getLocalDateString } from "./dateLocalDate.js"
 
-export async function guardarPedido(productosSeleccionados, userId, origen = "empacador", estadoPersonalizado = null) {
+export async function guardarPedido(productosSeleccionados, userId, origen = "empacador") {
   const total = productosSeleccionados.reduce((acc, p) => acc + p.total, 0);
   const fechaActual = getCDMXISOString();
 
   // Determinar el estado automáticamente si no se especifica
-  const estado = estadoPersonalizado || (origen === "empacador" ? "empacado" : "pendiente");
+  const estado = (origen === "empacador" ? "empacado" : "pendiente");
 
   const { codigo_ticket, folio_secuencial } = await generarCodigoTicket(origen, userId);
 

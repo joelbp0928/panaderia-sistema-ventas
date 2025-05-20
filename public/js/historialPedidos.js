@@ -26,7 +26,7 @@ export function inicializarHistorialPedidos() {
 
         const { data: pedidos, error } = await supabase
             .from("pedidos")
-            .select("*")
+            .select("*, pedido_productos(descuento, promocion_id)")
             .eq("cliente_id", usuario_id)
             .order("fecha", { ascending: false });
 
@@ -36,20 +36,25 @@ export function inicializarHistorialPedidos() {
           <i class="fas fa-ban me-2"></i>No tienes pedidos recientes
         </p>`;
             return;
-
         }
 
         const totalesProductos = await obtenerTotalesProductosPorPedido(pedidos.map(p => p.id));
 
-        // Agrupar pedidos por fecha (sin hora)
+        const pedidosConPromo = pedidos.map(p => {
+            const totalDescuentos = p.pedido_productos?.reduce((acc, pp) => acc + (pp.descuento || 0), 0);
+            return {
+                ...p,
+                tienePromo: totalDescuentos > 0
+            };
+        });
+
         const pedidosPorFecha = {};
-        pedidos.forEach(p => {
+        pedidosConPromo.forEach(p => {
             const fecha = new Date(p.fecha).toLocaleDateString();
             if (!pedidosPorFecha[fecha]) pedidosPorFecha[fecha] = [];
             pedidosPorFecha[fecha].push(p);
         });
 
-        // Generar HTML agrupado
         contenedor.innerHTML = Object.entries(pedidosPorFecha).map(([fecha, lista], i) => `
         <div class="mb-3 fade-slide-in">
           <div class="encabezado-fecha d-flex justify-content-between align-items-center text-primary border-bottom pb-1" data-toggle="grupo-${i}" style="cursor: pointer;">
@@ -62,7 +67,10 @@ export function inicializarHistorialPedidos() {
           <div id="grupo-${i}" class="grupo-pedidos collapse-fecha mt-2">
             ${lista.map(p => `
               <div class="border-bottom py-2 pedido-item" style="cursor: pointer;" data-id="${p.id}">
-                <div><i class="fa-solid fa-ticket-simple"></i><strong> ${p.codigo_ticket}</strong></div>
+                <div>
+                  <i class="fa-solid fa-ticket-simple"></i><strong> ${p.codigo_ticket}</strong>
+                  ${p.tienePromo ? '<i class="fas fa-tags text-success ms-2" title="Incluye promoción"></i>' : ''}
+                </div>
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="text-muted small mt-1"><i class="fas fa-clock me-1"></i>${new Date(p.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                     <div><span class="badge bg-${obtenerColorEstado(p.estado)} text-capitalize"><i class="fas fa-circle me-1 small"></i>${p.estado}</span></div>
@@ -93,61 +101,69 @@ export function inicializarHistorialPedidos() {
             });
         });
 
-
         document.querySelectorAll(".pedido-item").forEach(el => {
             el.addEventListener("click", async () => {
                 const pedidoId = el.dataset.id;
 
-                // Obtener información del pedido primero
                 const { data: pedido, error: errorPedido } = await supabase
                     .from("pedidos")
                     .select("*")
                     .eq("id", pedidoId)
-                    .single();
+                    .maybeSingle();
 
-                if (errorPedido || !pedido) {
-                    mostrarToast("No se pudo cargar la información del pedido", "error");
-                    return;
-                }
-
-                // Consulta con join para obtener los productos
-                const { data: detalles, error } = await supabase
+                const { data: productos, error: errorProd } = await supabase
                     .from("pedido_productos")
-                    .select(`
-                        cantidad,
-                        precio_unitario,
-                        productos:producto_id (nombre)
-                    `)
+                    .select("cantidad, precio_unitario, descuento, promocion_id, productos:producto_id(nombre), promociones:promocion_id(nombre)")
                     .eq("pedido_id", pedidoId);
 
-                if (error || !detalles) {
-                    mostrarToast("No se pudieron cargar los productos del pedido", "error");
+                if (errorPedido || !pedido || errorProd || !productos) {
+                    mostrarToast("Error al cargar el pedido o sus productos", "error");
                     return;
                 }
 
-                const tablaHTML = detalles.map(p => `
+                const totalPiezas = productos.reduce((sum, p) => sum + p.cantidad, 0);
+                const subtotal = productos.reduce((sum, p) => sum + (p.precio_unitario * p.cantidad), 0);
+                const totalDescuentos = productos.reduce((sum, p) => sum + (p.descuento || 0), 0);
+                const promocionesAplicadas = [...new Set(productos.map(p => p.promociones?.nombre).filter(Boolean))];
+
+                const tablaHTML = productos.map(p => `
                     <tr>
                         <td>${p.productos?.nombre || "Producto"}</td>
                         <td>${p.cantidad}</td>
                         <td>$${p.precio_unitario.toFixed(2)}</td>
-                        <td>$${(p.cantidad * p.precio_unitario).toFixed(2)}</td>
+                        <td>
+                          ${p.descuento > 0
+                            ? `<span class='text-danger text-decoration-line-through'>$${(p.precio_unitario * p.cantidad).toFixed(2)}</span><br><strong>$${((p.precio_unitario * p.cantidad) - p.descuento).toFixed(2)}</strong>`
+                            : `$${(p.precio_unitario * p.cantidad).toFixed(2)}`
+                        }
+                        </td>
                     </tr>
                 `).join("");
 
                 Swal.fire({
-                    title: '<i class="fas fa-clipboard-list me-2"></i>Detalles del Pedido',
+                    title: '<i class="fas fa-clipboard-list me-2"></i>Detalles del pedido',
                     html: `
                         <div class="text-start">
                             <p><i class="fa-solid fa-ticket-simple"></i><strong> Ticket:</strong> ${pedido.codigo_ticket}</p>
                             <p><i class="fas fa-traffic-light me-2"></i><strong>Estado:</strong> <span class="badge bg-${obtenerColorEstado(pedido.estado)} text-capitalize">${pedido.estado}</span></p>
-                            <p><i class="fas fa-boxes me-2"></i><strong>Total productos:</strong> ${detalles.reduce((sum, item) => sum + item.cantidad, 0)}</p>
+                            <p><i class="fas fa-boxes me-2"></i><strong>Total productos:</strong> ${totalPiezas}</p>
                             <table class="table table-bordered table-sm mt-3">
                                 <thead class="table-light">
                                     <tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Total</th></tr>
                                 </thead>
                                 <tbody>${tablaHTML}</tbody>
                             </table>
-                            <p class="mt-2 text-muted small">
+                            <hr>
+                            <p><strong><i class="fas fa-coins me-1"></i>Subtotal:</strong> $${subtotal.toFixed(2)}</p>
+                            ${totalDescuentos > 0 ? `<p class="text-success"><strong><i class="fas fa-piggy-bank me-1"></i>Ahorraste:</strong> -$${totalDescuentos.toFixed(2)}</p>` : ""}
+                            <p><strong><i class="fas fa-wallet me-1"></i>Total:</strong> $${pedido.total.toFixed(2)}</p>
+                            ${promocionesAplicadas.length > 0 ? `
+                            <p class="mt-2"><strong><i class="fas fa-tags text-info me-1"></i>Promociones aplicadas:</strong></p>
+                            <ul class="mb-0 ps-3">
+                                ${promocionesAplicadas.map(p => `<li><i class="fas fa-check-circle text-success me-1"></i>${p}</li>`).join("")}
+                            </ul>
+                            ` : ""}
+                            <p class="mt-3 text-muted small">
                                 <i class="fas fa-info-circle me-1"></i>
                                 Guarda tu ticket para poder pagar. <br>
                                 Tu pedido aún no está confirmado hasta que el estado cambie a empacado.
@@ -161,13 +177,10 @@ export function inicializarHistorialPedidos() {
                     reverseButtons: true,
                     preConfirm: async () => {
                         await descargarTicketDesdeHistorial(pedidoId);
-                        return false; // Evita que se cierre el modal automáticamente
+                        return false;
                     }
                 });
-
             });
-
-
         });
     });
 
@@ -189,10 +202,11 @@ export function inicializarHistorialPedidos() {
             overlay.classList.add("d-none");
             sidebar.classList.remove("animate__fadeOutRight");
             document.body.style.overflow = "";
-        }, 500); // coincide con la duración del fadeOut
+        }, 500);
     }
-
 }
+
+
 
 async function obtenerTotalesProductosPorPedido(idsPedidos) {
     const { data, error } = await supabase
@@ -212,7 +226,6 @@ async function obtenerTotalesProductosPorPedido(idsPedidos) {
 
     return totales;
 }
-
 
 export async function descargarTicketDesdeHistorial(pedidoId) {
   const swalInstance = Swal.fire({
@@ -357,8 +370,6 @@ export async function descargarTicketDesdeHistorial(pedidoId) {
     console.error(err);
   }
 }
-
-
 
 function obtenerColorEstado(estado) {
     switch (estado.toLowerCase()) {
