@@ -1,10 +1,12 @@
+import { aplicarPromociones, aplicarDescuentosPedido } from "./aplicarPromocion.js";
+import { eliminarPedidosAntiguosYRestaurarStock } from "./restaurarStock.js";
 import { cargarConfiguracion, configuracionGlobal } from "./config.js";
 import { marcarErrorCampo, mostrarToast } from "./manageError.js";
 import { verificarSesion, cerrarSesion } from './auth-check.js'; // Importa la función para verificar la sesión
-import { aplicarPromociones, aplicarDescuentosPedido, calcularTotalPedido } from "./aplicarPromocion.js";
 import { getLocalDateString } from "./dateLocalDate.js";
 import { guardarPedido } from "./guardarPedido.js";
 import { supabase } from "./supabase-config.js";
+
 
 const beepError = new Audio("../sounds/error-beep.mp3");
 let productosSeleccionados = []; // Array para almacenar los productos seleccionados
@@ -30,7 +32,9 @@ function obtenerColorEstado(estado) {
 
 // Iniciar la aplicación cuando el DOM esté listo
 window.onload = async function () {
+    eliminarPedidosAntiguosYRestaurarStock();
     initializeApp()
+
 };
 
 // Función principal de inicialización

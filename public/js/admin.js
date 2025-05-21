@@ -5,6 +5,7 @@ import { abrirModalEntradaProducto, cargarInventarioProductos } from "./inventar
 import { mostrarFormularioEmpleado, gestionarEmpleado, cargarEmpleados } from "./empleados.js";
 import { verificarAccesoAdmin, verificarSesion, cerrarSesion } from "./auth-check.js";
 import { cargarPromociones, cargarProductosPromocion } from './promociones.js';
+import { eliminarPedidosAntiguosYRestaurarStock } from "./restaurarStock.js";
 import { cargarConfiguracion } from "./admin/configAdmin.js";
 import { showLoading, hideLoading } from "./manageError.js";
 import { cargarCategorias } from './categorias.js';
@@ -17,6 +18,7 @@ window.onload = async function () {
   try {
     // 🔹 Cargar elementos principales de la página
     showLoading();
+    eliminarPedidosAntiguosYRestaurarStock(); // ✅ Eliminar pedidos antiguos y restaurar stock
     await cargarConfiguracion(); // ✅ Cargar la configuración de la tienda
     await verificarAccesoAdmin();
     await verificarSesion();
