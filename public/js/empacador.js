@@ -1889,25 +1889,30 @@ async function descontarStockYRegistrarMovimientos(pedidoId, codigoTicket) {
 
             // Mostrar alerta si no había stock
             if (stockInicial < item.cantidad) {
+                // Cargar el sonido
+                const sonidoAdvertencia = new Audio('../sounds/error-beep.mp3');
+                sonidoAdvertencia.play().catch(() => {
+                    console.warn('🔇 No se pudo reproducir el sonido (quizá el navegador lo bloqueó).');
+                });
                 Swal.fire({
-  title: 'Stock insuficiente',
-  text: `${item.productos?.nombre || 'Producto'} quedó con stock negativo.`,
-  icon: 'warning',
-  toast: true,
-  position: 'top-end', // puedes cambiar a 'bottom-start', etc.
-  showConfirmButton: false,
-  timer: 5000,
-  background: '#fff8dc',
-  color: '#654321',
-  didOpen: () => {
-    const swalContainer = Swal.getPopup();
-  //  swalContainer.style.backgroundImage = "url('https://i.imgur.com/Lf5zGdl.png')"; // Fondo suave tipo bodega vacía
-    swalContainer.style.backgroundSize = "cover";
-    swalContainer.style.backgroundRepeat = "no-repeat";
-    swalContainer.style.backgroundPosition = "center";
-    swalContainer.style.border = "1px solid #d0a34f";
-  }
-});
+                    title: 'Stock insuficiente',
+                    text: `${item.productos?.nombre || 'Producto'} quedó con stock negativo.`,
+                    icon: 'warning',
+                    toast: true,
+                    position: 'top-end', // puedes cambiar a 'bottom-start', etc.
+                    showConfirmButton: false,
+                    timer: 5000,
+                    background: '#fff8dc',
+                    color: '#654321',
+                    didOpen: () => {
+                        const swalContainer = Swal.getPopup();
+                        //  swalContainer.style.backgroundImage = "url('https://i.imgur.com/Lf5zGdl.png')"; // Fondo suave tipo bodega vacía
+                        swalContainer.style.backgroundSize = "cover";
+                        swalContainer.style.backgroundRepeat = "no-repeat";
+                        swalContainer.style.backgroundPosition = "center";
+                        swalContainer.style.border = "1px solid #d0a34f";
+                    }
+                });
 
             }
         }
