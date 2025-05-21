@@ -112,7 +112,8 @@ header h1 {
   margin-bottom: 15px;
 }
 
-.form-control, .form-select {
+.form-control,
+.form-select {
   padding: 0.375rem 0.75rem;
   font-size: 0.9rem;
 }
@@ -247,12 +248,12 @@ input[type="color"] {
   .d-flex.flex-wrap {
     flex-direction: column;
   }
-  
+
   .flex-fill {
     width: 100%;
     margin-bottom: 10px;
   }
-  
+
   .button-container {
     justify-content: center;
     margin-right: 0;
@@ -264,17 +265,17 @@ input[type="color"] {
   header h1 {
     font-size: 1.2rem;
   }
-  
+
   .nav-tabs .nav-link {
     font-size: 0.7rem;
     padding: 0.3rem;
   }
-  
+
   .btn {
     padding: 0.25rem 0.5rem;
     font-size: 0.8rem;
   }
-  
+
   /* Historial lateral */
   .historial-sidebar {
     width: 100%;
@@ -289,23 +290,23 @@ input[type="color"] {
     justify-content: space-between;
     align-items: center;
   }
-  
+
   header img {
     width: 80px;
     margin-bottom: 0;
   }
-  
+
   header h1 {
     font-size: 1.3rem;
     margin: 0;
   }
-  
+
   #employee-name {
     order: 1;
     width: 100%;
     text-align: center;
   }
-  
+
   #logout-btn {
     margin-top: 0;
   }
@@ -318,12 +319,12 @@ input[type="color"] {
   select {
     font-size: 16px; /* Evita zoom en iOS */
   }
-  
+
   .btn {
     padding: 8px 12px;
     margin: 5px 0;
   }
-  
+
   /* Teclado numérico más accesible */
   input[type="number"] {
     min-height: 44px; /* Tamaño mínimo para toques */
@@ -519,7 +520,7 @@ select[multiple] {
   position: fixed;
   top: 0;
   right: -400px;
-  
+
   height: 100%;
   background: #fff;
   border-left: 2px solid #dee2e6;
@@ -559,7 +560,7 @@ select[multiple] {
     width: 100%;
     right: -100%;
   }
-  
+
   .historial-sidebar.mostrar {
     right: 0;
   }
@@ -569,24 +570,27 @@ select[multiple] {
   .table thead {
     display: none;
   }
-  
-  .table, .table tbody, .table tr, .table td {
+
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
     display: block;
     width: 100%;
   }
-  
+
   .table tr {
     margin-bottom: 15px;
     border: 1px solid #ddd;
   }
-  
+
   .table td {
     text-align: left;
     padding-right: 50%;
     position: relative;
     border-bottom: 1px solid #eee;
   }
-  
+
   .table td::before {
     content: attr(data-label);
     position: absolute;
@@ -659,8 +663,6 @@ body.bloquear-scroll {
   border-radius: 8px;
 }
 
-
-
 .filters {
   margin-bottom: 20px;
 }
@@ -685,7 +687,8 @@ table {
   font-size: 0.85rem;
 }
 
-table th, table td {
+table th,
+table td {
   padding: 0.5rem;
 }
 /* Opcional: reduce paddings y márgenes generales */
@@ -700,7 +703,6 @@ table th, table td {
   margin: auto;
 }
 
-
 #ingredient-table th,
 #ingredient-table td {
   padding: 0.4rem 0.6rem;
@@ -713,15 +715,12 @@ table th, table td {
   transition: background-color 0.2s ease-in-out;
 }
 
-
 /*   EStadisticas */
 /* Reducir el tamaño de la gráfica principal */
 #sales-chart {
   max-width: 100%;
   height: 235px !important ; /* Gráfico más pequeño */
-    margin-top: 20px;
-
-  
+  margin-top: 20px;
 }
 
 /* Estilo para las tarjetas de estadísticas */
@@ -748,8 +747,10 @@ canvas {
 
 #loader {
   position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: #121212;
   z-index: 9999;
   display: flex;
@@ -764,9 +765,18 @@ canvas {
   animation: pulse 2s infinite;
 }
 @keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.2); opacity: 0.8; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .stat-card p {
@@ -778,7 +788,7 @@ canvas {
   background: #ffffff;
   border-radius: 1.25rem;
   box-shadow: 0 4px 20px var(--primary-color-obscuro);
- /* transition: transform 0.2s ease, box-shadow 0.2s ease;*/
+  /* transition: transform 0.2s ease, box-shadow 0.2s ease;*/
   color: 212529;
 }
 
@@ -820,8 +830,6 @@ canvas {
   font-weight: 600;
 }
 
-
-
 /* Estilos para la lista de ingredientes */
 #ingredientesCollapse {
   margin-top: 10px;
@@ -850,7 +858,6 @@ canvas {
 .bg-primary-color {
   background-color: var(--primary-color);
 }
-
 
 /* Estilos para mejorar la tabla de ingredientes */
 .table-ingredientes {
@@ -882,7 +889,7 @@ canvas {
   min-width: 70px;
   font-weight: 500;
 }
-.btn-outline-custom{
+.btn-outline-custom {
   border: 1px solid;
   border-color: var(--primary-color-obscuro);
 }
@@ -905,7 +912,7 @@ canvas {
 .btn-ingredientes-compact:hover {
   border-color: var(--primary-color-obscuro);
   transform: scale(1.02);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 /* Ajustar el tamaño de las gráficas de productos y categorías 
 #top-products-chart, #sales-by-category-chart {
@@ -947,47 +954,62 @@ Mejorar el espaciado entre las secciones
   border-radius: 10px;
   padding: 20px;
   background: white;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   flex: 1;
   min-width: 300px;
 }
 
-
-#mostrarPrediccionesBtn{
-  background:#1AAB8A;
-  color:#fff;
-  border:none;
-  position:relative;
-  height:60px;
-  font-size:1.6em;
-  padding:0 2em;
-  cursor:pointer;
-  transition:800ms ease all;
-  outline:none;
+#mostrarPrediccionesBtn {
+  background: #1aab8a;
+  color: #fff;
+  border: none;
+  position: relative;
+  height: 60px;
+  font-size: 1.6em;
+  padding: 0 2em;
+  cursor: pointer;
+  transition: 800ms ease all;
+  outline: none;
 }
 
-#mostrarPrediccionesBtn:hover{
-  background:#fff;
-  color:#1AAB8A;
+#mostrarPrediccionesBtn:hover {
+  background: #fff;
+  color: #1aab8a;
 }
-#mostrarPrediccionesBtn:before,#mostrarPrediccionesBtn:after{
-  content:'';
-  position:absolute;
-  top:0;
-  right:0;
-  height:2px;
-  width:0;
-  background: #1AAB8A;
-  transition:400ms ease all;
+#mostrarPrediccionesBtn:before,
+#mostrarPrediccionesBtn:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 2px;
+  width: 0;
+  background: #1aab8a;
+  transition: 400ms ease all;
 }
-#mostrarPrediccionesBtn:after{
-  right:inherit;
-  top:inherit;
-  left:0;
-  bottom:0;
+#mostrarPrediccionesBtn:after {
+  right: inherit;
+  top: inherit;
+  left: 0;
+  bottom: 0;
 }
-b#mostrarPrediccionesBtn:hover:before,#mostrarPrediccionesBtn:hover:after{
-  width:100%;
-  transition:800ms ease all;
+b#mostrarPrediccionesBtn:hover:before,
+#mostrarPrediccionesBtn:hover:after {
+  width: 100%;
+  transition: 800ms ease all;
 }
 
+.rotate-icon {
+  transition: transform 0.3s ease;
+}
+.rotate-icon.rotado {
+  transform: rotate(180deg);
+}
+
+.card-stat {
+  transition: transform 0.2s ease;
+}
+
+.card-stat:hover {
+  transform: scale(1.01);
+}

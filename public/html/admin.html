@@ -3357,54 +3357,130 @@
           role="tabpanel"
           aria-labelledby="reportes-tab"
         >
-          <div class="container py-4 animate__animated animate__fadeIn">
-            <h3 class="mb-4 text-primary">
-              <i class="fas fa-chart-line me-2"></i> Reporte de Punto de
-              Equilibrio
-            </h3>
+          <div
+            class="container py-5 animate__animated animate__fadeIn"
+            style="
+              background-color: #f8f9fa;
+              border-radius: 1rem;
+              font-family: 'Poppins', sans-serif;
+            "
+          >
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <h3 class="text-dark fw-bold mb-0">
+                  <i class="fas fa-chart-line text-primary me-2"></i> Reporte de
+                  Punto de Equilibrio
+                </h3>
+                <small class="text-muted"
+                  >Análisis actualizado en tiempo real</small
+                >
+              </div>
+              <button class="btn btn-outline-secondary btn-sm rounded-pill">
+                <i class="fas fa-download me-1"></i> Exportar PDF
+              </button>
+            </div>
 
-            <!-- Tarjeta de resumen de costos fijos -->
-            <div class="card shadow-sm mb-4">
-              <div
-                class="card-body d-flex justify-content-between align-items-center"
-              >
-                <div>
-                  <h5 class="card-title">
-                    <i class="fas fa-coins text-warning me-1"></i> Costos Fijos
-                    Totales
-                  </h5>
-                  <p class="card-text text-muted mb-1">
-                    Incluye sueldos, renta, servicios y otros gastos mensuales.
-                  </p>
-                  <h4 id="costosFijosTotal" class="text-success fw-bold">
-                    $0.00
-                  </h4>
+            <!-- KPIs principales -->
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <div
+                  class="card shadow-sm p-4 card-stat border-start border-4 border-primary rounded-3"
+                >
+                  <div
+                    class="d-flex justify-content-between align-items-center"
+                  >
+                    <div>
+                      <h5 class="fw-bold text-secondary">
+                        <i class="fas fa-coins text-warning me-2"></i> Costos
+                        Fijos Totales
+                      </h5>
+                      <p class="text-muted small mb-2">
+                        Incluye sueldos, renta, servicios y otros gastos
+                        mensuales.
+                      </p>
+                      <h4
+                        id="costosFijosTotal"
+                        class="text-success fw-bold mb-0"
+                      >
+                        $0.00
+                      </h4>
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                      <button
+                        class="btn btn-outline-dark btn-sm rounded-pill"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseCostosFijos"
+                        aria-expanded="false"
+                        aria-controls="collapseCostosFijos"
+                      >
+                        <i
+                          class="fas fa-chevron-down rotate-icon transition"
+                        ></i>
+                        Ver desglose
+                      </button>
+                      <button
+                        class="btn btn-primary btn-sm rounded-pill"
+                        id="btn-agregar-costo-fijo"
+                      >
+                        <i class="fas fa-plus me-1"></i> Agregar
+                      </button>
+                    </div>
+                  </div>
+                  <div class="collapse mt-3" id="collapseCostosFijos">
+                    <ul
+                      id="lista-costos-fijos"
+                      class="list-group list-group-flush small border rounded p-2 bg-light shadow-sm"
+                    >
+                      <!-- Datos dinámicos -->
+                    </ul>
+                  </div>
                 </div>
-                <button
-                  class="btn btn-primary btn-sm"
-                  id="btn-agregar-costo-fijo"
+              </div>
+
+              <div class="col-md-6">
+                <div
+                  class="card shadow-sm p-4 card-stat border-start border-4 border-success rounded-3 position-relative"
                 >
-                  <i class="fas fa-edit me-1"></i> Agregar costo fijo
-                </button>
-                <button
-                  class="btn btn-outline-secondary btn-sm"
-                  id="editarCostosFijos"
-                >
-                  <i class="fas fa-edit me-1"></i> Editar costo fijo
-                </button>
+                  <button
+                    id="btn-ver-sugerencias"
+                    class="btn btn-warning btn-sm position-absolute top-0 end-0 mt-2 me-2 rounded-pill shadow-sm animate__animated animate__pulse animate__infinite d-none"
+                    title="Ver sugerencias inteligentes"
+                  >
+                    <i class="fas fa-lightbulb"></i>
+                  </button>
+                  <h5 class="fw-bold text-secondary mb-3">
+                    <i class="fas fa-balance-scale text-success me-2"></i> Punto
+                    de Equilibrio
+                  </h5>
+                  <p class="text-muted mb-2 small">
+                    Basado en: <strong>PE = CF / MCP</strong> (Margen Contrib.
+                    Promedio)
+                  </p>
+                  <div
+                    class="alert alert-info d-flex align-items-center small"
+                    role="alert"
+                  >
+                    <i class="fas fa-info-circle me-2"></i>
+                    <div>
+                      Debes vender <strong id="resultado-pe">0</strong> unidades
+                      equivalentes para cubrir tus costos fijos.
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <!-- Tabla de productos y datos para mezcla -->
+            <!-- Tabla de mezcla de productos -->
             <div class="card shadow-sm mb-4">
               <div
-                class="card-header bg-light d-flex justify-content-between align-items-center"
+                class="card-header bg-white d-flex justify-content-between align-items-center"
               >
                 <h5 class="mb-0">
                   <i class="fas fa-box-open me-2"></i> Productos en la Mezcla
                 </h5>
                 <button
-                  class="btn btn-sm btn-outline-primary"
+                  class="btn btn-sm btn-outline-primary rounded-pill"
                   id="btn-actualizar-mezcla"
                 >
                   <i class="fas fa-sync-alt"></i> Actualizar
@@ -3415,7 +3491,7 @@
                   <table
                     class="table table-sm table-hover align-middle text-center mb-0"
                   >
-                    <thead class="table-primary">
+                    <thead class="table-light border-bottom border-primary">
                       <tr>
                         <th>Producto</th>
                         <th>Precio Venta</th>
@@ -3432,53 +3508,29 @@
               </div>
             </div>
 
-            <!-- Resultado del Punto de Equilibrio -->
-            <div class="card shadow-sm">
-              <div class="card-body">
-                <h5 class="card-title">
-                  <i class="fas fa-balance-scale me-2"></i> Punto de Equilibrio
-                </h5>
-                <p class="mb-2 text-muted">
-                  Cálculo basado en:
-                  <strong class="text-primary">PE = CF / MCP</strong> (Margen
-                  Contrib. Promedio)
-                </p>
-                <div
-                  class="alert alert-info d-flex align-items-center"
-                  role="alert"
-                >
-                  <i class="fas fa-info-circle me-2"></i>
-                  <div>
-                    Debes vender <strong id="resultado-pe">0</strong> unidades
-                    (equivalentes) para cubrir tus costos fijos.
+            <!-- Gráficas -->
+            <div class="row">
+              <div class="card mt-4 shadow-sm">
+                <div class="card-body text-center">
+                  <h5 class="card-title mb-3">
+                    <i class="fas fa-chart-pie me-2"></i> Mezcla de Ventas
+                  </h5>
+                  <div id="loadingChart" class="my-3">
+                    <div
+                      class="spinner-border text-primary"
+                      role="status"
+                    ></div>
+                    <p class="text-muted mt-2">Generando gráfica...</p>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Gráfica de pastel -->
-            <div class="card mt-4 shadow-sm">
-              <div class="card-body text-center">
-                <h5 class="card-title mb-3">
-                  <i class="fas fa-chart-pie me-2"></i> Distribución de la
-                  Mezcla de Ventas
-                </h5>
-
-                <!-- Animación de carga -->
-                <div id="loadingChart" class="my-3">
-                  <div class="spinner-border text-primary" role="status"></div>
-                  <p class="text-muted mt-2">Generando gráfica...</p>
-                </div>
-
-                <!-- Contenedor con altura flexible y gráfico -->
-                <div
-                  class="position-relative mx-auto"
-                  style="max-width: 100%; height: 400px"
-                >
-                  <canvas
-                    id="graficaMezcla"
-                    class="d-none w-100 h-100"
-                  ></canvas>
+                  <div
+                    class="position-relative mx-auto"
+                    style="max-width: 100%; height: 300px"
+                  >
+                    <canvas
+                      id="graficaMezcla"
+                      class="d-none w-100 h-100"
+                    ></canvas>
+                  </div>
                 </div>
               </div>
             </div>

@@ -290,7 +290,7 @@ export async function cargarEmpleados() {
                 <td>${empleado.usuario.nombre}</td>
                 <td>${formatearFecha(empleado.usuario.fechaNacimiento)}</td>
                 <td>${empleado.puesto}</td>
-                <td>${empleado.sueldo}</td>
+                <td>$ ${empleado.sueldo.toLocaleString()}</td>
                 <td>${empleado.usuario.email}</td>
                 <td>${empleado.usuario.telefono}</td>
                 <td>${empleado.admin?.nombre || "Desconocido"}</td>
