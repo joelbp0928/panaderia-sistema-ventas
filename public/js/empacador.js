@@ -98,29 +98,41 @@ function setupRealtime() {
 }
 
 const handleNewOrder = (pedido) => {
-    // 1. Muestra notificación visual
-    showNotification(pedido);
+    // Espera breve antes de continuar
+    setTimeout(async () => {
+        // 1. Muestra notificación visual
+        showNotification(pedido);
 
-    // 2. Reproduce sonido
-    playNotificationSound();
+        // 2. Reproduce sonido
+        playNotificationSound();
 
-    // 3. Actualiza el contador
-    updatePendingOrdersCount();
+        // 3. Actualiza el contador
+        updatePendingOrdersCount();
 
-    // 4. Muestra alerta en la interfaz
-    displayOrderAlert(pedido);
+        // 4. Muestra alerta en la interfaz
+        displayOrderAlert(pedido);
+    }, 500); // Puedes ajustar entre 300 y 1000 ms si es necesario
 };
 
 // Función auxiliar para obtener la cantidad de productos
 async function obtenerCantidadProductos(pedidoId) {
-    const { data: productos, error } = await supabase
-        .from('pedido_productos')
-        .select('cantidad')
-        .eq('pedido_id', pedidoId);
+    for (let i = 0; i < 5; i++) {
+        const { data: productos, error } = await supabase
+            .from('pedido_productos')
+            .select('cantidad')
+            .eq('pedido_id', pedidoId);
 
-    if (error) throw error;
-    return productos?.reduce((total, item) => total + item.cantidad, 0) || 0;
+        if (error) throw error;
+
+        const total = productos?.reduce((sum, item) => sum + item.cantidad, 0) || 0;
+        if (total > 0) return total;
+
+        await new Promise(resolve => setTimeout(resolve, 300)); // espera antes del siguiente intento
+    }
+    return 0; // Si después de varios intentos sigue en 0
 }
+
+
 
 // Función de alerta modificada
 async function displayOrderAlert(pedido) {
@@ -181,22 +193,22 @@ const showNotification = async (pedido) => {
         const cantidadProductos = await obtenerCantidadProductos(pedido.id);
 
         if (Notification.permission === 'granted') {
-            new Notification('Nuevo Pedido', {
-                body: `Ticket ${pedido.codigo_ticket} - ${cantidadProductos} producto${cantidadProductos !== 1 ? 's' : ''} - Total: $${pedido.total.toFixed(2)}`,
+            new Notification('🧾 Nuevo Pedido', {
+                body: `Ticket: ${pedido.codigo_ticket}\nProductos: ${cantidadProductos}\nTotal: $${pedido.total.toFixed(2)}`,
                 icon: `${configuracionGlobal.logo_url || ''}`
             });
         }
     } catch (error) {
         console.error("Error al mostrar notificación:", error);
-        // Notificación alternativa si falla la consulta
         if (Notification.permission === 'granted') {
-            new Notification('Nuevo Pedido', {
-                body: `Ticket ${pedido.codigo_ticket} - Total: $${pedido.total.toFixed(2)}`,
+            new Notification('🧾 Nuevo Pedido', {
+                body: `Ticket: ${pedido.codigo_ticket}\nTotal: $${pedido.total?.toFixed(2) || '0.00'}`,
                 icon: `${configuracionGlobal.logo_url || ''}`
             });
         }
     }
 };
+
 
 const playNotificationSound = () => {
     const audio = new Audio('../sounds/notificacionM.mp3');
@@ -512,7 +524,6 @@ function actualizarTabla() {
     document.getElementById("total").innerHTML = htmlTotal;
 }
 
-
 // Función para seleccionar una fila y marcarla para eliminar
 function seleccionarFila(row, producto) {
     // Si la fila ya está seleccionada, desmarcarla
@@ -635,6 +646,8 @@ document.getElementById("finalize-btn").addEventListener("click", async function
 
     const pedidoGuardado = await guardarPedido(productosSeleccionados, userId, "empacador");
     if (!pedidoGuardado) return;
+
+    await descontarStockYRegistrarMovimientos(pedidoGuardado.id, pedidoGuardado.codigo_ticket);
 
     const codigoTicket = pedidoGuardado.codigo_ticket;
 
@@ -1583,6 +1596,19 @@ async function manejarCambioEstado(pedidoId, estadoActual, textoElem, iconoElem,
         return;
     }
 
+    // Si se empacó, descontar del inventario
+    if (nuevoEstado === 'empacado') {
+        const { data: pedido } = await supabase
+            .from('pedidos')
+            .select('codigo_ticket')
+            .eq('id', pedidoId)
+            .single();
+
+        if (pedido) {
+            await descontarStockYRegistrarMovimientos(pedidoId, pedido.codigo_ticket);
+        }
+    }
+
     // Actualizar la UI
     configurarEstadoPedido(nuevoEstado, boton, textoElem, iconoElem);
 
@@ -1796,3 +1822,99 @@ document.getElementById('print-ticket-btnP').addEventListener('click', function 
     // Cerrar el modal después de imprimir
     bootstrap.Modal.getInstance(document.getElementById('detallePedidoModalPendiente')).hide();
 });
+
+async function descontarStockYRegistrarMovimientos(pedidoId, codigoTicket) {
+    try {
+        const { data: productosPedido, error } = await supabase
+            .from("pedido_productos")
+            .select("producto_id, cantidad, productos(nombre)")
+            .eq("pedido_id", pedidoId);
+
+        if (error || !productosPedido) throw error;
+
+        for (const item of productosPedido) {
+            // Buscar si ya tiene registro en inventario
+            const { data: inventario, error: invError } = await supabase
+                .from("inventario_productos")
+                .select("id, stock_actual")
+                .eq("producto_id", item.producto_id)
+                .maybeSingle();
+
+            let inventarioProductoId = null;
+            let stockInicial = 0;
+
+            if (invError) throw invError;
+
+            if (!inventario) {
+                // El producto no tiene registro → consideramos stock 0 y creamos nuevo
+                const { data: nuevoInv, error: errorNuevoInv } = await supabase
+                    .from("inventario_productos")
+                    .insert({ producto_id: item.producto_id, stock_actual: 0 })
+                    .select()
+                    .single();
+
+                if (errorNuevoInv) throw errorNuevoInv;
+
+                inventarioProductoId = nuevoInv.id;
+                stockInicial = 0;
+            } else {
+                inventarioProductoId = inventario.id;
+                stockInicial = inventario.stock_actual;
+            }
+
+            const nuevoStock = stockInicial - item.cantidad;
+
+            // Actualizar inventario
+            await supabase
+                .from("inventario_productos")
+                .update({ stock_actual: nuevoStock, updated_at: new Date() })
+                .eq("id", inventarioProductoId);
+
+            // Obtener precio unitario para registrar el movimiento
+            const { data: producto } = await supabase
+                .from("productos")
+                .select("precio_unitario")
+                .eq("id", item.producto_id)
+                .single();
+
+            // Registrar movimiento
+            await supabase.from("movimientos_productos").insert({
+                inventario_producto_id: inventarioProductoId,
+                tipo_movimiento: "salida",
+                cantidad: item.cantidad,
+                stock_resultante: nuevoStock,
+                descripcion: `Empaque del pedido ${codigoTicket}`,
+                costo_unitario: producto?.precio_unitario ?? null,
+            });
+
+            // Mostrar alerta si no había stock
+            if (stockInicial < item.cantidad) {
+                Swal.fire({
+  title: 'Stock insuficiente',
+  text: `${item.productos?.nombre || 'Producto'} quedó con stock negativo.`,
+  icon: 'warning',
+  toast: true,
+  position: 'top-end', // puedes cambiar a 'bottom-start', etc.
+  showConfirmButton: false,
+  timer: 5000,
+  background: '#fff8dc',
+  color: '#654321',
+  didOpen: () => {
+    const swalContainer = Swal.getPopup();
+  //  swalContainer.style.backgroundImage = "url('https://i.imgur.com/Lf5zGdl.png')"; // Fondo suave tipo bodega vacía
+    swalContainer.style.backgroundSize = "cover";
+    swalContainer.style.backgroundRepeat = "no-repeat";
+    swalContainer.style.backgroundPosition = "center";
+    swalContainer.style.border = "1px solid #d0a34f";
+  }
+});
+
+            }
+        }
+
+    } catch (error) {
+        console.error("❌ Error al descontar stock:", error);
+        mostrarToast("❌ Error al actualizar inventario", "error");
+    }
+}
+

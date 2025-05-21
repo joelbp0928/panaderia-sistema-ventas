@@ -1,5 +1,5 @@
 // 📌 Importar Supabase y crear la conexión
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // 📌 Configurar Supabase con las credenciales del proyecto
 const SUPABASE_URL = "https://kicwgxkkayxneguidsxe.supabase.co";  // 🔹 Reemplaza con tu URL

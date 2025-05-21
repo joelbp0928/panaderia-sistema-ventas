@@ -42,7 +42,7 @@ export async function guardarPedido(productosSeleccionados, userId, origen = "em
       promocion_id: prod.promocionAplicada ? prod.promocionAplicada.id : null,
       total: prod.total
     }));
-    console.log(productosDB)
+    
     const { error: errorProductos } = await supabase
       .from("pedido_productos")
       .insert(productosDB);
@@ -115,3 +115,4 @@ export async function generarCodigoTicket(origen = "empacador", userId) {
     folio_secuencial
   };
 }
+
