@@ -264,7 +264,7 @@ function renderizarDesgloseFinal(productos, puntoEquilibrio) {
     <div class="d-flex justify-content-between align-items-center">
       <strong>Desglose por producto:</strong>
       <button class="btn btn-sm btn-outline-secondary d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseBtnId}" aria-expanded="false" aria-controls="${collapseBtnId}">
-        <i class="fas fa-chevron-down me-2 rotate-icon"></i> Ver Detalles
+        <i class="fas fa-chevron-down me-2 rotate-icon"></i> Ver detalles
       </button>
     </div>
     <div class="collapse" id="${collapseBtnId}">
