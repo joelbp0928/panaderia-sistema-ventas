@@ -303,7 +303,7 @@ async function renderizarProductos(productos) {
     let ingredientesAlergicosCliente = [];
     const clienteInfo = getClienteInfo();
 
-    if (clienteInfo?.id) {
+    if (getClienteActivo()) {
         ingredientesAlergicosCliente = await obtenerIngredientesAlergicos(clienteInfo.id);
     }
 
