@@ -371,7 +371,7 @@ async function renderizarProductos(productos) {
                         Inicia sesión para comprar
                     </div>
                     <button class="btn btn-outline-secondary btn-sm ver-detalles" data-index="${index}">
-                        <i class="fas fa-eye me-1"></i> Ver detalles
+                        <i class="fas fa-eye me-1"></i> Ver ingredientes
                     </button>
                 </div>
             </div>

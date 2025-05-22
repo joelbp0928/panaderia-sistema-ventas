@@ -11,7 +11,7 @@ export async function guardarPedido(productosSeleccionados, userId, origen = "em
   const estado = (origen === "empacador" ? "empacado" : "pendiente");
 
   const { codigo_ticket, folio_secuencial } = await generarCodigoTicket(origen, userId);
-  //console.log("Código de ticket generado:", codigo_ticket, folio_secuencial);
+  console.log("Código de ticket generado:", codigo_ticket, folio_secuencial);
   try {
     const pedidoData = {
       fecha: fechaActual,
@@ -107,7 +107,9 @@ export async function generarCodigoTicket(origen = "empacador", userId) {
     console.error("Error al contar pedidos:", error);
     throw new Error("No se pudo generar el código del ticket");
   }
+  console.log("Cantidad de pedidos:", count);
   const folio_secuencial = (count ?? 0) + 1;
+  console.log("Folio secuencial:", folio_secuencial);
   const numeroTicket = folio_secuencial.toString().padStart(3, "0");
 
   // Mezclar user, fecha, folio
