@@ -584,24 +584,26 @@
       </div>
     </div>
 
-    <!-- Modal para seleccionar alergias -->
-    <div id="modal-alergias" class="modal">
-      <div class="modal-contenido">
-        <span class="cerrar-modal" id="cerrar-modal">&times;</span>
-        <h2>
-          Selecciona los ingredientes a los que eres alérgico o no te gusten
-        </h2>
-        <form id="form-alergias">
-          <div id="contenedor-ingredientes">
-            <!-- Aquí se cargarán los checkboxes desde JS -->
-          </div>
+     <div id="modal-preferencias" class="modal">
+  <div class="modal-contenido">
+    <span class="cerrar-modal" id="cerrar-modal-preferencias">&times;</span>
+    <h2>Selecciona tus preferencias</h2>
 
-          <button type="submit" class="btn-guardar">
-            Guardar preferencias
-          </button>
-        </form>
-      </div>
+    <!-- Botones -->
+    <div class="botones-preferencias">
+      <button id="btn-ver-alergias">Alergias</button>
+      <button id="btn-ver-gustos">Gustos</button>
     </div>
+
+    <!-- Contenedor dinámico -->
+    <form id="form-preferencias">
+      <div id="contenedor-preferencias">
+        <!-- Aquí se cargan los checkboxes según el tipo -->
+      </div>
+      <button type="submit" class="btn-guardar" style="display: none;">Guardar</button>
+    </form>
+  </div>
+</div>
 
     <!-- Footer -->
     <footer>
@@ -613,7 +615,10 @@
     />
     <!-- <script src="js/config.js"></script>-->
     <!-- <script src="js/sugerencias.js"></script>-->
+   
     <script src="js/alergias.js"></script>
+    <script type="module" src="js/gustos.js"></script>
+    <script src="js/guardarPreferencia.js"></script> <!-- ← este va al final -->
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script type="module" src="./js/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
