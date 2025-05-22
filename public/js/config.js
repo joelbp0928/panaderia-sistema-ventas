@@ -312,11 +312,11 @@ async function renderizarProductos(productos) {
         const ingredientes = producto.productos_ingredientes?.map(pi => pi.ingredientes) || [];
         const hayAlergia = ingredientes.some(ing => ingredientesAlergicosCliente.includes(ing.id));
 
-const alertaAlergia = hayAlergia
-    ? `<span class="badge bg-danger-subtle text-danger border border-danger-subtle position-absolute top-0 end-0 m-2 shadow-sm" style="font-size: 0.7rem;">
+        const alertaAlergia = hayAlergia
+            ? `<span class="badge bg-danger-subtle text-danger border border-danger-subtle position-absolute top-0 end-0 m-2 shadow-sm" style="font-size: 0.7rem;">
         <i class="fas fa-allergies me-1"></i> Alérgeno
        </span>`
-    : "";
+            : "";
 
 
         const stock = producto.inventario_productos?.[0]?.stock_actual ?? 0;
@@ -407,11 +407,11 @@ const alertaAlergia = hayAlergia
             document.getElementById("modalPrecioProducto").textContent = `$${producto.precio}`;
 
             const ulIngredientes = document.getElementById("modalIngredientes");
-           ulIngredientes.innerHTML = producto.productos_ingredientes?.map(pi => {
-    const ing = pi.ingredientes;
-    const esAlergeno = ing?.id && ingredientesAlergicosCliente.includes(ing.id);
+            ulIngredientes.innerHTML = producto.productos_ingredientes?.map(pi => {
+                const ing = pi.ingredientes;
+                const esAlergeno = ing?.id && ingredientesAlergicosCliente.includes(ing.id);
 
-    return `
+                return `
         <li class="list-group-item d-flex justify-content-between align-items-center">
             <span>
                 <i class="fa-solid fa-circle fa-2xs"></i> ${ing.nombre}
@@ -421,7 +421,7 @@ const alertaAlergia = hayAlergia
                     <i class="fas fa-exclamation-triangle me-1"></i> Alérgeno
                 </span>` : ''}
         </li>`;
-}).join('') || '<li class="list-group-item">Sin ingredientes</li>';
+            }).join('') || '<li class="list-group-item">Sin ingredientes</li>';
 
 
             const modal = new bootstrap.Modal(document.getElementById('modalDetallesProducto'));
