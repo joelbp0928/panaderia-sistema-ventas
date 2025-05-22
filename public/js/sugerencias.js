@@ -1,3 +1,6 @@
+const PROJECT_URL = "https://kicwgxkkayxneguidsxe.supabase.co"; // ← tu URL real
+const API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpY3dneGtrYXl4bmVndWlkc3hlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwNjc2NDgsImV4cCI6MjA1NjY0MzY0OH0.0d-ON6kBYU3Wx3L7-jP-n0wcLYD9Uj0GcxAYULqsDRg"; // ← tu key anon real
+
 import { agregarProductoAlCarrito } from "./cart.js";
 
 let sugerencias = [];
@@ -20,19 +23,19 @@ export async function obtenerSugerencia() {
 
     console.log("Estado: ", data.estado);
 
-     if (data.estado === "sin_historial") {
+    if (data.estado === "sin_historial") {
       const tarjeta = document.getElementById("tarjeta-sugerencia");
       tarjeta.classList.add("oculto");
 
-    setTimeout(() => {
-      tarjeta.innerHTML = `
-        <div style="padding: 10px; text-align: center;">
-          <h3 style="margin-bottom: 10px;"> Aún no hay recomendaciones</h3>
-          <p>Compra minimo 5 panes para poder darte sugerencias deliciosas</p>
-          <i class="fas fa-bread-slice" style="font-size: 40px; color: #a67847;"></i>
-        </div>
-        <br>
-      `;
+  setTimeout(() => {
+    tarjeta.innerHTML = `
+      <div style="padding: 10px; text-align: center;">
+        <h3 style="margin-bottom: 10px;"> Aún no hay recomendaciones</h3>
+        <p>Compra minimo 5 panes para poder darte sugerencias deliciosas</p>
+        <i class="fas fa-bread-slice" style="font-size: 40px; color: #a67847;"></i>
+      </div>
+      <br>
+    `;
     tarjeta.classList.remove("oculto");
     tarjeta.style.display = "flex";
   }, 300);
@@ -41,8 +44,34 @@ export async function obtenerSugerencia() {
 }
 
     // Verifica que venga con el nombre correcto desde el backend
-    sugerencias = data.sugerencias || [];// <-- asegúrate que el backend regrese esto
-    indiceActual = 0;
+    //sugerencias = data.sugerencias || [];// <-- asegúrate que el backend regrese esto
+    //indiceActual = 0;
+    const productosRecomendados = data.sugerencias || [];
+
+// 👉 Obtener gustos desde Supabase
+const gustosRes = await fetch(`${PROJECT_URL}/rest/v1/gustos?cliente_id=eq.${cliente_id}&select=productos_id`, {
+  headers: {
+    apikey: API_KEY,
+    Authorization: `Bearer ${API_KEY}`
+  }
+});
+const gustosData = await gustosRes.json();
+const gustos = gustosData.map(g => g.productos_id);
+
+// 👉 Aplicar afinidad: los productos en gustos van primero
+function priorizarGustos(recomendaciones, gustos) {
+  return recomendaciones.sort((a, b) => {
+    const aGusto = gustos.includes(a.id) ? 1 : 0;
+    const bGusto = gustos.includes(b.id) ? 1 : 0;
+    return bGusto - aGusto; // los que están en gustos van antes
+  });
+}
+
+sugerencias = priorizarGustos(productosRecomendados, gustos);
+indiceActual = 0;
+
+console.log("✅ Sugerencias con afinidad aplicada:", sugerencias);
+
 
     console.log("✅ Sugerencias recibidas:", sugerencias);
 
@@ -96,5 +125,6 @@ function ocultarTarjeta() {
 
  
 //obtenerSugerencia();
+  
   
   
