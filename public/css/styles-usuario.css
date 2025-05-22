@@ -266,7 +266,7 @@ header {
   justify-items: center;
 }
 
-.category-btn {
+.category-btn,#btn-ver-alergias,#btn-ver-gustos {
   padding: 1rem;
   background-color: var(--primary-color);
   color: var(--blanco);
@@ -281,7 +281,7 @@ header {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }
 
-.category-btn:hover {
+.category-btn:hover,#btn-ver-alergias:hover,#btn-ver-gustos:hover {
   background-color: var(--primary-color-obscuro);
   border-color: var(--primary-color-obscuro);
   transform: translateY(-2px) !important;
@@ -289,13 +289,12 @@ header {
 }
 
 /* 💥 Active: animación de clic */
-.category-btn:active {
+.category-btn:active,#btn-ver-alergias:active,#btn-ver-gustos:active {
   transform: scale(0.96) !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
   background-color: var(--primary-color);
   color: white;
 }
-
 .category-btn.active {
   background-color: var(--primary-color-obscuro);
   transform: translateY(-2px);
