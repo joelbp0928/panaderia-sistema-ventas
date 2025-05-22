@@ -18,14 +18,17 @@ document.addEventListener('DOMContentLoaded', function () {
     cargarCategorias();
 
     // Escuchar cambios en tiempo real del input
+    // Corrección en el event listener del input
     const inputBusqueda = document.getElementById("busqueda-productos");
-    if (!inputBusqueda) {
-      //  console.log("Elemento busqueda-productos no encontrado - omitiendo carga de barra de busqueda de productos");
-        return;
-    }else{
-        inputBusqueda.addEventListener("input", async function () {
-            const termino = inputBusqueda.value.trim().toLowerCase();
-            buscarProductos(termino);
+    if (inputBusqueda) {
+        // Usar debounce para evitar múltiples llamadas
+        let timeout;
+        inputBusqueda.addEventListener("input", (e) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                const termino = e.target.value.trim();
+                buscarProductos(termino);
+            }, 300);
         });
     }
 
@@ -40,7 +43,7 @@ async function cargarPromociones() {
 
         // Verificar si los elementos existen
         if (!promotionsSection || !promoCarousel || !promoSlider) {
-           // console.log("Elementos de promociones no encontrados - omitiendo carga");
+            // console.log("Elementos de promociones no encontrados - omitiendo carga");
             return;
         }
 
@@ -70,12 +73,12 @@ async function cargarPromociones() {
             const slide = document.createElement("div");
             slide.classList.add("carousel-item");
             if (index === 0) slide.classList.add("active");
-          
+
             const hoy = new Date();
             const expira = new Date(promocion.fecha_expiracion);
             const diasRestantes = Math.ceil((expira - hoy) / (1000 * 60 * 60 * 24));
             const esUltimosDias = diasRestantes <= 3;
-          
+
             slide.innerHTML = `
               <img src="${promocion.imagen_url}" 
                    class="d-block w-100" 
@@ -87,7 +90,7 @@ async function cargarPromociones() {
               </div>
             `;
             promoSlider.appendChild(slide);
-          });
+        });
 
         // 6. Inicializar el carrusel (si usa Bootstrap)
         new bootstrap.Carousel(promoCarousel);
@@ -120,6 +123,7 @@ export async function cargarProductos() {
             cantidad_usada,
             ingrediente_id,
             ingredientes:ingrediente_id (
+              id,
               nombre,
               medida
             )
@@ -129,7 +133,6 @@ export async function cargarProductos() {
           )
         `)
             .order("id", { ascending: true });
-
 
         if (error) throw error;
 
@@ -153,8 +156,8 @@ export async function cargarConfiguracion() {
             .single();
 
         if (error) throw error;
-        
-        configuracionGlobal = data; 
+
+        configuracionGlobal = data;
         //window.configuracionGlobal = data; // Guarda los datos en una variable global accesible
 
         // Actualizar logo
@@ -199,7 +202,7 @@ function aplicarColorPrimario(color) {
 async function cargarCategorias() {
     const categoryButtonsContainer = document.getElementById("category-buttons");
     if (!categoryButtonsContainer) {
-      //  console.log("Elemento category-buttons no encontrado - omitiendo carga de Categorias");
+        //  console.log("Elemento category-buttons no encontrado - omitiendo carga de Categorias");
         return;
     }
     try {
@@ -266,6 +269,7 @@ async function toggleCategory(categoryId) {
                 cantidad_usada,
                 ingrediente_id,
                 ingredientes:ingrediente_id (
+                  id,
                   nombre,
                   medida
                 )
@@ -284,16 +288,37 @@ async function toggleCategory(categoryId) {
     }
 }
 
-function renderizarProductos(productos) {
+async function renderizarProductos(productos) {
     const productsList = document.getElementById('products-list');
+    // Limpiar listeners antiguos
+    productsList.querySelectorAll('button').forEach(btn => {
+        btn.replaceWith(btn.cloneNode(true));
+    });
     productsList.innerHTML = '';
 
     if (!productos || productos.length === 0) {
         productsList.innerHTML = "<p>No hay productos en esta categoría.</p>";
         return;
     }
+    let ingredientesAlergicosCliente = [];
+    const clienteInfo = getClienteInfo();
+
+    if (clienteInfo?.id) {
+        ingredientesAlergicosCliente = await obtenerIngredientesAlergicos(clienteInfo.id);
+    }
 
     productos.forEach((producto, index) => {
+        // Verificar si algún ingrediente es alérgeno
+        const ingredientes = producto.productos_ingredientes?.map(pi => pi.ingredientes) || [];
+        const hayAlergia = ingredientes.some(ing => ingredientesAlergicosCliente.includes(ing.id));
+
+const alertaAlergia = hayAlergia
+    ? `<span class="badge bg-danger-subtle text-danger border border-danger-subtle position-absolute top-0 end-0 m-2 shadow-sm" style="font-size: 0.7rem;">
+        <i class="fas fa-allergies me-1"></i> Alérgeno
+       </span>`
+    : "";
+
+
         const stock = producto.inventario_productos?.[0]?.stock_actual ?? 0;
         let badgeStock = '';
         if (stock > 7) {
@@ -318,12 +343,16 @@ function renderizarProductos(productos) {
 
         productCard.innerHTML = `
         <div class="card product-card shadow-sm h-100">
-            <img src="${producto.imagen_url}" class="card-img-top img-fluid rounded-top" alt="${producto.nombre}" loading="lazy">
+            <div class="position-relative">
+    ${alertaAlergia}
+    <img src="${producto.imagen_url}" class="card-img-top img-fluid rounded-top" alt="${producto.nombre}" loading="lazy">
+</div>
+
             <div class="card-body d-flex flex-column justify-content-between">
                 <h5 class="card-title nombre-producto nombre-producto" title="${producto.nombre}">${producto.nombre}</h5>
                <p class="card-text fw-bold text-success">$${producto.precio}</p>
                 ${mostrarStock}
-
+                
                 <div class="d-flex align-items-center justify-content-center mb-2 ${mostrarCantidad}">
                     <button class="btn btn-outline-secondary btn-sm me-2 cantidad-btn" data-index="${index}" data-action="restar">
                         <i class="fas fa-minus"></i>
@@ -378,10 +407,22 @@ function renderizarProductos(productos) {
             document.getElementById("modalPrecioProducto").textContent = `$${producto.precio}`;
 
             const ulIngredientes = document.getElementById("modalIngredientes");
-            ulIngredientes.innerHTML = producto.productos_ingredientes?.map(pi => {
-                const ing = pi.ingredientes;
-                return `<li class="list-group-item">${ing.nombre}</li>`;
-            }).join('') || '<li class="list-group-item">Sin ingredientes</li>';
+           ulIngredientes.innerHTML = producto.productos_ingredientes?.map(pi => {
+    const ing = pi.ingredientes;
+    const esAlergeno = ing?.id && ingredientesAlergicosCliente.includes(ing.id);
+
+    return `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>
+                <i class="fa-solid fa-circle fa-2xs"></i> ${ing.nombre}
+            </span>
+            ${esAlergeno ? `
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                    <i class="fas fa-exclamation-triangle me-1"></i> Alérgeno
+                </span>` : ''}
+        </li>`;
+}).join('') || '<li class="list-group-item">Sin ingredientes</li>';
+
 
             const modal = new bootstrap.Modal(document.getElementById('modalDetallesProducto'));
             modal.show();
@@ -393,90 +434,141 @@ function renderizarProductos(productos) {
             const index = e.currentTarget.dataset.index;
             const producto = productos[index];
             const cantidad = parseInt(document.getElementById(`cantidad-${index}`).textContent);
-            
+
             if (!producto?.id || isNaN(cantidad) || cantidad < 1) {
                 mostrarToast("❌ Algo salió mal al agregar el producto", "error");
                 return;
-              }
-              
+            }
+
             if (cantidad > 0 && producto?.id) {
                 agregarProductoAlCarrito(producto.id, cantidad);
-               // console.log("aqui en el cart", producto.id, cantidad)
+                // console.log("aqui en el cart", producto.id, cantidad)
             }
         });
     });
 
 }
 
+async function obtenerIngredientesAlergicos(clienteId) {
+    const { data, error } = await supabase
+        .from("alergias")
+        .select("ingrediente_id")
+        .eq("cliente_id", clienteId);
+
+    if (error) {
+        console.error("❌ Error al obtener alergias", error);
+        return [];
+    }
+
+    return data.map(a => a.ingrediente_id);
+}
+
+
 async function buscarProductos(termino) {
     try {
+        // Limpiar resultados anteriores inmediatamente
+        const productsList = document.getElementById("products-list");
+        if (!productsList) return;
+
+        productsList.innerHTML = '<div class="col-12 text-center"><div class="spinner-border text-primary" role="status"></div></div>';
+
+        // Ocultar secciones adicionales
+        const seccionesOcultar = ["promotions", "titulo-recomendacion", "tarjeta-sugerencia"];
+        seccionesOcultar.forEach(id => document.getElementById(id)?.classList.add("d-none"));
+
+        // Si el término está vacío, mostrar todos los productos
+        if (!termino.trim()) {
+            await cargarProductos();
+            return;
+        }
+
         const { data, error } = await supabase
             .from("productos")
             .select(`
-                    id,
-                    nombre,
-                    precio,
-                    imagen_url,
-                    categoria_id,
-                    categorias (
-                    visible_cliente
-                    ),
-                    productos_ingredientes (
+                id,
+                nombre,
+                precio,
+                imagen_url,
+                categoria_id,
+                categorias (visible_cliente),
+                productos_ingredientes (
                     cantidad_usada,
                     ingrediente_id,
-                    ingredientes:ingrediente_id (
-                        nombre,
-                        medida
-                    )
-                    ),
-                    inventario_productos (
-                    stock_actual
-                    )
-                `);
+                    ingredientes:ingrediente_id (id, nombre, medida)
+                ),
+                inventario_productos (stock_actual)
+            `);
 
         if (error) throw error;
 
         const productosVisibles = data.filter(producto =>
             producto.categorias?.visible_cliente === true
         );
-        // 🔍 Aplica búsqueda
+
+        // Búsqueda case-insensitive
+        const terminoLower = termino.toLowerCase();
         const resultados = productosVisibles.filter(producto => {
             const nombreProducto = producto.nombre.toLowerCase();
-            const matchNombre = nombreProducto.includes(termino);
+            const matchNombre = nombreProducto.includes(terminoLower);
 
             const matchIngrediente = producto.productos_ingredientes?.some(pi =>
-                pi.ingredientes?.nombre?.toLowerCase().includes(termino)
+                pi.ingredientes?.nombre?.toLowerCase().includes(terminoLower)
             );
 
             return matchNombre || matchIngrediente;
         });
 
-        // 🔹 Ocultar promociones y sugerencias al buscar
-        const seccionesOcultar = ["promotions", "titulo-recomendacion", "tarjeta-sugerencia"];
-        seccionesOcultar.forEach(id => document.getElementById(id)?.classList.add("d-none"));
-
-        // 🔹 Mostrar mensaje si no hay coincidencias
-        const productsList = document.getElementById("products-list");
+        // Mostrar mensaje si no hay resultados
         if (resultados.length === 0) {
             productsList.innerHTML = `
-              <div class="col-12 text-center animate__animated animate__fadeIn">
-                <p class="text-muted fs-5 mt-4"><i class="fas fa-search-minus me-2"></i>No hay coincidencias con "<strong>${termino}</strong>"</p>
-              </div>`;
+                <div class="col-12 text-center animate__animated animate__fadeIn">
+                    <p class="text-muted fs-5 mt-4">
+                        <i class="fas fa-search-minus me-2"></i>
+                        No hay coincidencias con "<strong>${termino}</strong>"
+                    </p>
+                </div>`;
             return;
         }
 
-        // 🔹 Resaltado visual del término buscado en el nombre del producto
-        resultados.forEach(producto => {
-            const regex = new RegExp(`(${termino})`, 'gi');
-            producto.nombre = producto.nombre.replace(regex, '<mark>$1</mark>');
-        });
+        // Resaltar término de búsqueda
+        const resultadosConResaltado = resultados.map(producto => ({
+            ...producto,
+            nombre: producto.nombre.replace(
+                new RegExp(`(${escapeRegExp(termino)})`, 'gi'),
+                '<mark>$1</mark>'
+            )
+        }));
 
-        renderizarProductos(resultados);
+        // Renderizar una sola vez
+        await renderizarProductos(resultadosConResaltado);
 
-        // 🔹 Scroll suave a productos
-        document.getElementById("products").scrollIntoView({ behavior: "smooth" });
+        // Scroll suave
+        document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
+
     } catch (error) {
-        console.error("Error al buscar productos:", error.message);
+        console.error("Error al buscar productos:", error);
+        const productsList = document.getElementById("products-list");
+        if (productsList) {
+            productsList.innerHTML = `
+                <div class="col-12 text-center text-danger">
+                    Error al cargar los resultados
+                </div>`;
+        }
     }
 }
 
+
+
+// Función auxiliar para escapar caracteres especiales en regex
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function getClienteInfo() {
+    try {
+        const cliente = JSON.parse(localStorage.getItem("cliente"));
+        return cliente && typeof cliente === 'object' && cliente.id ? cliente : null;
+    } catch (e) {
+        return null;
+    }
+}

@@ -145,6 +145,11 @@ export async function verificarSesionCliente() {
             return false; // Retorna false cuando no hay sesión
         }
 
+        if (userId) {
+            localStorage.setItem("cliente", JSON.stringify({ id: userId }));
+        }
+        console.log("🟢 Sesión cliente verificada:", userId);
+
         actualizarHeaderCliente(userData.nombre);
         setClienteActivo(true);
         return true; // Retorna true cuando hay cliente verificado
