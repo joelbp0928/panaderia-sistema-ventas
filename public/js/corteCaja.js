@@ -1,8 +1,8 @@
 import { supabase } from './supabase-config.js';
 import { getLocalDateString, getCDMXISOString } from './dateLocalDate.js';
 import { configuracionGlobal } from './config.js';
+
 // Al cargar la aplicación
-// Al inicio de la aplicación
 document.addEventListener('DOMContentLoaded', async () => {
   // Mostrar spinner
   // Simplemente usa new Date() para obtener la hora local del cliente
@@ -21,21 +21,49 @@ document.addEventListener('DOMContentLoaded', async () => {
   sincronizarLocalStorageConBase();
   // Verificar caja
   const today = getLocalDateString();
-  const { data: ultimoCorte } = await supabase
+  // Obtener el ID del empleado actual desde la sesión ANTES de consultar cobros
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  const usuarioId = sessionData?.session?.user?.id;
+
+  if (sessionError || !usuarioId) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al obtener el empleado',
+      text: 'Hubo un problema al obtener el ID del empleado. Por favor, verifica tu sesión.',
+    });
+    return;
+  }
+
+  const { data: ultimoCorte, error: errorCorte } = await supabase
     .from('cortes_caja')
     .select('id, cerrado')
+    .eq('empleado_id', usuarioId)
     .gte('fecha', `${today}T00:00:00`)
     .lte('fecha', `${today}T23:59:59`)
     .order('fecha', { ascending: false })
     .limit(1);
 
+  if (errorCorte) {
+    console.error("Error al consultar cortes de caja:", errorCorte);
+  } else if (!ultimoCorte || ultimoCorte.length === 0) {
+    console.log("No se encontró ningún corte de caja para hoy.");
+  } else {
+    console.log(`Último corte encontrado: ID=${ultimoCorte[0].id}, cerrado=${ultimoCorte[0].cerrado}`);
+    if (ultimoCorte[0].cerrado) {
+      console.log("El último corte está CERRADO → No hay caja abierta.");
+    } else {
+      console.log("El último corte está ABIERTO → Hay caja abierta.");
+    }
+  }
+
+
   if (!ultimoCorte || ultimoCorte.length === 0 || ultimoCorte[0].cerrado) {
     // No hay caja abierta → mostrar modal de apertura
     console.log("No hay caja abierta → mostrar modal de apertura")
     // Habilitar operaciones
-    document.querySelectorAll('.btn-cobro').forEach(btn => {
-      btn.disabled = true;
-    });
+    /* document.querySelectorAll('.btn-cobro').forEach(btn => {
+       btn.disabled = true;
+     });*/
     //  await bloquearOperacionesSiCajaCerrada();
     await abrirCajaConFondo();
   }
@@ -58,6 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { data: corteActual } = await supabase
       .from('cortes_caja')
       .select('id, cerrado')
+      .eq('empleado_id', usuarioId)
       .gte('fecha', `${today}T00:00:00`)
       .lte('fecha', `${today}T23:59:59`)
       .order('fecha', { ascending: false })
@@ -90,10 +119,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function actualizarBotonCorteCaja() {
   const today = getLocalDateString();
   const btn = document.getElementById("corte-caja-btn");
+  // Obtener el ID del empleado actual desde la sesión ANTES de consultar cobros
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  const usuarioId = sessionData?.session?.user?.id;
+
+  if (sessionError || !usuarioId) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al obtener el empleado',
+      text: 'Hubo un problema al obtener el ID del empleado. Por favor, verifica tu sesión.',
+    });
+    return;
+  }
 
   const { data: corteHoy, error } = await supabase
     .from('cortes_caja')
     .select('cerrado')
+    .eq('empleado_id', usuarioId)
     .gte('fecha', `${today}T00:00:00`)
     .lte('fecha', `${today}T23:59:59`)
     .order('fecha', { ascending: false })
@@ -120,12 +162,26 @@ export async function verificarEstadoCaja() {
   // Verificar en localStorage primero para rapidez
   const cajaAbierta = localStorage.getItem('cajaAbierta') === 'true';
   console.log(cajaAbierta)
+  // Obtener el ID del empleado actual desde la sesión ANTES de consultar cobros
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  const usuarioId = sessionData?.session?.user?.id;
+
+  if (sessionError || !usuarioId) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al obtener el empleado',
+      text: 'Hubo un problema al obtener el ID del empleado. Por favor, verifica tu sesión.',
+    });
+    return;
+  }
+
   if (!cajaAbierta) {
     // Verificar en la base de datos por si acaso
     const today = getLocalDateString();
     const { data, error } = await supabase
       .from('cortes_caja')
       .select('id')
+      .eq('empleado_id', usuarioId)
       .gte('fecha', `${today}T00:00:00`)
       .lte('fecha', `${today}T23:59:59`)
       .order('fecha', { ascending: false }) // 👈 importante
@@ -175,9 +231,7 @@ export async function bloquearOperacionesSiCajaCerrada() {
   }
   const cajaAbierta = await verificarEstadoCaja();
 
-  console.log(verificarEstadoCaja())
-  console.log(!verificarEstadoCaja())
-  if (cajaAbierta) {
+  if (!cajaAbierta) {
     // Modal mejorado con más opciones
     Swal.fire({
       icon: 'error',
@@ -200,9 +254,9 @@ export async function bloquearOperacionesSiCajaCerrada() {
           const abrioCaja = await abrirCajaConFondo(true);
           if (abrioCaja) {
             Swal.close();
-            document.querySelectorAll('.btn-cobro').forEach(btn => {
-              btn.disabled = false;
-            });
+            /*  document.querySelectorAll('.btn-cobro').forEach(btn => {
+                btn.disabled = false;
+              });*/
           }
         });
 
@@ -213,9 +267,9 @@ export async function bloquearOperacionesSiCajaCerrada() {
     });
 
     // Deshabilitar operaciones
-    document.querySelectorAll('.btn-cobro').forEach(btn => {
-      btn.disabled = true;
-    });
+    /* document.querySelectorAll('.btn-cobro').forEach(btn => {
+       btn.disabled = true;
+     });*/
 
     return true;
   }
@@ -225,11 +279,24 @@ export async function bloquearOperacionesSiCajaCerrada() {
 // Función para abrir caja con fondo inicial
 export async function abrirCajaConFondo(force = false) {
   const today = getLocalDateString();
+  // Obtener el ID del empleado actual desde la sesión ANTES de consultar cobros
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  const usuarioId = sessionData?.session?.user?.id;
+
+  if (sessionError || !usuarioId) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al obtener el empleado',
+      text: 'Hubo un problema al obtener el ID del empleado. Por favor, verifica tu sesión.',
+    });
+    return;
+  }
 
   // Verificar si ya hay caja abierta hoy
   const { data: corteExistente } = await supabase
     .from('cortes_caja')
     .select('id, cerrado')
+    .eq('empleado_id', usuarioId)
     .gte('fecha', `${today}T00:00:00`)
     .lte('fecha', `${today}T23:59:59`)
     .order('fecha', { ascending: false })
@@ -289,24 +356,21 @@ export async function abrirCajaConFondo(force = false) {
     return;
   }
 
-  // Obtener el ID del empleado actual desde la sesión
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  const usuarioId = sessionData?.session?.user?.id;
   // Obtener fecha actual en zona horaria de CDMX
-const fechaCDMX = new Date().toLocaleString('es-MX', {
-  timeZone: 'America/Mexico_City',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hour12: false // Para formato 24 horas
-});
+  const fechaCDMX = new Date().toLocaleString('es-MX', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false // Para formato 24 horas
+  });
 
-// Convertir a formato ISO 8601 para PostgreSQL
-const partes = fechaCDMX.match(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}):(\d{2}):(\d{2})/);
-const fechaISO = `${partes[3]}-${partes[2]}-${partes[1]}T${partes[4]}:${partes[5]}:${partes[6]}`;
+  // Convertir a formato ISO 8601 para PostgreSQL
+  const partes = fechaCDMX.match(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}):(\d{2}):(\d{2})/);
+  const fechaISO = `${partes[3]}-${partes[2]}-${partes[1]}T${partes[4]}:${partes[5]}:${partes[6]}`;
 
   // Resto del código de inserción...
   const { data, error } = await supabase
@@ -320,7 +384,7 @@ const fechaISO = `${partes[3]}-${partes[2]}-${partes[1]}T${partes[4]}:${partes[5
       salidas_caja: 0,
       saldo_final: formValues.fondoInicial,
       empleado_id: usuarioId,
-      observaciones: `${formValues.observaciones || 'Sin observaciones'}`,
+      observaciones: `Apertura: ${formValues.observaciones || 'Sin observaciones: apertura'}`,
       cerrado: false
     }])
     .select();
@@ -356,7 +420,6 @@ const fechaISO = `${partes[3]}-${partes[2]}-${partes[1]}T${partes[4]}:${partes[5
     imprimirCorteDeCaja(data[0], nombreEmpleado);
   }
 
-
   // Actualizar estado en localStorage
   localStorage.setItem('cajaAbierta', 'true');
   localStorage.setItem('ultimoCorteId', data[0].id);
@@ -364,9 +427,9 @@ const fechaISO = `${partes[3]}-${partes[2]}-${partes[1]}T${partes[4]}:${partes[5
   localStorage.setItem('fechaCorte', today);
 
   // Habilitar operaciones
-  document.querySelectorAll('.btn-cobro').forEach(btn => {
-    btn.disabled = false;
-  });
+  /*  document.querySelectorAll('.btn-cobro').forEach(btn => {
+      btn.disabled = false;
+    });*/
 
   return true;
 }
@@ -375,10 +438,22 @@ const fechaISO = `${partes[3]}-${partes[2]}-${partes[1]}T${partes[4]}:${partes[5
 export async function registrarCorteCaja() {
   // Verificar si hay caja abierta
   const today = getLocalDateString();
+  // Obtener el ID del empleado actual desde la sesión ANTES de consultar cobros
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  const usuarioId = sessionData?.session?.user?.id;
 
+  if (sessionError || !usuarioId) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al obtener el empleado',
+      text: 'Hubo un problema al obtener el ID del empleado. Por favor, verifica tu sesión.',
+    });
+    return;
+  }
   const { data: cortesAbiertos, error: errorCortes } = await supabase
     .from('cortes_caja')
     .select('id, fondo_inicial')
+    .eq('empleado_id', usuarioId)
     .gte('fecha', `${today}T00:00:00`)
     .lte('fecha', `${today}T23:59:59`)
     .is('cerrado', false)
@@ -401,10 +476,12 @@ export async function registrarCorteCaja() {
   const { data: cobros, error: errorCobros } = await supabase
     .from('historial_cobros')
     .select('pedido_id')
+    .eq('empleado_cobro_id', usuarioId)
     .gte('fecha_cobro', `${today}T00:00:00`)
     .lte('fecha_cobro', `${today}T23:59:59`);
 
   if (errorCobros) {
+    console.error("Error al obtener cobros:", errorCobros);
     Swal.fire({
       icon: 'error',
       title: 'Error al obtener cobros',
@@ -433,19 +510,6 @@ export async function registrarCorteCaja() {
 
   // Sumar los montos de las ventas realizadas hoy
   const montoVentas = pedidos.reduce((total, pedido) => total + pedido.total, 0);
-
-  // Obtener el ID del empleado actual desde la sesión
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  const usuarioId = sessionData?.session?.user?.id;
-  console.log(usuarioId)
-  if (sessionError || !usuarioId) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Error al obtener el empleado',
-      text: 'Hubo un problema al obtener el ID del empleado. Por favor, verifica tu sesión.',
-    });
-    return;
-  }
 
   // Mostrar el modal para registrar el corte de caja
   const { value: formValues } = await Swal.fire({
@@ -502,7 +566,6 @@ export async function registrarCorteCaja() {
   const salidasCaja = parseFloat(formValues.salidasCaja) || 0;
   const observaciones = formValues.observaciones;
 
-
   // Calculamos el saldo final
   const saldoFinal = montoVentas - salidasCaja;
   const cajaEsperada = corteAbierto.fondo_inicial + montoVentas + ingresosAdicionales - salidasCaja;
@@ -538,21 +601,21 @@ export async function registrarCorteCaja() {
     });
     return;
   }
-// Obtener fecha actual en zona horaria de CDMX
-const fechaCDMX = new Date().toLocaleString('es-MX', {
-  timeZone: 'America/Mexico_City',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hour12: false // Para formato 24 horas
-});
+  // Obtener fecha actual en zona horaria de CDMX
+  const fechaCDMX = new Date().toLocaleString('es-MX', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false // Para formato 24 horas
+  });
 
-// Convertir a formato ISO 8601 para PostgreSQL
-const partes = fechaCDMX.match(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}):(\d{2}):(\d{2})/);
-const fechaISO = `${partes[3]}-${partes[2]}-${partes[1]}T${partes[4]}:${partes[5]}:${partes[6]}`;
+  // Convertir a formato ISO 8601 para PostgreSQL
+  const partes = fechaCDMX.match(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}):(\d{2}):(\d{2})/);
+  const fechaISO = `${partes[3]}-${partes[2]}-${partes[1]}T${partes[4]}:${partes[5]}:${partes[6]}`;
   // Insertamos el corte de caja en la base de datos
   try {
     const { data, error } = await supabase
@@ -566,7 +629,7 @@ const fechaISO = `${partes[3]}-${partes[2]}-${partes[1]}T${partes[4]}:${partes[5
         salidas_caja: salidasCaja,
         saldo_final: saldoFinal,
         empleado_id: usuarioId,
-        observaciones: `${observaciones || 'Sin observaciones'}`,
+        observaciones: `Cierre: ${observaciones || 'Cierre: Sin observaciones'}`,
         cerrado: true
       }])
       .select();
@@ -656,7 +719,6 @@ function imprimirCorteDeCaja(corte, nombreEmpleado) {
     ventanaImpresion.close();  // Cerrar la ventana después de la impresión
   }, 1000); // Espera 1 segundo para que el contenido se cargue
 }
-
 
 function generarHTMLCorteDeCaja(corte, nombreEmpleado) {
   const fecha = getCDMXISOString();
@@ -758,9 +820,23 @@ function generarHTMLCorteDeCaja(corte, nombreEmpleado) {
 
 export async function sincronizarLocalStorageConBase() {
   const today = getLocalDateString();
+  // Obtener el ID del empleado actual desde la sesión ANTES de consultar cobros
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  const usuarioId = sessionData?.session?.user?.id;
+
+  if (sessionError || !usuarioId) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al obtener el empleado',
+      text: 'Hubo un problema al obtener el ID del empleado. Por favor, verifica tu sesión.',
+    });
+    return;
+  }
+
   const { data, error } = await supabase
     .from('cortes_caja')
     .select('id, cerrado')
+    .eq('empleado_id', usuarioId)
     .gte('fecha', `${today}T00:00:00`)
     .lte('fecha', `${today}T23:59:59`)
     .order('fecha', { ascending: false })
@@ -787,45 +863,69 @@ document.getElementById("open-history-cortes-btn").addEventListener("click", asy
   historial.show();
 });
 
-
 // Función para cargar los cortes de caja del historial
 export async function cargarHistorialCortes() {
+  // Obtener el ID del empleado actual desde la sesión ANTES de consultar cobros
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  const usuarioId = sessionData?.session?.user?.id;
+
+  if (sessionError || !usuarioId) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al obtener el empleado',
+      text: 'Hubo un problema al obtener el ID del empleado. Por favor, verifica tu sesión.',
+    });
+    return;
+  }
+
   const { data, error } = await supabase
     .from("cortes_caja")
     .select("*")
+    .eq('empleado_id', usuarioId)
     .order("fecha", { ascending: false })
     .limit(30); // 🔢 limitar resultados
-
-
 
   if (error) {
     console.error("Error al cargar cortes:", error);
     return;
   }
 
+  const contenedor = document.getElementById('contenedorHistorialCortes');
+  contenedor.innerHTML = ''; // Limpiar antes de mostrar
+
+  if (!data || data.length === 0) {
+    // Mostrar mensaje cuando no hay cortes
+    contenedor.innerHTML = `
+      <div class="alert alert-info text-center my-4">
+        <i class="fas fa-info-circle me-2"></i>
+        No se encontraron cortes de caja para tu usuario.
+      </div>
+    `;
+    return;
+  }
+
+  // Si hay cortes, los mostramos
   data.forEach(corte => {
     const card = document.createElement('div');
     card.className = 'col-12';
     card.innerHTML = `
-    <div class="card shadow-sm rounded-4 p-3 bg-light historal-corte-card" style="cursor:pointer" data-id="${corte.id}">
-      <div class="d-flex justify-content-between">
-        <div>
-          <div class="fw-bold">${new Date(corte.fecha).toLocaleString()}</div>
-          <div class="text-muted">${corte.cerrado ? '🟥 Cierre de Caja' : '🟩 Apertura de Caja'}</div>
-        </div>
-        <div class="text-end">
-          <div><i class="fa-solid fa-coins"></i> $${corte.saldo_final.toFixed(2)}</div>
-          <div><i class="fa-solid fa-sack-dollar"></i> $${corte.monto_ventas.toFixed(2)}</div>
+      <div class="card shadow-sm rounded-4 p-3 bg-light historal-corte-card" style="cursor:pointer" data-id="${corte.id}">
+        <div class="d-flex justify-content-between">
+          <div>
+            <div class="fw-bold">${new Date(corte.fecha).toLocaleString()}</div>
+            <div class="text-muted">${corte.cerrado ? '🟥 Cierre de Caja' : '🟩 Apertura de Caja'}</div>
+          </div>
+          <div class="text-end">
+            <div><i class="fa-solid fa-coins"></i> $${corte.saldo_final.toFixed(2)}</div>
+            <div><i class="fa-solid fa-sack-dollar"></i> $${corte.monto_ventas.toFixed(2)}</div>
+          </div>
         </div>
       </div>
-    </div>
-  `;
+    `;
     card.querySelector('.historal-corte-card').addEventListener('click', () => verDetalleCorte(corte.id));
-    contenedorHistorialCortes.appendChild(card);
+    contenedor.appendChild(card);
   });
-
 }
-
 
 // Cargar detalles del corte de caja
 window.verDetalleCorte = async function (corteId) {
@@ -833,6 +933,7 @@ window.verDetalleCorte = async function (corteId) {
     .from("cortes_caja")
     .select("*")
     .eq("id", corteId)
+   // .eq('empleado_id', usuarioId)
     .single();
 
   if (error) {

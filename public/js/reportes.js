@@ -58,7 +58,8 @@ export async function cargarReportePuntoEquilibrio() {
       const cantidadVendida = ventasPorProducto[p.id] || 0;
       const ingreso = cantidadVendida * (p.precio ?? 0);
       const costoVariable = cantidadVendida * (p.precio_unitario ?? 0);
-      const margenContribucion = ingreso - costoVariable;
+      const margenContribucion = p.precio - p.precio_unitario;
+      console.log(margenContribucion, p.precio, p.precio_unitario);
       const proporcion = totalVentasReales > 0 ? ingreso / totalVentasReales : 0;
 
       return {
@@ -234,7 +235,7 @@ function agregarSugerencia(tipo = "info", icono = "fas fa-info-circle", htmlText
 
 // Modal para mostrar sugerencias (puede llamarse desde botón)
 document.getElementById("btn-ver-sugerencias")?.addEventListener("click", () => {
-   // console.log("📦 Sugerencias actuales:", sugerenciasHtml);
+  // console.log("📦 Sugerencias actuales:", sugerenciasHtml);
 
   Swal.fire({
     title: "Sugerencias del sistema",
@@ -292,8 +293,6 @@ function renderizarDesgloseFinal(productos, puntoEquilibrio) {
     rotateIcon.classList.remove("rotado");
   });
 }
-
-
 
 
 function renderizarTablaProductos(productos) {

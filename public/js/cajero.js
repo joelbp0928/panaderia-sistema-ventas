@@ -177,7 +177,7 @@ window.onload = async function () {
   await verificarSesion();
   cargarConfiguracion();
   configurarBotonesPago();
-
+/*
   // Verificar estado de caja al cargar
   const cajaAbierta = await verificarEstadoCaja();
   console.log(cajaAbierta)
@@ -189,7 +189,7 @@ window.onload = async function () {
       // Si no abrió caja, bloquear operaciones
       await bloquearOperacionesSiCajaCerrada();
     }
-  }
+  }*/
 
   // Ocultar el spinner cuando se haya cargado todo
   document.getElementById("loading-spinner").style.display = "none";
@@ -468,8 +468,22 @@ function configurarBotonesPago() {
     });
   });
 
-  document.getElementById('submit-payment').addEventListener('click', procesarPago);
+  // document.getElementById('submit-payment').addEventListener('click', procesarPago);
 }
+document.getElementById('submit-payment').addEventListener('click', async (e) => {
+  //const btn = document.getElementById('submit-payment');
+  const estadoCaja = await verificarEstadoCaja();
+  console.log("Estado de caja:", estadoCaja);
+  if (!estadoCaja) {
+    console.log("Botón está deshabilitado, mostrar mensaje corte de caja");
+    await bloquearOperacionesSiCajaCerrada();
+  } else {
+    console.log("Botón está habilitado, continuar con el pago",estadoCaja);
+    // Ejecutar la acción normal de pago
+    procesarPago();
+  }
+});
+
 
 async function procesarPago() {
   // Validar si no hay ticket ingresado
