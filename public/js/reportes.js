@@ -58,22 +58,39 @@ export async function cargarReportePuntoEquilibrio() {
       const cantidadVendida = ventasPorProducto[p.id] || 0;
       const ingreso = cantidadVendida * (p.precio ?? 0);
       const costoVariable = cantidadVendida * (p.precio_unitario ?? 0);
-      const margenContribucion = p.precio - p.precio_unitario;
+      //  const margenContribucion = p.precio - p.precio_unitario;
+      const margenUnitario = (p.precio ?? 0) - (p.precio_unitario ?? 0);
+      const margenContribucion = margenUnitario * cantidadVendida;
+      //  const margenContribucion = ingreso - costoVariable;
       console.log(margenContribucion, p.precio, p.precio_unitario);
+      //   const proporcion = totalVentasReales > 0 ? ingreso / totalVentasReales : 0;
+
       const proporcion = totalVentasReales > 0 ? ingreso / totalVentasReales : 0;
+      const mcPonderado = margenUnitario * proporcion;
+
 
       return {
+        /* ...p,
+         cantidadVendida,
+         ingreso,
+         costoVariable,
+         margenContribucion,
+         proporcion,
+         mcPonderado: margenContribucion * proporcion,*/
         ...p,
         cantidadVendida,
         ingreso,
         costoVariable,
+        margenUnitario,
         margenContribucion,
         proporcion,
-        mcPonderado: margenContribucion * proporcion,
+        mcPonderado,
       };
     });
 
+    const totalCostosFijos = totalSueldos + (costosFijosData?.reduce((sum, item) => sum + (item.monto || 0), 0) ?? 0);
     const MCP = productosConDatos.reduce((sum, p) => sum + p.mcPonderado, 0);
+
     const listaCostos = document.getElementById("lista-costos-fijos");
     listaCostos.innerHTML = "";
 
@@ -128,7 +145,7 @@ export async function cargarReportePuntoEquilibrio() {
       liVacio.textContent = "No hay costos fijos registrados aún.";
       listaCostos.appendChild(liVacio);
     }
-    const totalCostosFijos = totalSueldos + (costosFijosData?.reduce((sum, item) => sum + (item.monto || 0), 0) ?? 0);
+
 
     // Insertar input para utilidad deseada arriba del resultado (solo una vez)
     const contenedor = document.getElementById("resultado-pe").parentElement;
@@ -163,8 +180,12 @@ export async function cargarReportePuntoEquilibrio() {
 
       document.getElementById("resultado-pe").innerHTML =
         MCP > 0
-          ? `Punto de equilibrio mezcla: <strong>${puntoConUtilidad.toLocaleString()}</strong> unidades`
+          ? `
+      <p>Punto de equilibrio (sin utilidad): <strong>${puntoEquilibrio.toLocaleString()}</strong> unidades</p>
+      <p>Punto de equilibrio (con utilidad deseada): <strong>${puntoConUtilidad.toLocaleString()}</strong> unidades</p>
+    `
           : "No se puede calcular (MCP = 0)";
+
 
       sugerenciasHtml = ""; // reset
 
@@ -181,7 +202,7 @@ export async function cargarReportePuntoEquilibrio() {
     <ul class='mb-0 small'>${margenNegativo.slice(0, 5).map(p => `<li>${p.nombre}</li>`).join("")}</ul>`);
 
       // 3. Margen muy bajo (<10%)
-      const margenBajo = productosConDatos.filter(p => p.precio > 0 && (p.margenContribucion / p.precio) < 0.1);
+      const margenBajo = productosConDatos.filter(p => p.precio > 0 && (p.margenUnitario / p.precio) < 0.1);
       if (margenBajo.length > 0) agregarSugerencia("warning", "fas fa-compress-alt",
         `Algunos productos tienen un margen muy bajo. Evalúa si es rentable mantenerlos:` +
         `<ul class='mb-0 small'>${margenBajo.slice(0, 5).map(p => `<li>${p.nombre}</li>`).join("")}</ul>`);
@@ -264,7 +285,7 @@ function renderizarDesgloseFinal(productos, puntoEquilibrio) {
   desgloseContainer.innerHTML = `
     <div class="d-flex justify-content-between align-items-center">
       <strong>Desglose por producto:</strong>
-      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseBtnId}" aria-expanded="false" aria-controls="${collapseBtnId}">
+      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseBtnId}" aria-expanded="false" aria-controls="${collapseBtnId}">
         <i class="fas fa-chevron-down me-2 rotate-icon"></i> Ver detalles
       </button>
     </div>
@@ -300,7 +321,7 @@ function renderizarTablaProductos(productos) {
   cuerpo.innerHTML = productos.map(p => {
     const precio = p.precio ?? 0;
     const precioUnitario = p.precio_unitario ?? 0;
-    const margen = p.margenContribucion ?? 0;
+    const margen = p.margenUnitario ?? 0;
     const proporcion = p.proporcion ?? 0;
 
     return `
