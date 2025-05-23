@@ -1,14 +1,13 @@
 /* 🎨 Paleta de colores */
 :root {
-  --vino-claro: #9a223d;
   --blanco: #ffffff;
   --gris-claro: #e0dcdc;
   --gris-oscuro: #cccccc;
   --fondo-modal: #f9f9f9;
 
-  --primary-color: #6c1b2d;
-  --primary-color-obscuro: #5a1725;
-  --primary-claro: #9a223d;
+  --primary-color: #D2772D;
+  --primary-color-obscuro: #D2772D;
+  --primary-claro: #D2772D;
   --light-color: #f5f5f5;
   --primary-color-claro: #f2ccd5;
 }
@@ -197,7 +196,7 @@ header {
 }
 
 #btn-carrito {
-  background-color: var(--primary-color, #6c1b2d);
+  background-color: var(--primary-color, #D2772D);
   color: white;
   border: none;
   padding: 6px 10px;

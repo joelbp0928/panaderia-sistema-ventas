@@ -81,7 +81,7 @@ export async function cargarConfiguracion() {
 
         // 🔹 Actualizar la UI con los datos obtenidos
         document.getElementById("site-name").value = configuracion.nombre_empresa || "";
-        document.getElementById("primary-color").value = configuracion.color_primario || "#6c1b2d";
+        document.getElementById("primary-color").value = configuracion.color_primario || "#D2772D";
         aplicarColorPrimario(configuracion.color_primario); // Aplicar el color al sitio
 
         // 🔹 Verificar si el elemento del logo existe antes de asignar la imagen

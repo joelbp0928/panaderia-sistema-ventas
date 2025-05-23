@@ -172,7 +172,7 @@ export async function cargarConfiguracion() {
 
         if (colorInput) {
             // Si el elemento existe, asignamos el valor
-            colorInput.value = data.color_primario || "#6c1b2d";
+            colorInput.value = data.color_primario || "#D2772D";
         }
         // Actualizar color de fondo
         aplicarColorPrimario(data.color_primario); // Aplicar el color al sitio

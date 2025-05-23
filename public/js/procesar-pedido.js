@@ -129,7 +129,7 @@ export async function confirmarPedido() {
     await mostrarCarrito();
 
     const ticketContenido = document.getElementById("ticket-visual");
-    const color = configuracionGlobal.color_primario || "#6c1b2d";
+    const color = configuracionGlobal.color_primario || "#D2772D";
 
     ticketContenido.innerHTML = `
       <div class="ticket-impresion animate__animated animate__fadeInDown" style="max-width: 320px; background: white; font-family: 'Courier New', monospace; border: 2px dashed ${color}; padding: 16px; border-radius: 12px;">

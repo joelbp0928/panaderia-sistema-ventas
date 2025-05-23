@@ -273,7 +273,7 @@ export async function descargarTicketDesdeHistorial(pedidoId) {
     }
 
     const nombreCliente = clienteData?.nombre || "Cliente";
-    const color = configuracionGlobal.color_primario || "#6c1b2d";
+    const color = configuracionGlobal.color_primario || "#D2772D";
 
     const totalPiezas = productos.reduce((sum, p) => sum + p.cantidad, 0);
     const subtotal = productos.reduce((sum, p) => sum + (p.precio_unitario * p.cantidad), 0);
