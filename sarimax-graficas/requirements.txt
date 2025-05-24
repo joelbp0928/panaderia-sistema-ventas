@@ -1,7 +1,0 @@
-Flask
-flask-cors
-firebase-admin
-pandas
-statsmodels
-numpy
-gunicorn
