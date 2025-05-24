@@ -717,11 +717,11 @@ table td {
 
 /*   EStadisticas */
 /* Reducir el tamaño de la gráfica principal */
-#sales-chart {
+/*#sales-chart {
   max-width: 100%;
-  height: 235px !important ; /* Gráfico más pequeño */
+  height: 235px !important ; /* Gráfico más pequeño 
   margin-top: 20px;
-}
+}*/
 
 /* Estilo para las tarjetas de estadísticas */
 .stat-card {
@@ -937,9 +937,10 @@ Mejorar el espaciado entre las secciones
 }
 
 #sales-chart {
-  width: 60% !important;
-  height: 250px !important;
-  align-items: center;
+
+  width: 100% !important;
+  height: 350px !important;
+
 }
 
 .contenedor-graficas {

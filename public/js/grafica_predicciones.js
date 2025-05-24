@@ -48,11 +48,8 @@ document.getElementById("mostrarPrediccionesBtn").addEventListener("click", asyn
       data: valores,
       borderColor: "rgba(255, 99, 132, 1)",
       backgroundColor: "rgba(255, 99, 132, 0.1)", // Relleno debajo
-      borderWidth: 2,
-      pointRadius: 5,
-      pointHoverRadius: 7,
-      fill: true,
-      tension: 0.4 // Curva más suave
+                     fill: true,
+                tension: 0.3,
     }]
   },
   options: {
@@ -83,7 +80,7 @@ document.getElementById("mostrarPrediccionesBtn").addEventListener("click", asyn
         borderColor: "#ccc",
         borderWidth: 1,
         callbacks: {
-          label: context => `Predicción: $${context.parsed.y.toFixed(2)}`
+          label: context => `Predicción: ${context.parsed.y.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`
         }
       }
     },
@@ -102,7 +99,7 @@ document.getElementById("mostrarPrediccionesBtn").addEventListener("click", asyn
         ticks: {
           font: { size: 13 },
           color: "#333",
-          callback: value => `$${value}`
+          callback: value => `${value.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`
         },
         grid: {
           color: "#eee"

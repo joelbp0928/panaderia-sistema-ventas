@@ -3178,6 +3178,20 @@
                     </div>
                   </div>
                 </div>
+                <!-- Tarjeta de Ticket Promedio -->
+                <div class="col">
+                  <div class="card dashboard-card h-100 text-center">
+                    <div class="card-body">
+                      <h5 class="card-title">
+                        <i class="fas fa-receipt text-info me-2"></i> Ticket
+                        Promedio
+                      </h5>
+                      <p id="ticket-promedio" class="card-text fs-4 fw-bold">
+                        $0
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
                 <!-- Tarjeta de Ventas Promedio -->
                 <div class="col">
@@ -3206,8 +3220,6 @@
                     </div>
                   </div>
                 </div>
-
-                <!-- Puedes seguir con: Total Pedidos, Top Producto, Hora, Fecha, etc -->
               </div>
             </div>
           </div>
@@ -3216,8 +3228,10 @@
             <button id="mostrarPrediccionesBtn">Mostrar predicción</button>
           </div>
 
-          <div id="contenedorVentas" class="contenedor-grafica-individual">
-            <canvas id="sales-chart"></canvas>
+          <div id="contenedorVentas" class="contenedor-graficas">
+            <div class="card">
+              <canvas id="sales-chart"></canvas>
+            </div>
           </div>
 
           <div
