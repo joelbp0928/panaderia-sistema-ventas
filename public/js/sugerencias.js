@@ -123,7 +123,6 @@ function ocultarTarjeta() {
   if (tarjeta) tarjeta.style.display = "none";
 }
 
- 
 //obtenerSugerencia();
   
   
