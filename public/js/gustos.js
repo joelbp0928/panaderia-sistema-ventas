@@ -29,14 +29,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     Promise.all([
-      fetch(`${PROJECT_URL}/rest/v1/productos?select=id,nombre,imagen_url`, {
-        headers: {
-          apikey: API_KEY,
-          Authorization: `Bearer ${API_KEY}`
-        }
-      }).then(res => res.json()),
+    fetch(`https://sarimax-panaderia-v2-dyfwgmb5ecb5gnb4.eastus-01.azurewebsites.net/productos_visibles`).then(res => res.json()),
+    //fetch("http://localhost:5000/productos_visibles").then(res => res.json()),
 
-      fetch(`${PROJECT_URL}/rest/v1/gustos?cliente_id=eq.${cliente_id}`, {
+    fetch(`${PROJECT_URL}/rest/v1/gustos?cliente_id=eq.${cliente_id}`, {
         headers: {
           apikey: API_KEY,
           Authorization: `Bearer ${API_KEY}`
