@@ -41,16 +41,17 @@ async function updateSalesChart() {
   const period = document.getElementById("stats-period").value;
   const salesData = await fetchSalesData(period);
 
-    // Invertir arreglo para que se muestre de más viejo a más nuevo
- // salesData = salesData.reverse();
   console.log("Sales Data:", salesData);
+  
+  // Ordenar por fecha (por si acaso)
+  if (period === 'daily') {
+    salesData.sort((a, b) => new Date(a.rawDate) - new Date(b.rawDate));
+  }
+
   const labels = salesData.map(item => item.label);
   const sales = salesData.map(item => item.sales);
   const ctx = document.getElementById('sales-chart').getContext('2d');
-  console.log("Sales Data:", salesData);
-  console.log("Labels:", labels);
-  console.log("Sales:", sales);
-  // Limpiar el canvas antes de crear el gráfico 
+
   if (salesChart) salesChart.destroy();
 
   salesChart = new Chart(ctx, {
@@ -61,9 +62,12 @@ async function updateSalesChart() {
         label: 'Ventas',
         data: sales,
         borderColor: '#4bc0c0',
-        backgroundColor: '#4bc0c055',
-        fill: true,
+        backgroundColor: period === 'monthly' ? '#4bc0c0' : '#4bc0c055',
+        fill: period !== 'monthly',
         tension: 0.3,
+        borderWidth: 2,
+        pointRadius: sales.map(s => s === 0 ? 3 : 4), // Puntos más grandes para días con ventas
+        pointBackgroundColor: sales.map(s => s === 0 ? '#cccccc' : '#4bc0c0') // Color diferente para días sin ventas
       }]
     },
     options: {
@@ -78,8 +82,11 @@ async function updateSalesChart() {
         tooltip: {
           callbacks: {
             label: function (tooltipItem) {
-              // Agregar el símbolo $ en el tooltip junto con las ventas
-              return `Ventas: ${tooltipItem.raw.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`;
+              const value = tooltipItem.raw;
+              if (value === 0) {
+                return 'Sin ventas registradas';
+              }
+              return `Ventas: ${value.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`;
             }
           },
           mode: 'index',
@@ -95,7 +102,13 @@ async function updateSalesChart() {
             }
           }
         },
-        x: { beginAtZero: true }
+        x: { 
+          beginAtZero: true,
+          ticks: {
+            autoSkip: true,
+            maxTicksLimit: 10 // Mostrar máximo 10 etiquetas en el eje X
+          }
+        }
       }
     }
   });
@@ -103,32 +116,78 @@ async function updateSalesChart() {
 
 // Consulta datos según el periodo desde las views de Supabase
 async function fetchSalesData(period) {
-  let query;
-  switch (period) {
-    case 'daily':
-     // query = supabase.from('ventas_diarias').select('fecha, ventas_totales'); break;
-      query = supabase.from('ventas_diarias').select('fecha, ventas_totales').order('fecha', { ascending: true }); break;
-    case 'weekly':
-      query = supabase.from('ventas_semanales').select('semana, año, ventas_totales').order('semana', { ascending: true }); break;
-    case 'monthly':
-      query = supabase.from('ventas_mensuales').select('mes, año, ventas_totales').order('mes', { ascending: true }); break;
-    default:
-      query = supabase.from('ventas_diarias').select('fecha, ventas_totales').order('fecha', { ascending: true }); break;
+  if (period !== 'daily') {
+    // Mantenemos el comportamiento original para semanas y meses
+    let query;
+    switch (period) {
+      case 'weekly':
+        query = supabase.from('ventas_semanales').select('semana, año, ventas_totales').order('semana', { ascending: true });
+        break;
+      case 'monthly':
+        query = supabase.from('ventas_mensuales').select('mes, año, ventas_totales').order('mes', { ascending: true });
+        break;
+      default:
+        query = supabase.from('ventas_diarias').select('fecha, ventas_totales').order('fecha', { ascending: true });
+        break;
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.error("Error al obtener datos de ventas:", error);
+      return [];
+    }
+
+    if (period === 'weekly') {
+      return data.map(item => ({ label: obtenerRangoSemana(item.semana, item.año), sales: item.ventas_totales }));
+    } else if (period === 'monthly') {
+      return data.map(item => ({ label: `${item.mes} - ${item.año}`, sales: item.ventas_totales }));
+    }
   }
 
-  const { data, error } = await query;
+  // Para el caso diario, implementamos la lógica de completar días faltantes
+  return await fetchDailyDataWithMissingDays();
+}
+
+async function fetchDailyDataWithMissingDays() {
+  // 1. Obtener el rango de fechas completo que queremos mostrar (últimos 30 días)
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(endDate.getDate() - 30); // Mostrar últimos 30 días
+  
+  // 2. Obtener los datos existentes de Supabase para este rango
+  const { data: existingData, error } = await supabase
+    .from('ventas_diarias')
+    .select('fecha, ventas_totales')
+    .gte('fecha', startDate.toISOString().split('T')[0])
+    .lte('fecha', endDate.toISOString().split('T')[0])
+    .order('fecha', { ascending: true });
+
   if (error) {
-    console.error("Error al obtener datos de ventas:", error);
+    console.error("Error al obtener datos diarios:", error);
     return [];
   }
 
-  if (period === 'daily') {
-    return data.map(item => ({ label: formatearFecha(item.fecha), sales: item.ventas_totales }));
-  } else if (period === 'weekly') {
-    return data.map(item => ({ label: obtenerRangoSemana(item.semana, item.año), sales: item.ventas_totales }));
-  } else {
-    return data.map(item => ({ label: `${item.mes} - ${item.año}`, sales: item.ventas_totales }));
+  // 3. Crear un mapa de fechas para búsqueda rápida
+  const salesMap = new Map();
+  existingData.forEach(item => {
+    salesMap.set(item.fecha, item.ventas_totales);
+  });
+
+  // 4. Generar el rango completo de fechas
+  const completeData = [];
+  const currentDate = new Date(startDate);
+  
+  while (currentDate <= endDate) {
+    const dateStr = currentDate.toISOString().split('T')[0];
+    completeData.push({
+      label: formatearFecha(dateStr),
+      sales: salesMap.get(dateStr) || 0, // 0 para días sin datos
+      rawDate: dateStr // Guardamos la fecha original para ordenamiento
+    });
+    currentDate.setDate(currentDate.getDate() + 1);
   }
+
+  return completeData;
 }
 
 // Estadísticas resumen
@@ -177,11 +236,31 @@ async function countOrdersForPeriod() {
   return count || 0;
 }
 
-function calculateSalesChange(data) {
-  if (!data.length) return 0;
+function calculateSalesChange(data, period = 'daily') {
+  // Validación básica
+  if (!data || data.length < 2) {
+    console.warn(`No hay suficientes datos (${data?.length || 0} puntos) para calcular cambio`);
+    return 0;
+  }
+
   const first = data[0].sales;
   const last = data[data.length - 1].sales;
-  return ((last - first) / first) * 100;
+
+  // Casos especiales
+  if (first === 0 && last === 0) return 0;
+  if (first === 0) return last > 0 ? Infinity : -Infinity;
+
+  // Cálculo normal
+  const percentage = ((last - first) / Math.abs(first)) * 100;
+  const rounded = Math.round(percentage * 100) / 100;
+
+  // Manejo de valores extremos
+  if (isNaN(rounded)) {
+    console.error("Error en cálculo de porcentaje:", { first, last, percentage });
+    return 0;
+  }
+
+  return rounded;
 }
 
 async function updateTotalOrders(period) {
@@ -511,6 +590,7 @@ async function updateTopSalesHour() {
     .select('hora, ventas')
     .order('ventas', { ascending: false })
     .limit(1);
+  console.log("Datos de ventas por hora:", data); // <-- Ver todos los datos
 
   if (error || !data || data.length === 0) {
     console.error('Error al cargar hora top:', error);
