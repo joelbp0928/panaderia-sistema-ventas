@@ -21,26 +21,50 @@ def obtener_productos():
         "Authorization": f"Bearer {SUPABASE_API_KEY}",
         "Content-Type": "application/json"
     }
-    params = {
-        "select": "id,nombre,descripcion,imagen_url"
+    
+     # 1. Obtener categorías visibles
+    url_categorias = f"{SUPABASE_URL}/rest/v1/categorias"
+    params_cat = {
+        "visible_cliente": "eq.true",
+        "select": "id"
     }
 
-
-
-    response = requests.get(url, headers=headers, params=params)
-    
-    if response.status_code == 200:
-        productos = response.json()
-        print("✅ Productos cargados:", productos)
-        return productos
-    else:
-        print("❌ Error al obtener productos", response.text)
+    res_cat = requests.get(url_categorias, headers=headers, params=params_cat)
+    if res_cat.status_code != 200:
+        print("❌ Error al obtener categorías:", res_cat.text)
         return []
+
+    categorias_visibles = {cat["id"] for cat in res_cat.json()}
+    print("✅ Categorías visibles:", categorias_visibles)
+
+    # 2. Obtener todos los productos
+    url_productos = f"{SUPABASE_URL}/rest/v1/productos"
+    params_prod = {
+        "select": "id,nombre,descripcion,imagen_url,categoria_id"
+    }
+
+    res_prod = requests.get(url_productos, headers=headers, params=params_prod)
+    if res_prod.status_code != 200:
+        print("❌ Error al obtener productos:", res_prod.text)
+        return []
+
+    productos = res_prod.json()
+
+    # 3. Filtrar productos por categoría visible
+    productos_filtrados = [
+        p for p in productos if p["categoria_id"] in categorias_visibles
+    ]
+    
+    productos_ocultos = [
+        p for p in productos if p["categoria_id"] not in categorias_visibles
+    ]
+    
+    print("🚫 Productos ocultos al cliente:", productos_ocultos)
+
+    return productos_filtrados
+    
     
 #obetenr el historial del cliente
-    
-
-
 def obtener_historial_cliente(cliente_id):
     url = f"{SUPABASE_URL}/rest/v1/rpc/obtener_historial_cliente"  # ✅
 
@@ -237,7 +261,10 @@ def pan_es_seguro(producto_id, cliente_id):
     # 3. Comparar
     return not set(ingredientes_producto) & set(ingredientes_alergicos)
 
-
+@app.route('/productos_visibles', methods=['GET'])
+def productos_visibles():
+    productos = obtener_productos()  # Esta ya los filtra correctamente
+    return jsonify(productos)
 
 # === Ruta para ver todos los productos directamente ===
 @app.route('/productos', methods=['GET'])
