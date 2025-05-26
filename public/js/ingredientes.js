@@ -1,7 +1,7 @@
 // 📦 MÓDULOS IMPORTADOS
 import { supabase } from "./supabase-config.js"; // 📌 Importar configuración de Supabase
 import { mostrarToast, marcarErrorCampo, limpiarErrorCampo, hideLoading, showLoading } from "./manageError.js"; // 📌 Manejo de errores
-import { formatearFecha } from "./formatearFecha.js"; // 📌 Formateo de fechas
+import { formatearFecha, formatearFechaDb } from "./formatearFecha.js"; // 📌 Formateo de fechas
 import { loadIngredients } from "./productos.js"; // 📌 Carga de productos relacionados
 
 // 🏷️ VARIABLES GLOBALES DE ESTADO
@@ -264,7 +264,7 @@ export async function cargarIngredientes() {
             const fila = document.createElement("tr");
             fila.dataset.id = ingrediente.id; // Agregar el ID como atributo de datos
 
-            const fechaRegistro = formatearFecha(ingrediente.fechaRegistro);
+            const fechaRegistro = formatearFechaDb(ingrediente.fechaRegistro);
             fila.innerHTML = `
             <td>${ingrediente.nombre}</td>
             <td>${formatCurrency(ingrediente.precio_total)} x ${formatNumber(ingrediente.cantidad)} ${ingrediente.medida}</td>

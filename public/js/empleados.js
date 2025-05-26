@@ -2,7 +2,7 @@
 import { marcarErrorCampo, limpiarErrorCampo, mostrarToast, showLoading, hideLoading } from "./manageError.js";
 import { validarTelefono, validarEdad } from "./validaciones.js";
 import { supabase } from "./supabase-config.js";
-import { formatearFecha } from "./formatearFecha.js";
+import { formatearFecha, formatearFechaDb } from "./formatearFecha.js";
 
 // 🏷️ VARIABLES GLOBALES DE ESTADO
 let selectedEmployeeRow = null;
@@ -294,7 +294,7 @@ export async function cargarEmpleados() {
                 <td>${empleado.usuario.email}</td>
                 <td>${empleado.usuario.telefono}</td>
                 <td>${empleado.admin?.nombre || "Desconocido"}</td>
-                <td>${formatearFecha(empleado.usuario.fechaRegistro)}</td>
+                <td>${formatearFechaDb(empleado.usuario.fechaRegistro)}</td>
             </tr>
         `).join('');
 

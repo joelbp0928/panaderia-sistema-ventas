@@ -1,7 +1,7 @@
 import { supabase } from "./supabase-config.js"; // 📌 Importar configuración de Supabase
 import { ref, storage, uploadBytes, getDownloadURL, deleteObject } from "./firebase-config.js"
 import { mostrarToast, marcarErrorCampo, limpiarErrorCampo, showLoading, hideLoading } from "./manageError.js"; // 📌 Manejo de errores
-import { formatearFecha } from "./formatearFecha.js";
+import { formatearFecha, formatearFechaDb } from "./formatearFecha.js";
 
 // 🏷️ VARIABLES GLOBALES DE ESTADO
 let productModal;
@@ -929,7 +929,7 @@ async function mostrarDetallesProducto(idProducto) {
         document.getElementById("detalle-producto-precio").innerText = formatearPrecio(producto.precio);
         document.getElementById("detalle-producto-stock").innerText = producto.stock !== null ? producto.stock : "N/D";
         document.getElementById("detalle-producto-categoria").innerText = producto.categorias?.nombre || "N/D";
-        document.getElementById("detalle-producto-fecha-registro").innerText = producto.fecha_registro ? formatearFecha(producto.fecha_registro) : "N/D";
+        document.getElementById("detalle-producto-fecha-registro").innerText = producto.fecha_registro ? formatearFechaDb(producto.fecha_registro) : "N/D";
         document.getElementById("detalle-producto-costo-unitario").innerText = formatearPrecio(producto.precio_unitario);
         
         // Mostrar imagen o placeholder si no hay
