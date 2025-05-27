@@ -46,7 +46,7 @@ export async function registrarCliente(event) {
       marcarErrorCampo("signup-name", "Solo letras y espacios");
       return;
     }
-    
+
     // Validación de email
     if (!validarEmail(email)) {
       mostrarToast("⚠️ Ingresa un correo electrónico válido.", "warning");
@@ -128,6 +128,8 @@ export async function registrarCliente(event) {
 
     const user = authData.user;
     if (!user) throw new Error("No se pudo registrar el usuario.");
+    // Obtiene la fecha/hora local en formato ISO sin el 'Z' final (UTC)
+    const fechaRegistro = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 19).replace('T', ' ');
 
     // 🔹 Insertar en 'usuarios'
     const { error: insertUserError } = await supabase.from("usuarios").insert([
@@ -138,7 +140,7 @@ export async function registrarCliente(event) {
         rol: "cliente",
         telefono,
         fechaNacimiento,
-        fechaRegistro: new Date().toISOString()
+        fechaRegistro: fechaRegistro
       }
     ]);
     if (insertUserError) throw insertUserError;
@@ -301,15 +303,15 @@ function validarCodigoPostal(codigoPostal) {
 function validarFechaNacimiento(fecha) {
   const hoy = new Date();
   const fechaNac = new Date(fecha);
-  
+
   // Calcular edad de forma precisa
   let edad = hoy.getFullYear() - fechaNac.getFullYear();
   const mes = hoy.getMonth() - fechaNac.getMonth();
-  
+
   if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
     edad--;
   }
-  
+
   return edad >= 18;
 }
 function validarNombre(nombre) {
@@ -317,14 +319,14 @@ function validarNombre(nombre) {
 }
 
 // Validación de email en tiempo real
-document.getElementById("signup-email")?.addEventListener("blur", function() {
+document.getElementById("signup-email")?.addEventListener("blur", function () {
   if (!validarEmail(this.value.trim())) {
     marcarErrorCampo("signup-email", "Formato de correo inválido");
   }
 });
 
 // Validación de teléfono en tiempo real
-document.getElementById("signup-phone")?.addEventListener("input", function() {
+document.getElementById("signup-phone")?.addEventListener("input", function () {
   this.value = this.value.replace(/\D/g, '').slice(0, 10); // Solo números, max 10
   if (this.value.length !== 10) {
     marcarErrorCampo("signup-phone", "10 dígitos requeridos");
