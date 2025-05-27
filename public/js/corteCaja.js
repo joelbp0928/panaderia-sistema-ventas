@@ -384,7 +384,7 @@ export async function abrirCajaConFondo(force = false) {
       salidas_caja: 0,
       saldo_final: formValues.fondoInicial,
       empleado_id: usuarioId,
-      observaciones: `Apertura: ${formValues.observaciones || 'Sin observaciones: apertura'}`,
+      observaciones: `Apertura: ${formValues.observaciones || 'Sin observaciones'}`,
       cerrado: false
     }])
     .select();
@@ -629,7 +629,7 @@ export async function registrarCorteCaja() {
         salidas_caja: salidasCaja,
         saldo_final: saldoFinal,
         empleado_id: usuarioId,
-        observaciones: `Cierre: ${observaciones || 'Cierre: Sin observaciones'}`,
+        observaciones: `Cierre: ${observaciones || 'Sin observaciones'}`,
         cerrado: true
       }])
       .select();
