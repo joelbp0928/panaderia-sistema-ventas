@@ -424,7 +424,6 @@ export async function registrarNuevoEmpleado(datos) {
                 telefono: datos.telefono,
                 fechaNacimiento: datos.fechaNacimiento,
                 rol: "empleado",
-                sueldo: datos.sueldo,
                 fechaRegistro: new Date().toISOString()
             }
         ]);
@@ -437,7 +436,8 @@ export async function registrarNuevoEmpleado(datos) {
                 usuario_id: usuarioId,
                 genero: datos.genero,
                 puesto: datos.puesto,
-                creado_por: adminId
+                creado_por: adminId,
+                sueldo: datos.sueldo
             }
         ]);
         if (empleadoError) throw empleadoError;
