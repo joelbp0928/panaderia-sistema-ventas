@@ -17,10 +17,10 @@ import "./forgot-password.js";
 window.onload = async function () {
     try {
         cargarConfiguracion();
-// Obtiene la fecha/hora local en formato ISO sin el 'Z' final (UTC)
-const fechaRegistro = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 19).replace('T', ' ');
-// Resultado: "2023-11-15 14:30:45" (hora local)
-        console.log("Fecha de registro:", fechaRegistro);
+        // Obtiene la fecha/hora local en formato ISO sin el 'Z' final (UTC)
+     //   const fechaRegistro = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 19).replace('T', ' ');
+        // Resultado: "2023-11-15 14:30:45" (hora local)
+     //   console.log("Fecha de registro:", fechaRegistro);
         // Primero verificamos la sesión del cliente
         const clienteVerificado = await verificarSesionCliente();
 
