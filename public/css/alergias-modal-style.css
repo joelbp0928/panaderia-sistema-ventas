@@ -61,5 +61,5 @@
 }
 
 .btn-guardar:hover {
-  background-color: #a2b000;
+  background-color: var(--primary-color-obscuro);
 }

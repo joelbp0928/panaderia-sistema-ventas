@@ -1,3 +1,4 @@
+import { cargarProductos } from "./config.js";
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("form-preferencias");
   const modal = document.getElementById("modal-preferencias");
@@ -7,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
   form.addEventListener("submit", (e) => {
     e.preventDefault();
 
- // Asegúrate de que coincida.
+    // Asegúrate de que coincida.
     const cliente_id = localStorage.getItem("cliente_id");
     if (!cliente_id) return alert("No se pudo obtener el ID del cliente.");
     const fecha = new Date().toISOString();
@@ -20,11 +21,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (checkProductos.length > 0) {
       const seleccionados = Array.from(checkProductos).filter(cb => cb.checked).map(cb => cb.value);
       const prevSeleccionados = Array.from(checkProductos)
-  .filter(cb => cb.dataset.prev === "1")
-  .map(cb => cb.value);
+        .filter(cb => cb.dataset.prev === "1")
+        .map(cb => cb.value);
 
-const aInsertar = seleccionados.filter(id => !prevSeleccionados.includes(id));
-const aEliminar = prevSeleccionados.filter(id => !seleccionados.includes(id));
+      const aInsertar = seleccionados.filter(id => !prevSeleccionados.includes(id));
+      const aEliminar = prevSeleccionados.filter(id => !seleccionados.includes(id));
 
 
       aInsertar.forEach(producto_id => {
@@ -48,8 +49,16 @@ const aEliminar = prevSeleccionados.filter(id => !seleccionados.includes(id));
           }
         });
       });
-
-      alert("Gustos actualizados.");
+      cargarProductos();
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Gustos actualizados',
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true
+      });
     }
 
     // === ALERGIAS ===
@@ -79,8 +88,17 @@ const aEliminar = prevSeleccionados.filter(id => !seleccionados.includes(id));
           }
         });
       });
+      cargarProductos();
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Preferencias guardadas',
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true
+      });
 
-      alert("Alergias actualizadas.");
     }
 
     modal.style.display = "none";
