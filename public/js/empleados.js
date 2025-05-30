@@ -56,8 +56,8 @@ export function mostrarFormularioEmpleado() {
     const form = document.getElementById("form-empleado");
     form.reset();
     form.dataset.empleadoId = "";
-    document.getElementById("empleadoModalLabel").textContent = "Agregar Empleado";
-    document.querySelector("#form-empleado button[type='submit']").textContent = "Guardar Empleado";
+    document.getElementById("empleadoModalLabel").textContent = "Agregar colaborador";
+    document.querySelector("#form-empleado button[type='submit']").textContent = "Guardar colaborador";
     empleadoModal.show();
 }
 
@@ -214,7 +214,8 @@ export async function editarEmpleado(idEmpleado) {
         formulario.dataset.empleadoId = idEmpleado;
 
         // 🔹 Cambiar el botón para indicar que se actualizará un empleado
-        document.querySelector("#form-empleado button[type='submit']").innerText = "Actualizar Empleado";
+        document.getElementById("empleadoModalLabel").innerText = "Editar colaborador";
+        document.querySelector("#form-empleado button[type='submit']").innerText = "Actualizar colaborador";
 
         // Seleccionar fila
         selectEmployeeRow(idEmpleado);

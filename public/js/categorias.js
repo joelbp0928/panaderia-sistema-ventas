@@ -81,8 +81,8 @@ export function mostrarFormularioCategoria() {
     const modal = new bootstrap.Modal(document.getElementById("categoriaModal"));
     form.reset();
     form.dataset.categoriaId = "";
-    document.getElementById("categoriaModalLabel").textContent = "Agregar Categoría";
-    document.querySelector("#form-categoria button[type='submit']").textContent = "Guardar Categoría";
+    document.getElementById("categoriaModalLabel").textContent = "Agregar categoría";
+    document.querySelector("#form-categoria button[type='submit']").textContent = "Guardar categoría";
     modal.show();
 }
 
@@ -171,8 +171,8 @@ export async function editarCategoria(idCategoria) {
         // 🔹 Configurar el formulario para edición
         const formulario = document.getElementById("form-categoria");
         formulario.dataset.categoriaId = idCategoria;
-        document.getElementById("categoriaModalLabel").textContent = "Editar Categoría";
-        document.querySelector("#form-categoria button[type='submit']").textContent = "Actualizar Categoría";
+        document.getElementById("categoriaModalLabel").textContent = "Editar categoría";
+        document.querySelector("#form-categoria button[type='submit']").textContent = "Actualizar categoría";
 
 
 

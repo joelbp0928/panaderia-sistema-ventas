@@ -67,9 +67,9 @@ export function showProductForm() {
     });
 
     // Configurar para "agregar nuevo"
-    document.getElementById("productModalLabel").textContent = "Agregar Producto";
+    document.getElementById("productModalLabel").textContent = "Agregar producto";
     document.querySelector("#product-form button[type='submit']").innerHTML =
-        '<i class="fas fa-check-circle me-2"></i>Guardar Producto';
+        '<i class="fas fa-check-circle me-2"></i>Guardar producto';
 
     // Cargar categorías e ingredientes
     cargarCategorias();
@@ -437,9 +437,9 @@ async function editarProducto(idProducto) {
         });
 
         // 6. Configurar el formulario para edición
-        document.getElementById("productModalLabel").textContent = "Editar Producto";
+        document.getElementById("productModalLabel").textContent = "Editar producto";
         document.querySelector("#product-form button[type='submit']").innerHTML =
-            '<i class="fas fa-save me-2"></i>Actualizar Producto';
+            '<i class="fas fa-save me-2"></i>Actualizar producto';
         document.getElementById("product-form").dataset.productId = idProducto;
 
         // 7. Mostrar el modal
@@ -889,7 +889,6 @@ export async function cargarProductos() {
                 )
             `)
             .order('nombre');
-
 
         if (error) throw error;
 

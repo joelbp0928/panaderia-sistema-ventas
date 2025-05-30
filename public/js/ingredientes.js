@@ -267,7 +267,7 @@ export async function cargarIngredientes() {
             const fechaRegistro = formatearFechaDb(ingrediente.fechaRegistro);
             fila.innerHTML = `
             <td>${ingrediente.nombre}</td>
-            <td>${formatCurrency(ingrediente.precio_total)} x ${formatNumber(ingrediente.cantidad)} ${ingrediente.medida}</td>
+            <td>${formatCurrency(ingrediente.precio_total)} por ${formatNumber(ingrediente.cantidad)} ${ingrediente.medida}</td>
            <!-- <td>${formatCurrency(ingrediente.precio_unitario)} x ${formatNumber(ingrediente.cantidad_unitario)} ${ingrediente.medida_unitario}</td>-->
             <td>${fechaRegistro}</td>
         `;
