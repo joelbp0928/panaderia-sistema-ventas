@@ -102,6 +102,9 @@ document.getElementById("codigo-ticket-input").addEventListener("keypress", asyn
         title: "Ticket no encontrado",
         text: "Verifica el código e intenta de nuevo",
       });
+      // Limpiar el input y volver a enfocar
+      e.target.value = "";
+      setTimeout(() => e.target.focus(), 100);
       return;
     }
 
