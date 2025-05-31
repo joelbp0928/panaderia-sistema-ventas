@@ -941,22 +941,27 @@ async function mostrarDetallesProducto(idProducto) {
 
             let icono = '';
             let clase = '';
+            let mensaje = '';
 
             if (utilidad >= 50) {
                 icono = '<i class="fas fa-circle-arrow-up text-success me-1"></i>';
                 clase = 'badge bg-success-subtle text-success fw-semibold';
+                mensaje = '<small class="text-success ms-2"><i class="fas fa-check-circle me-1"></i>Rentabilidad alta</small>';
             } else if (utilidad >= 20) {
                 icono = '<i class="fas fa-arrow-up text-warning me-1"></i>';
                 clase = 'badge bg-warning-subtle text-warning fw-semibold';
+                mensaje = '<small class="text-warning ms-2"><i class="fas fa-exclamation-circle me-1"></i>Rentabilidad moderada</small>';
             } else {
                 icono = '<i class="fas fa-arrow-down text-danger me-1"></i>';
                 clase = 'badge bg-danger-subtle text-danger fw-semibold';
+                mensaje = '<small class="text-danger ms-2"><i class="fas fa-times-circle me-1"></i>Rentabilidad baja</small>';
             }
 
-            utilidadHTML = `<span class="${clase}">${icono}${utilidadFormateada}%</span>`;
+            utilidadHTML = `<span class="${clase}">${icono}${utilidadFormateada}%</span>${mensaje}`;
         }
 
         document.getElementById("detalle-producto-utilidad").innerHTML = utilidadHTML;
+
 
 
         // Mostrar imagen o placeholder si no hay
