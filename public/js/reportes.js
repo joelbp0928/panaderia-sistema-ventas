@@ -62,7 +62,7 @@ export async function cargarReportePuntoEquilibrio() {
       const margenUnitario = (p.precio ?? 0) - (p.precio_unitario ?? 0);
       const margenContribucion = margenUnitario * cantidadVendida;
       //  const margenContribucion = ingreso - costoVariable;
-      console.log(margenContribucion, p.precio, p.precio_unitario);
+    //  console.log(margenContribucion, p.precio, p.precio_unitario);
       //   const proporcion = totalVentasReales > 0 ? ingreso / totalVentasReales : 0;
 
       const proporcion = totalVentasReales > 0 ? ingreso / totalVentasReales : 0;
@@ -70,13 +70,6 @@ export async function cargarReportePuntoEquilibrio() {
 
 
       return {
-        /* ...p,
-         cantidadVendida,
-         ingreso,
-         costoVariable,
-         margenContribucion,
-         proporcion,
-         mcPonderado: margenContribucion * proporcion,*/
         ...p,
         cantidadVendida,
         ingreso,

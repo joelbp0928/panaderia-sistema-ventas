@@ -930,7 +930,35 @@ async function mostrarDetallesProducto(idProducto) {
         document.getElementById("detalle-producto-categoria").innerText = producto.categorias?.nombre || "N/D";
         document.getElementById("detalle-producto-fecha-registro").innerText = producto.fecha_registro ? formatearFechaDb(producto.fecha_registro) : "N/D";
         document.getElementById("detalle-producto-costo-unitario").innerText = formatearPrecio(producto.precio_unitario);
-        
+        const precio = parseFloat(producto.precio || 0);
+        const costoUnitario = parseFloat(producto.precio_unitario || 0);
+
+        let utilidadHTML = `<span class="text-muted">N/D</span>`;
+
+        if (precio > 0 && costoUnitario > 0) {
+            const utilidad = ((precio - costoUnitario) / precio) * 100;
+            const utilidadFormateada = utilidad.toFixed(2);
+
+            let icono = '';
+            let clase = '';
+
+            if (utilidad >= 50) {
+                icono = '<i class="fas fa-circle-arrow-up text-success me-1"></i>';
+                clase = 'badge bg-success-subtle text-success fw-semibold';
+            } else if (utilidad >= 20) {
+                icono = '<i class="fas fa-arrow-up text-warning me-1"></i>';
+                clase = 'badge bg-warning-subtle text-warning fw-semibold';
+            } else {
+                icono = '<i class="fas fa-arrow-down text-danger me-1"></i>';
+                clase = 'badge bg-danger-subtle text-danger fw-semibold';
+            }
+
+            utilidadHTML = `<span class="${clase}">${icono}${utilidadFormateada}%</span>`;
+        }
+
+        document.getElementById("detalle-producto-utilidad").innerHTML = utilidadHTML;
+
+
         // Mostrar imagen o placeholder si no hay
         const imgElement = document.getElementById("detalle-producto-imagen");
         imgElement.src = producto.imagen_url || '';
@@ -955,16 +983,16 @@ async function mostrarDetallesProducto(idProducto) {
             toggleButton.setAttribute("data-bs-target", "#ingredientesCollapse");
             toggleButton.setAttribute("aria-expanded", "false");
             toggleButton.setAttribute("aria-controls", "ingredientesCollapse");
-            
+
             // Crear contenedor colapsable
             const collapseDiv = document.createElement("div");
             collapseDiv.className = "collapse mt-2";
             collapseDiv.id = "ingredientesCollapse";
-            
+
             // Crear tabla de ingredientes
             const table = document.createElement("table");
             table.className = "table table-sm table-borderless";
-            
+
             // Crear encabezados de tabla
             const thead = document.createElement("thead");
             thead.innerHTML = `
@@ -974,10 +1002,10 @@ async function mostrarDetallesProducto(idProducto) {
                     <th class="fw-normal text-muted text-end">Costo</th>
                 </tr>
             `;
-            
+
             // Crear cuerpo de tabla
             const tbody = document.createElement("tbody");
-            
+
             // Obtener detalles de cada ingrediente
             const ingredientes = await Promise.all(producto.productos_ingredientes.map(async (i) => {
                 if (!i.ingrediente_id) return null;
@@ -1043,13 +1071,13 @@ async function mostrarDetallesProducto(idProducto) {
             table.appendChild(thead);
             table.appendChild(tbody);
             collapseDiv.appendChild(table);
-            
+
             // Ensamblar todos los elementos
             ingredientesContainer.appendChild(toggleButton);
             ingredientesContainer.appendChild(collapseDiv);
 
             // Animación para el ícono del botón
-            toggleButton.addEventListener('click', function() {
+            toggleButton.addEventListener('click', function () {
                 const icon = this.querySelector('i');
                 if (this.getAttribute('aria-expanded') === 'true') {
                     icon.classList.remove('fa-chevron-down');
