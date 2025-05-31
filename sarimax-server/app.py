@@ -151,9 +151,17 @@ def sugerencia():
     # Paso 2: Mapeo UUID → número
     
     
-    producto_ids_numericos = [
-        mapeo_producto_global[pid] for pid in producto_ids if pid in mapeo_producto_global
-    ]
+    #producto_ids_numericos = [
+     #   mapeo_producto_global[pid] for pid in producto_ids if pid in mapeo_producto_global
+    #]
+    
+    fechas_filtradas = []
+    producto_ids_numericos = []
+
+    for i, pid in enumerate(producto_ids):
+        if pid in mapeo_producto_global:
+            producto_ids_numericos.append(mapeo_producto_global[pid])
+            fechas_filtradas.append(fechas[i])
 
     
     print("📦 Mapeo de producto (UUID → número):")
@@ -161,7 +169,7 @@ def sugerencia():
         print(f"{k} => {v}")
 
     # Paso 3: Serie con fechas como índice y producto como número
-    serie = pd.Series(producto_ids_numericos, index=fechas)
+    serie = pd.Series(producto_ids_numericos, index=fechas_filtradas)
     print("Serie: ", serie)
 
     # SARIMAX con la serie

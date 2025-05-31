@@ -45,7 +45,12 @@ document.addEventListener("DOMContentLoaded", () => {
         gustos = [];
       }
 
-      gustosActuales = gustos.map(g => g.productos_id)
+      // Solo mantener gustos cuyo producto aún existe (por si desactivaste una categoría)
+      const productosIdsVisibles = productos.map(p => p.id);
+      gustosActuales = gustos
+        .filter(g => productosIdsVisibles.includes(g.productos_id))
+        .map(g => g.productos_id);
+
 
       productos.forEach(producto => {
         const yaSeleccionado = gustosActuales.includes(producto.id);
