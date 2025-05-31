@@ -56,6 +56,35 @@ export async function agregarProductoAlCarrito(productoId, cantidad) {
     if (errorConsulta && errorConsulta.code !== "PGRST116" && errorConsulta.code !== "406") {
       throw errorConsulta;
     }
+    // Verificar stock actual desde inventario_productos
+    const { data: producto, error: errorProducto } = await supabase
+      .from("productos")
+      .select("id, nombre, inventario_productos!inner(stock_actual)")
+      .eq("id", productoId)
+      .single();
+
+    if (errorProducto || !producto) {
+      mostrarToast("Error al verificar el stock del producto", "error");
+      return;
+    }
+ //   console.log("Producto desde Supabase:", producto);
+
+    const stockActual = producto.inventario_productos?.[0]?.stock_actual ?? 0;
+
+    // Revisar si ya existe en el carrito
+    /* const { data: existentes } = await supabase
+       .from("carrito")
+       .select("id, cantidad")
+       .eq("usuario_id", usuario_id)
+       .eq("producto_id", productoId)
+       .maybeSingle();
+ */
+    const cantidadTotal = existentes ? existentes.cantidad + cantidad : cantidad;
+
+    if (cantidadTotal > stockActual) {
+      mostrarToast(`No hay suficiente stock para "${producto.nombre}". Solo quedan ${stockActual} disponibles.`, "warning");
+      return;
+    }
 
     if (existentes) {
       // Ya existe → actualizar cantidad
