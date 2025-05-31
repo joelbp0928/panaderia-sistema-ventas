@@ -22,6 +22,26 @@ export async function confirmarPedido() {
       mostrarToast("Tu carrito está vacío", "warning");
       return;
     }
+    // 🔍 Verificación de stock antes de confirmar
+    for (let item of productos) {
+      const { data: productoData, error: errorStock } = await supabase
+        .from("productos")
+        .select("id, nombre, inventario_productos(stock_actual)")
+        .eq("id", item.productos.id)
+        .maybeSingle();
+
+      if (errorStock || !productoData) {
+        mostrarToast(`Error al verificar el stock de "${item.productos.nombre}"`, "error");
+        return;
+      }
+
+      const stockDisponible = productoData?.inventario_productos?.[0]?.stock_actual ?? 0;
+
+      if (item.cantidad > stockDisponible) {
+        mostrarToast(`❌ El producto "${item.productos.nombre}" solo tiene ${stockDisponible} en stock.`, "warning");
+        return;
+      }
+    }
 
     const productosSeleccionados = productos.map(item => ({
       id: item.productos.id,
