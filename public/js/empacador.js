@@ -215,7 +215,7 @@ const showNotification = async (pedido) => {
 
 
 const playNotificationSound = () => {
-    const audio = new Audio('../sounds/notificacionM.mp3');
+    const audio = new Audio('../sounds/notificacion.mp3');
     audio.play().catch(e => console.log('Error al reproducir sonido:', e));
 };
 
@@ -1296,7 +1296,7 @@ function mostrarBotonPedidos(cantidad, notificar = false) {
         });
         notif.onclick = () => window.focus();
 
-        const sonido = new Audio("../sounds/notificacionM.mp3");
+        const sonido = new Audio("../sounds/notificacion.mp3");
         sonido.play();
     }
 }
