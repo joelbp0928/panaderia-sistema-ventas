@@ -20,8 +20,8 @@ export async function obtenerSugerencia() {
   try {
     mostrarCargaSugerencia(); // ← 🔄 muestra mensaje mientras carga
 
-    //const res = await fetch(`https://sarimax-panaderia-v2-dyfwgmb5ecb5gnb4.eastus-01.azurewebsites.net//?cliente_id=${cliente_id}`);
-    const res = await fetch(`http://localhost:5000/?cliente_id=${cliente_id}`);
+    const res = await fetch(`https://sarimax-panaderia-v2-dyfwgmb5ecb5gnb4.eastus-01.azurewebsites.net//?cliente_id=${cliente_id}`);
+    //const res = await fetch(`http://localhost:5000/?cliente_id=${cliente_id}`);
     const data = await res.json();
     //  console.log("✅ Respuesta del servidor:", data);
     // console.log("Estado: ", data.estado);
