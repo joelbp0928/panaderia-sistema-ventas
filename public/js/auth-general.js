@@ -58,7 +58,7 @@ export async function iniciarSesionGeneral(event) {
           }
         };
 
-        await playSound(); // Intenta reproducir el sonido
+      //  await playSound(); // Intenta reproducir el sonido
         // Usuario no ha confirmado su correo
         await Swal.fire({
           title: '¡Confirma tu correo!',
@@ -69,12 +69,12 @@ export async function iniciarSesionGeneral(event) {
           confirmButtonText: 'Reenviar correo',
           cancelButtonText: 'Cancelar',
           showCancelButton: true,
-          backdrop: `
+         /* backdrop: `
                       rgba(0,0,0,0.5)
                       url("https://media.tenor.com/2roX3uxz_68AAAAC/cat-party.gif")
                       center center / cover
                       no-repeat
-                    `,
+                    `,*/
           showClass: {
             popup: 'animate__animated animate__fadeInDown'
           },
@@ -97,7 +97,7 @@ export async function iniciarSesionGeneral(event) {
           }
         });
         restoreButton();
-        await nyancat.pause();
+     //   await nyancat.pause();
         return; // No permitir login
       } else if (error.message.includes("Invalid login credentials")) {
         // Verificamos si el correo existe en la base de datos
