@@ -78,7 +78,7 @@ export async function verificarSesion() {
 
         // Mostrar el nombre del usuario en el encabezado
         const employeeName = document.getElementById('employee-name');
-        employeeName.textContent = `Sesión: ${userData.nombre}`; // Actualiza el nombre del usuario
+        employeeName.innerHTML = `<i class="fa-solid fa-user-circle fa-lg me-1"></i> <span>Sesión: ${userData.nombre}</span>`;
 
         console.log(`✅ Sesión activa: ${userData.nombre} (${userData.rol})`);
 
@@ -90,7 +90,7 @@ export async function verificarSesion() {
     } catch (error) {
         mostrarToast("❌ Error verificando la sesión.", "error");
         console.error("❌ Error verificando la sesión:", error.message);
-         window.location.href = "../index.html";
+        window.location.href = "../index.html";
     }
 }
 

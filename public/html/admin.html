@@ -31,28 +31,31 @@
     <link rel="stylesheet" href="../css/stylesAdmin.css" />
   </head>
   <body>
-    <header class="admin-header">
-      <img
-        id="logo-image"
-        src="../img/favicon.png"
-        alt="Logo de la empresa"
-        class="header-logo"
-      />
-      <h1 class="header-title">Panel de Administración</h1>
-      <div id="header-right">
-        <div class="d-flex align-items-center gap-2">
-          <i class="fa-solid fa-user-circle fa-lg"></i>
-          <span id="employee-name" class="fw-bold">Sesión: </span>
+    <header class="admin-header shadow-sm">
+      <div class="container d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-3">
+          <img
+            id="logo-image"
+            src="../img/favicon.png"
+            alt="Logo de la empresa"
+            class=" shadow"
+          />
+          <h1 class="header-title m-0">Panel de Administración</h1>
         </div>
-        <button
-          id="logout-btn"
-          class="btn btn-logout"
-          aria-label="Cerrar sesión"
-        >
-          <i class="fas fa-sign-out-alt fa-2x"></i>
-        </button>
+        <div class="d-flex align-items-center gap-3">
+          <span id="employee-name" class="fw-semibold"> 
+          </span>
+          <button
+            id="logout-btn"
+            class="btn btn-light btn-sm rounded-pill shadow-sm px-3"
+            aria-label="Cerrar sesión"
+          >
+            <i class="fas fa-sign-out-alt me-2"></i> Salir
+          </button>
+        </div>
       </div>
     </header>
+
     <!-- Navegación de pestañas -->
     <div class="container mt-4">
       <ul class="nav nav-tabs" id="admin-tabs" role="tablist">
