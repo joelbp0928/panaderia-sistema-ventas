@@ -9,6 +9,10 @@ import { supabase } from "./supabase-config.js";
 
 
 const beepError = new Audio("../sounds/error-beep.mp3");
+const sonidoNotificacion = new Audio('../sounds/notificacion.mp3');
+sonidoNotificacion.preload = 'auto';
+sonidoNotificacion.load();
+
 let productosSeleccionados = []; // Array para almacenar los productos seleccionados
 let selectedProductId = null; // ID del producto seleccionado para editar la cantidad
 let editQuantityModal = null; // Variable global para guardar la instancia
@@ -43,6 +47,8 @@ async function initializeApp() {
     cargarConfiguracion();
     cargarCategorias();
     actualizarTabla();
+   // document.body.addEventListener("click", () => sonidoNotificacion.play().catch(() => { }), { once: true });
+
 
     if ("Notification" in window) {
         Notification.requestPermission().then(p => console.log("Notificación:", p));
@@ -215,8 +221,8 @@ const showNotification = async (pedido) => {
 
 
 const playNotificationSound = () => {
-    const audio = new Audio('../sounds/notificacion.mp3');
-    audio.play().catch(e => console.log('Error al reproducir sonido:', e));
+   // const audio = new Audio('../sounds/notificacion.mp3');
+    sonidoNotificacion.play().catch(e => console.log('Error al reproducir sonido:', e));
 };
 
 // Función para actualizar el contador de pedidos pendientes hoy
@@ -1296,7 +1302,7 @@ function mostrarBotonPedidos(cantidad, notificar = false) {
         });
         notif.onclick = () => window.focus();
 
-        const sonido = new Audio("../sounds/notificacion.mp3");
+        //const sonido = new Audio("../sounds/notificacion.mp3");
         sonido.play();
     }
 }
