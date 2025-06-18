@@ -125,7 +125,7 @@ export async function abrirModalEntradaProducto() {
     const select = document.getElementById("producto-select");
     const contenedorIngredientes = document.getElementById("ingredientes-requeridos");
     const cantidadInput = document.getElementById("cantidad-producto");
-    
+
     // Limpiar los campos del modal
     select.innerHTML = `<option value="" disabled selected>Selecciona un producto...</option>`;
     contenedorIngredientes.innerHTML = `
@@ -134,7 +134,7 @@ export async function abrirModalEntradaProducto() {
     `;
     contenedorIngredientes.style.display = "none";
     cantidadInput.value = "";
-    
+
     // Cargar los productos
     const { data } = await supabase.from("productos").select("id, nombre").order("nombre");
     data?.forEach((prod) => {
@@ -166,13 +166,13 @@ async function mostrarIngredientesRequeridos() {
     const cantidad = parseFloat(document.getElementById("cantidad-producto").value);
 
     const contenedor = document.getElementById("ingredientes-requeridos");
-    
+
     // Limpiar completamente el contenedor (incluyendo mensajes previos)
     contenedor.innerHTML = `
         <strong>Ingredientes necesarios:</strong>
         <ul id="lista-ingredientes-requeridos" class="mb-0"></ul>
     `;
-    
+
     // Obtener la referencia a la lista después de reconstruir el HTML
     const lista = document.getElementById("lista-ingredientes-requeridos");
     contenedor.style.display = "none";
@@ -236,7 +236,7 @@ async function mostrarIngredientesRequeridos() {
         // Cambiar color del contenedor según resultado
         contenedor.classList.remove("alert-info", "alert-danger");
         contenedor.classList.add(hayFaltantes ? "alert-danger" : "alert-info");
-        
+
         // Mensaje adicional si hay faltantes (solo si no existe ya)
         if (hayFaltantes && !contenedor.querySelector('.mensaje-faltante')) {
             const mensajeFaltante = document.createElement("div");
@@ -299,14 +299,40 @@ export async function registrarEntradaProducto(e) {
         }
 
         for (const ing of ingredientes) {
-            // Suponiendo que cada ingrediente incluye: cantidad_usada, piezas_por_receta
             const lotesNecesarios = cantidad / productoInfo.stock;
             const requerido = ing.cantidad_usada * lotesNecesarios;
+
+            // 👇 Ejecutar función para descontar en DB
             await supabase.rpc("descontar_ingrediente", {
                 p_ingrediente_id: ing.ingrediente_id,
                 p_cantidad: requerido,
             });
+
+            // ✅ Insertar movimiento de ingrediente
+            const { data: inventarioIng } = await supabase
+                .from("inventario_ingredientes")
+                .select("id, stock_actual")
+                .eq("ingrediente_id", ing.ingrediente_id)
+                .single();
+
+            // Obtener nombre del producto para la descripción
+            const { data: productoInfoExtra } = await supabase
+                .from("productos")
+                .select("nombre")
+                .eq("id", productoId)
+                .single();
+
+            // Registrar movimiento de ingrediente
+            await supabase.from("movimientos_ingredientes").insert({
+                inventario_ingrediente_id: inventarioIng.id,
+                tipo_movimiento: "salida",
+                cantidad: requerido,
+                stock_resultante: inventarioIng.stock_actual,
+                descripcion: `Ingrediente descontado por producción de ${cantidad} ${productoInfoExtra.nombre} `,
+            });
+
         }
+
 
         const { data: existente } = await supabase
             .from("inventario_productos")
